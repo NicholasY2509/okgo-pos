@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { User, Mail, Phone, MapPin, Briefcase } from "lucide-react"
 import { AssignUserDialog } from "@/modules/staff-user/components/assign-user-dialog"
+import { UnlinkUserButton } from "@/modules/staff-user/components/unlink-user-button"
 
 export const metadata: Metadata = {
   title: "Staff Details | OKGO POS",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 
 export default async function StaffDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  
+
   const [staff, allUsers] = await Promise.all([
     StaffService.getStaffById(params.id),
     UserService.getAllUsers()
@@ -29,7 +30,7 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
   const availableUsers = allUsers.filter(u => !linkedUserIds.includes(u.id))
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-8">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title={`${staff.firstName} ${staff.lastName}`}
         description="View and manage staff details and access."
@@ -75,17 +76,23 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
           </CardHeader>
           <CardContent>
             {linkedUsers.length > 0 ? (
-              <div className="space-y-3 mt-4">
+              <div className="space-y-3">
                 {linkedUsers.map(({ user }) => (
-                  <div key={user.id} className="flex items-center gap-3 p-3 border rounded-md">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium leading-none">{user.name || "Unnamed User"}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{user.email}</p>
-                    </div>
-                  </div>
+                  <Card key={user.id} className="">
+                    <CardContent className="flex flex-row justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium leading-none">{user.name || "Unnamed User"}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{user.email}</p>
+                        </div>
+                      </div>
+                      <UnlinkUserButton staffId={staff.id} userId={user.id} />
+                    </CardContent>
+
+                  </Card>
                 ))}
               </div>
             ) : (
@@ -93,10 +100,12 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
                 No user accounts linked.
               </div>
             )}
-            
-            <div className="mt-6">
-              <AssignUserDialog staffId={staff.id} users={availableUsers} />
-            </div>
+
+            {linkedUsers.length === 0 && (
+              <div className="mt-6">
+                <AssignUserDialog staffId={staff.id} users={availableUsers} />
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -70,7 +70,7 @@ export const staffColumns: ColumnDef<StaffData>[] = [
     id: "actions",
     cell: ({ row }) => {
       return (
-        <Link href={`/admin/staff/${row.original.id}`}>
+        <Link href={`/staff/${row.original.id}`}>
           <Button variant="ghost" size="sm">View Details</Button>
         </Link>
       )

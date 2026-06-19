@@ -35,12 +35,18 @@ export function AppSidebar({ portalType = "branch", ...props }: React.ComponentP
 
   // 3. Select and filter the menu
   const activeMenu = isAdminPortal ? adminNav : branchNav
-  const permittedLinks = activeMenu.filter((item) => item.roles.includes(userRole))
+  const permittedGroups = activeMenu.map(group => ({
+    ...group,
+    items: group.items.filter((item) => item.roles.includes(userRole))
+  })).filter(group => group.items.length > 0)
 
   // 4. Transform to match NavMain expected structure
-  const navMain = permittedLinks.map(link => ({
-    ...link,
-    isActive: pathname === link.url || pathname?.startsWith(`${link.url}/`),
+  const navMainGroups = permittedGroups.map(group => ({
+    ...group,
+    items: group.items.map(link => ({
+      ...link,
+      isActive: pathname === link.url || pathname?.startsWith(`${link.url}/`),
+    }))
   }))
 
   const user = {
@@ -64,8 +70,7 @@ export function AppSidebar({ portalType = "branch", ...props }: React.ComponentP
         <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
-        {/* Removed NavProjects for now as it's not in the PRD, but you can add it back dynamically if needed */}
+        <NavMain groups={navMainGroups} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
