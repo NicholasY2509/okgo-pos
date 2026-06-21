@@ -70,6 +70,7 @@ model Branch {
 
   users  BranchUser[]
   staffs Staff[]
+  rooms  Room[]
 }
 
 model Role {
@@ -194,4 +195,16 @@ model VoucherPacket {
   updatedAt DateTime @updatedAt
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  name      String
+  capacity  Int?
+  isActive  Boolean  @default(true)
+  branchId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 }

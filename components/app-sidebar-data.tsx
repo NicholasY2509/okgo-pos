@@ -8,7 +8,8 @@ import {
   StoreIcon,
   BriefcaseIcon,
   ContactIcon,
-  TicketIcon
+  TicketIcon,
+  ArmchairIcon
 } from "lucide-react"
 
 export const adminNav = [
@@ -37,6 +38,12 @@ export const adminNav = [
         title: "Voucher",
         url: "/vouchers",
         icon: (<TicketIcon />),
+        roles: ["Admin"],
+      },
+      {
+        title: "Ruang",
+        url: "/rooms",
+        icon: (<ArmchairIcon />),
         roles: ["Admin"],
       },
     ]
