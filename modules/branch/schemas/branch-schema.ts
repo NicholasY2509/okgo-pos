@@ -1,8 +1,8 @@
 import { z } from "zod"
 
 export const createBranchSchema = z.object({
-  name: z.string().min(1, "Branch name is required"),
-  subdomain: z.string().min(1, "Subdomain is required").regex(/^[a-z0-9-]+$/, "Subdomain can only contain lowercase letters, numbers, and hyphens"),
+  name: z.string().min(1, "Nama cabang wajib diisi"),
+  subdomain: z.string().min(1, "Subdomain wajib diisi").regex(/^[a-z0-9-]+$/, "Subdomain hanya boleh berisi huruf kecil, angka, dan tanda hubung"),
   address: z.string().optional(),
   phone: z.string().optional(),
 })
@@ -11,8 +11,8 @@ export type CreateBranchInput = z.infer<typeof createBranchSchema>
 
 export const updateBranchSchema = z.object({
   id: z.string().cuid(),
-  name: z.string().min(1, "Branch name is required"),
-  subdomain: z.string().min(1, "Subdomain is required").regex(/^[a-z0-9-]+$/, "Subdomain can only contain lowercase letters, numbers, and hyphens"),
+  name: z.string().min(1, "Nama cabang wajib diisi"),
+  subdomain: z.string().min(1, "Subdomain wajib diisi").regex(/^[a-z0-9-]+$/, "Subdomain hanya boleh berisi huruf kecil, angka, dan tanda hubung"),
   address: z.string().optional(),
   phone: z.string().optional(),
 })

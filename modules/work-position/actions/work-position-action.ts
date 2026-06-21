@@ -14,7 +14,7 @@ export async function createWorkPositionAction(values: CreateWorkPositionInput) 
     const validatedFields = createWorkPositionSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid data." }
+      return { error: "Data tidak valid." }
     }
 
     const position = await WorkPositionService.createWorkPosition(validatedFields.data)
@@ -22,7 +22,7 @@ export async function createWorkPositionAction(values: CreateWorkPositionInput) 
     return { success: true, data: position }
   } catch (error) {
     console.error("Failed to create work position:", error)
-    return { error: "Failed to create work position." }
+    return { error: "Gagal membuat posisi kerja." }
   }
 }
 
@@ -31,7 +31,7 @@ export async function updateWorkPositionAction(values: UpdateWorkPositionInput) 
     const validatedFields = updateWorkPositionSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid data." }
+      return { error: "Data tidak valid." }
     }
 
     const { id, ...data } = validatedFields.data
@@ -40,7 +40,7 @@ export async function updateWorkPositionAction(values: UpdateWorkPositionInput) 
     return { success: true, data: position }
   } catch (error) {
     console.error("Failed to update work position:", error)
-    return { error: "Failed to update work position." }
+    return { error: "Gagal memperbarui posisi kerja." }
   }
 }
 
@@ -51,6 +51,6 @@ export async function deleteWorkPositionAction(id: string) {
     return { success: true }
   } catch (error) {
     console.error("Failed to delete work position:", error)
-    return { error: "Failed to delete work position." }
+    return { error: "Gagal menghapus posisi kerja." }
   }
 }

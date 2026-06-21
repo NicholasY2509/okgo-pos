@@ -30,21 +30,21 @@ export type StaffData = {
 export const staffColumns: ColumnDef<StaffData>[] = [
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Nama",
     cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
   },
   {
     accessorKey: "workPosition.name",
-    header: "Position",
+    header: "Posisi",
   },
   {
     accessorKey: "branch.name",
-    header: "Branch",
+    header: "Cabang",
     cell: ({ row }) => row.original.branch?.name || "Global",
   },
   {
     id: "linkedUser",
-    header: "Linked Account",
+    header: "Akun Tertaut",
     cell: ({ row }) => {
       const users = row.original.staffUsers
       if (!users || users.length === 0) return <span className="text-muted-foreground">-</span>
@@ -62,7 +62,7 @@ export const staffColumns: ColumnDef<StaffData>[] = [
     header: "Status",
     cell: ({ row }) => (
       <Badge variant={row.original.isActive ? "default" : "secondary"}>
-        {row.original.isActive ? "Active" : "Inactive"}
+        {row.original.isActive ? "Aktif" : "Tidak Aktif"}
       </Badge>
     ),
   },
@@ -71,7 +71,7 @@ export const staffColumns: ColumnDef<StaffData>[] = [
     cell: ({ row }) => {
       return (
         <Link href={`/staff/${row.original.id}`}>
-          <Button variant="ghost" size="sm">View Details</Button>
+          <Button variant="ghost" size="sm">Lihat Detail</Button>
         </Link>
       )
     }

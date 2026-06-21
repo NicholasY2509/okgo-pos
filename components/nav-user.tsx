@@ -76,7 +76,7 @@ export function NavUser({
               <DropdownMenuItem>
                 <SparklesIcon
                 />
-                Upgrade to Pro
+                Tingkatkan ke Pro
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -84,24 +84,24 @@ export function NavUser({
               <DropdownMenuItem>
                 <BadgeCheckIcon
                 />
-                Account
+                Akun
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCardIcon
                 />
-                Billing
+                Tagihan
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <BellIcon
                 />
-                Notifications
+                Notifikasi
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <LogOutIcon
               />
-              Log out
+              Keluar
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

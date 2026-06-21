@@ -12,9 +12,9 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-sm shadow-xl border-t-4 border-t-primary">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold tracking-tight">Login</CardTitle>
+        <CardTitle className="text-2xl font-bold tracking-tight">Masuk</CardTitle>
         <CardDescription>
-          Enter your email and password to sign in.
+          Masukkan email dan kata sandi Anda untuk masuk.
         </CardDescription>
       </CardHeader>
       <form onSubmit={onSubmit}>
@@ -36,7 +36,7 @@ export function LoginForm() {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Kata Sandi</Label>
             <Input
               id="password"
               type="password"
@@ -63,7 +63,7 @@ export function LoginForm() {
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Signing in..." : "Sign in"}
+            {isSubmitting ? "Sedang masuk..." : "Masuk"}
           </Button>
         </CardFooter>
       </form>

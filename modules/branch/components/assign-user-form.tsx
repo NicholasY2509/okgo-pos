@@ -38,13 +38,13 @@ export function AssignUserForm({ branchId, users, roles }: AssignUserFormProps) 
   return (
     <Card className="w-full shadow-md">
       <CardHeader>
-        <CardTitle>Assign User</CardTitle>
-        <CardDescription>Assign a user to this branch with a specific role.</CardDescription>
+        <CardTitle>Tugaskan Pengguna</CardTitle>
+        <CardDescription>Tugaskan pengguna ke cabang ini dengan peran tertentu.</CardDescription>
       </CardHeader>
       <form onSubmit={onSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2 flex flex-col">
-            <label className="text-sm font-medium">User</label>
+            <label className="text-sm font-medium">Pengguna</label>
             <Popover open={userOpen} onOpenChange={setUserOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -58,15 +58,15 @@ export function AssignUserForm({ branchId, users, roles }: AssignUserFormProps) 
                 >
                   {selectedUserId
                     ? users.find((user) => user.id === selectedUserId)?.name || users.find((user) => user.id === selectedUserId)?.email
-                    : "Select a user..."}
+                    : "Pilih pengguna..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search user..." />
+                  <CommandInput placeholder="Cari pengguna..." />
                   <CommandList>
-                    <CommandEmpty>No user found.</CommandEmpty>
+                    <CommandEmpty>Pengguna tidak ditemukan.</CommandEmpty>
                     <CommandGroup>
                       {users.map((user) => (
                         <CommandItem
@@ -97,7 +97,7 @@ export function AssignUserForm({ branchId, users, roles }: AssignUserFormProps) 
           </div>
 
           <div className="space-y-2 flex flex-col">
-            <label className="text-sm font-medium">Role</label>
+            <label className="text-sm font-medium">Peran</label>
             <Popover open={roleOpen} onOpenChange={setRoleOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -111,15 +111,15 @@ export function AssignUserForm({ branchId, users, roles }: AssignUserFormProps) 
                 >
                   {selectedRoleId
                     ? roles.find((role) => role.id === selectedRoleId)?.name
-                    : "Select a role..."}
+                    : "Pilih peran..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search role..." />
+                  <CommandInput placeholder="Cari peran..." />
                   <CommandList>
-                    <CommandEmpty>No role found.</CommandEmpty>
+                    <CommandEmpty>Peran tidak ditemukan.</CommandEmpty>
                     <CommandGroup>
                       {roles.map((role) => (
                         <CommandItem
@@ -157,7 +157,7 @@ export function AssignUserForm({ branchId, users, roles }: AssignUserFormProps) 
         </CardContent>
         <CardFooter className="mt-4">
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Assigning..." : "Assign User"}
+            {isSubmitting ? "Menugaskan..." : "Tugaskan Pengguna"}
           </Button>
         </CardFooter>
       </form>

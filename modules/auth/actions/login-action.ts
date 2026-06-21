@@ -9,7 +9,7 @@ export async function loginAction(values: LoginInput) {
     const validatedFields = loginSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return "Invalid form data. Please check your inputs."
+      return "Data formulir tidak valid. Harap periksa input Anda."
     }
 
     const { email, password, subdomain } = validatedFields.data
@@ -24,9 +24,9 @@ export async function loginAction(values: LoginInput) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return "Invalid credentials."
+          return "Kredensial tidak valid."
         default:
-          return "Something went wrong."
+          return "Terjadi kesalahan."
       }
     }
     throw error // Let Next.js handle redirect errors

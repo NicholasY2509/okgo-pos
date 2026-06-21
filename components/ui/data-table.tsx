@@ -25,7 +25,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-  emptyMessage = "No results found.",
+  emptyMessage = "Hasil tidak ditemukan.",
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,

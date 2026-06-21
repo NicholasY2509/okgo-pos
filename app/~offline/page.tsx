@@ -3,7 +3,7 @@ export default function OfflineFallbackPage() {
     <div className="flex h-screen w-full flex-col items-center justify-center bg-background text-foreground">
       <h1 className="text-4xl font-bold tracking-tight">Offline</h1>
       <p className="mt-4 text-muted-foreground">
-        It looks like you don't have an internet connection. Please check your network and try again.
+        Sepertinya Anda tidak memiliki koneksi internet. Silakan periksa jaringan Anda dan coba lagi.
       </p>
     </div>
   );

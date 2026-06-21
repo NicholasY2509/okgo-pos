@@ -17,7 +17,7 @@ type UserWithRelations = User & {
 export const userColumns: ColumnDef<UserWithRelations>[] = [
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Nama",
     cell: ({ row }) => {
       return (
         <div className="font-medium">{row.getValue("name")}</div>
@@ -30,12 +30,12 @@ export const userColumns: ColumnDef<UserWithRelations>[] = [
   },
   {
     id: "assignments",
-    header: "Assigned Branches",
+    header: "Cabang yang Ditugaskan",
     cell: ({ row }) => {
       const branchUsers = row.original.branchUsers
 
       if (!branchUsers || branchUsers.length === 0) {
-        return <span className="text-muted-foreground italic text-xs">No branches</span>
+        return <span className="text-muted-foreground italic text-xs">Tidak ada cabang</span>
       }
 
       return (

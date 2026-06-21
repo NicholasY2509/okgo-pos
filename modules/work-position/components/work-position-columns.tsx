@@ -16,21 +16,21 @@ export type WorkPositionData = {
 export const workPositionColumns: ColumnDef<WorkPositionData>[] = [
   {
     accessorKey: "name",
-    header: "Position Name",
+    header: "Nama Posisi",
   },
   {
     accessorKey: "description",
-    header: "Description",
+    header: "Deskripsi",
     cell: ({ row }) => row.original.description || "-",
   },
   {
     id: "staffCount",
-    header: "Staff Count",
+    header: "Jumlah Staf",
     cell: ({ row }) => row.original._count.staff,
   },
   {
     accessorKey: "createdAt",
-    header: "Created At",
+    header: "Dibuat Pada",
     cell: ({ row }) => formatDate(row.original.createdAt),
   },
 ]

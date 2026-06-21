@@ -12,7 +12,7 @@ import { formatIDR } from "@/lib/utils"
 export const getProductsColumns = (categories: any[]): ColumnDef<any>[] => [
   {
     accessorKey: "image",
-    header: "Image",
+    header: "Gambar",
     cell: ({ row }) => {
       const image = row.getValue("image") as string | null
       const name = row.getValue("name") as string
@@ -21,7 +21,7 @@ export const getProductsColumns = (categories: any[]): ColumnDef<any>[] => [
           {image ? (
             <Image src={image} alt={name} fill className="object-cover" />
           ) : (
-            <span className="text-xs text-muted-foreground">None</span>
+            <span className="text-xs text-muted-foreground">Tidak Ada</span>
           )}
         </div>
       )
@@ -29,7 +29,7 @@ export const getProductsColumns = (categories: any[]): ColumnDef<any>[] => [
   },
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Nama",
     cell: ({ row }) => {
       const name = row.getValue("name") as string
       const description = row.original.description
@@ -45,15 +45,15 @@ export const getProductsColumns = (categories: any[]): ColumnDef<any>[] => [
   },
   {
     accessorKey: "category",
-    header: "Category",
+    header: "Kategori",
     cell: ({ row }) => {
       const category = row.getValue("category") as { name: string } | null
-      return category ? category.name : <span className="text-muted-foreground italic">None</span>
+      return category ? category.name : <span className="text-muted-foreground italic">Tidak Ada</span>
     }
   },
   {
     accessorKey: "price",
-    header: "Price",
+    header: "Harga",
     cell: ({ row }) => {
       const price = row.getValue("price") as number
       return formatIDR(price)
@@ -61,7 +61,7 @@ export const getProductsColumns = (categories: any[]): ColumnDef<any>[] => [
   },
   {
     accessorKey: "duration",
-    header: "Duration",
+    header: "Durasi",
     cell: ({ row }) => {
       const duration = row.getValue("duration") as number | null
       return duration ? `${duration} min` : "-"
@@ -74,24 +74,24 @@ export const getProductsColumns = (categories: any[]): ColumnDef<any>[] => [
       const isActive = row.getValue("isActive") as boolean
       return (
         <Badge variant={isActive ? "default" : "secondary"}>
-          {isActive ? "Active" : "Inactive"}
+          {isActive ? "Aktif" : "Tidak Aktif"}
         </Badge>
       )
     }
   },
   {
     id: "actions",
-    header: () => <div className="text-right pr-4">Actions</div>,
+    header: () => <div className="text-right pr-4">Aksi</div>,
     cell: ({ row }) => {
       const product = row.original
       return (
         <div className="flex justify-end gap-2">
           <ProductDialog initialData={product} categories={categories}>
-            <Button variant="ghost" size="icon" title="Edit Product">
+            <Button variant="ghost" size="icon" title="Edit Produk">
               <Edit className="h-4 w-4" />
             </Button>
           </ProductDialog>
-          <Button variant="ghost" size="icon" asChild title="View Details">
+          <Button variant="ghost" size="icon" asChild title="Lihat Detail">
             <Link href={`/products/${product.id}`}>
               <ChevronRight className="h-4 w-4" />
             </Link>

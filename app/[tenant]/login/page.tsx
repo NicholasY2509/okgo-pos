@@ -1,8 +1,8 @@
 import { LoginForm } from "@/modules/auth/components/login-form"
 
 export const metadata = {
-  title: "Login | Okgo POS",
-  description: "Login to your account",
+  title: "Masuk | Okgo POS",
+  description: "Masuk ke akun Anda",
 }
 
 export default function LoginPage() {

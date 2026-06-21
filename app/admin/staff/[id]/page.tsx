@@ -9,8 +9,10 @@ import { User, Mail, Phone, MapPin, Briefcase } from "lucide-react"
 import { AssignUserDialog } from "@/modules/staff-user/components/assign-user-dialog"
 import { UnlinkUserButton } from "@/modules/staff-user/components/unlink-user-button"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
-  title: "Staff Details | OKGO POS",
+  title: "Detail Staf | OKGO POS",
 }
 
 export default async function StaffDetailPage(props: { params: Promise<{ id: string }> }) {
@@ -33,27 +35,27 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
     <div className="flex flex-col gap-6">
       <PageHeader
         title={`${staff.firstName} ${staff.lastName}`}
-        description="View and manage staff details and access."
+        description="Lihat dan kelola detail serta akses staf."
       >
         <Badge variant={staff.isActive ? "default" : "secondary"} className="ml-2">
-          {staff.isActive ? "Active" : "Inactive"}
+          {staff.isActive ? "Aktif" : "Tidak Aktif"}
         </Badge>
       </PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
+            <CardTitle>Informasi Profil</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-2 text-sm">
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <span><span className="font-medium">Position:</span> {staff.workPosition.name}</span>
+                <span><span className="font-medium">Posisi:</span> {staff.workPosition.name}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span><span className="font-medium">Branch:</span> {staff.branch?.name || "Global"}</span>
+                <span><span className="font-medium">Cabang:</span> {staff.branch?.name || "Global"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="h-4 w-4 text-muted-foreground" />
@@ -61,7 +63,7 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span><span className="font-medium">Phone:</span> {staff.phone || "N/A"}</span>
+                <span><span className="font-medium">Telepon:</span> {staff.phone || "N/A"}</span>
               </div>
             </div>
           </CardContent>
@@ -70,8 +72,8 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div>
-              <CardTitle>Linked User Accounts</CardTitle>
-              <CardDescription>Accounts that can log in as this staff.</CardDescription>
+              <CardTitle>Akun Pengguna Tertaut</CardTitle>
+              <CardDescription>Akun yang dapat masuk sebagai staf ini.</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -85,7 +87,7 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
                           <User className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium leading-none">{user.name || "Unnamed User"}</p>
+                          <p className="text-sm font-medium leading-none">{user.name || "Pengguna Tanpa Nama"}</p>
                           <p className="text-xs text-muted-foreground mt-1">{user.email}</p>
                         </div>
                       </div>
@@ -97,7 +99,7 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
               </div>
             ) : (
               <div className="text-center py-6 text-sm text-muted-foreground">
-                No user accounts linked.
+                Tidak ada akun pengguna yang tertaut.
               </div>
             )}
 

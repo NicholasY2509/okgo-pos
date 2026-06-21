@@ -13,8 +13,8 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
   if (categories.length === 0) {
     return (
       <div className="p-12 text-center border border-dashed rounded-xl bg-card">
-        <h3 className="text-lg font-medium">No categories found</h3>
-        <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first category to group services.</p>
+        <h3 className="text-lg font-medium">Kategori tidak ditemukan</h3>
+        <p className="text-sm text-muted-foreground mt-1 mb-4">Buat kategori pertama Anda untuk mengelompokkan layanan.</p>
         <CategoryDialog />
       </div>
     )
@@ -22,5 +22,5 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
 
   const columns = useMemo(() => getCategoriesColumns(), [])
 
-  return <DataTable columns={columns} data={categories} emptyMessage="No categories found." />
+  return <DataTable columns={columns} data={categories} emptyMessage="Kategori tidak ditemukan." />
 }

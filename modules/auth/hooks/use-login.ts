@@ -38,7 +38,7 @@ export function useLogin() {
       setErrorMessage(result)
       toast.error(result)
     } else {
-      toast.success("Successfully logged in!")
+      toast.success("Berhasil masuk!")
     }
   }
 

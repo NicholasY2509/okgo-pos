@@ -1,23 +1,28 @@
 import { ProductService } from "@/modules/product/services/product-service"
 import { CategoryService } from "@/modules/product/services/category-service"
+import { VoucherPacketService } from "@/modules/vouchers/services/voucher-packet-service"
 import { notFound } from "next/navigation"
 import { PageHeader } from "@/components/page-header"
 import { ProductDialog } from "@/modules/product/components/product-dialog"
+import { VoucherPacketList } from "@/modules/vouchers/components/voucher-packet-list"
 import { Button } from "@/components/ui/button"
-import { Edit, CalendarClock, DollarSign, Activity } from "lucide-react"
+import { Edit } from "lucide-react"
+import { ProductOverviewTab } from "@/modules/product/components/product-overview-tab"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { formatIDR } from "@/lib/utils"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const [rawProduct, categories] = await Promise.all([
+  const [rawProduct, categories, voucherPackets] = await Promise.all([
     ProductService.getProductById(id),
-    CategoryService.getAllCategories()
+    CategoryService.getAllCategories(),
+    VoucherPacketService.getByProductId(id)
   ])
 
   if (!rawProduct) {
@@ -30,23 +35,28 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     price: Number(rawProduct.price)
   }
 
+  const formattedPackets = voucherPackets.map(vp => ({
+    ...vp,
+    price: Number(vp.price)
+  }))
+
   return (
     <div className="flex flex-col gap-6">
       <Link href="/admin/products" className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-fit">
         <ChevronLeft className="w-4 h-4 mr-1" />
-        Back to Services
+        Kembali ke Layanan
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <PageHeader
           title={product.name}
-          description="View product details and track performance metrics."
+          description="Lihat detail produk dan lacak metrik kinerja."
         >
           <div className="flex gap-2">
             <ProductDialog initialData={product} categories={categories}>
               <Button variant="outline">
                 <Edit className="w-4 h-4 mr-2" />
-                Edit Details
+                Edit Detail
               </Button>
             </ProductDialog>
           </div>
@@ -64,24 +74,24 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   <Image src={product.image} alt={product.name} fill className="object-cover" />
                 ) : (
                   <div className="flex items-center justify-center w-full h-full text-muted-foreground text-sm">
-                    No image available
+                    Gambar tidak tersedia
                   </div>
                 )}
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Category</h3>
-                  <p className="font-medium mt-1">{product.category?.name || "Uncategorized"}</p>
+                  <h3 className="text-sm font-medium text-muted-foreground">Kategori</h3>
+                  <p className="font-medium mt-1">{product.category?.name || "Belum Dikategorikan"}</p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Price</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">Harga</h3>
                   <p className="font-medium mt-1">{formatIDR(product.price)}</p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Duration</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground">Durasi</h3>
                   <p className="font-medium mt-1">{product.duration ? `${product.duration} min` : "N/A"}</p>
                 </div>
 
@@ -89,14 +99,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
                   <div className="mt-1">
                     <Badge variant={product.isActive ? "default" : "secondary"}>
-                      {product.isActive ? "Active" : "Inactive"}
+                      {product.isActive ? "Aktif" : "Tidak Aktif"}
                     </Badge>
                   </div>
                 </div>
 
                 {product.description && (
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground">Deskripsi</h3>
                     <p className="text-sm mt-1 whitespace-pre-line">{product.description}</p>
                   </div>
                 )}
@@ -106,44 +116,20 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </div>
 
         <div className="md:col-span-2 space-y-6">
-          <h2 className="text-lg font-semibold tracking-tight">Performance Overview</h2>
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+              <TabsTrigger value="overview">Ringkasan</TabsTrigger>
+              <TabsTrigger value="vouchers">Paket Voucher</TabsTrigger>
+            </TabsList>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Bookings</CardTitle>
-                <CalendarClock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground mt-1">This month</p>
-              </CardContent>
-            </Card>
+            <TabsContent value="overview" className="space-y-4 pt-4">
+              <ProductOverviewTab productId={id} />
+            </TabsContent>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Revenue Generated</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Rp 0</div>
-                <p className="text-xs text-muted-foreground mt-1">This month</p>
-              </CardContent>
-            </Card>
-
-            <Card className="sm:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Conversion & Analytics</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-[200px] flex flex-col items-center justify-center border border-dashed rounded-xl bg-muted/20 mt-2 gap-2">
-                  <Activity className="h-8 w-8 text-muted-foreground/50" />
-                  <p className="text-sm text-muted-foreground">Analytics graph will appear here once bookings start.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+            <TabsContent value="vouchers" className="space-y-4 pt-4">
+              <VoucherPacketList productId={id} packets={formattedPackets} />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

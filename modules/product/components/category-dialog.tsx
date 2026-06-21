@@ -50,19 +50,19 @@ export function CategoryDialog({ initialData, children }: CategoryDialogProps) {
     if (result.error) {
       toast.error(result.error)
     } else {
-      toast.success(`Category ${isEditing ? "updated" : "created"} successfully`)
+      toast.success(`Kategori berhasil ${isEditing ? "diperbarui" : "dibuat"}`)
       setOpen(false)
       if (!isEditing) form.reset()
     }
   }
 
   async function onDelete() {
-    if (confirm("Are you sure you want to delete this category?")) {
+    if (confirm("Apakah Anda yakin ingin menghapus kategori ini?")) {
       const result = await deleteCategoryAction(initialData.id)
       if (result.error) {
         toast.error(result.error)
       } else {
-        toast.success("Category deleted successfully")
+        toast.success("Kategori berhasil dihapus")
         setOpen(false)
       }
     }
@@ -74,42 +74,42 @@ export function CategoryDialog({ initialData, children }: CategoryDialogProps) {
         {children ? children : (
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            Add Category
+            Tambah Kategori
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Category" : "Add New Category"}</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Kategori" : "Tambah Kategori Baru"}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update category details." : "Create a new category to group your products/services."}
+            {isEditing ? "Perbarui detail kategori." : "Buat kategori baru untuk mengelompokkan produk/layanan Anda."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" {...form.register("name")} placeholder="e.g. Massages" />
+            <Label htmlFor="name">Nama</Label>
+            <Input id="name" {...form.register("name")} placeholder="cth. Pijat" />
             {form.formState.errors.name && (
               <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" {...form.register("description")} placeholder="Optional description" />
+            <Label htmlFor="description">Deskripsi</Label>
+            <Textarea id="description" {...form.register("description")} placeholder="Deskripsi opsional" />
           </div>
           
           <DialogFooter className="flex items-center sm:justify-between pt-4 border-t">
             {isEditing && (
               <Button type="button" variant="destructive" onClick={onDelete}>
-                Delete
+                Hapus
               </Button>
             )}
             <div className="flex gap-2 ml-auto">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
+                Batal
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Saving..." : "Save"}
+                {form.formState.isSubmitting ? "Menyimpan..." : "Simpan"}
               </Button>
             </div>
           </DialogFooter>

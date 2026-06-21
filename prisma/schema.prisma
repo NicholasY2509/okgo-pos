@@ -178,5 +178,20 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  category Category? @relation(fields: [categoryId], references: [id])
+  category       Category?       @relation(fields: [categoryId], references: [id])
+  voucherPackets VoucherPacket[]
+}
+
+model VoucherPacket {
+  id        String   @id @default(cuid())
+  name      String // e.g. "6 Sessions Packet"
+  quantity  Int // Number of vouchers in the packet
+  price     Decimal // Price of the packet
+  duration  Int? // Duration in months
+  isActive  Boolean  @default(true)
+  productId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }

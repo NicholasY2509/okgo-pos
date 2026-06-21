@@ -32,7 +32,7 @@ export function useCreateWorkPosition(onSuccess?: () => void) {
       setError(result.error)
       toast.error(result.error)
     } else {
-      toast.success("Work position created successfully!")
+      toast.success("Posisi kerja berhasil dibuat!")
       form.reset()
       onSuccess?.()
     }

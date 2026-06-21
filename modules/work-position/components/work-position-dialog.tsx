@@ -14,14 +14,14 @@ export function WorkPositionDialog() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Add Work Position
+          Tambah Posisi Kerja
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Work Position</DialogTitle>
+          <DialogTitle>Buat Posisi Kerja</DialogTitle>
           <DialogDescription>
-            Add a new work position/role for your staff.
+            Tambahkan posisi kerja/peran baru untuk staf Anda.
           </DialogDescription>
         </DialogHeader>
         <WorkPositionForm onSuccess={() => setOpen(false)} />

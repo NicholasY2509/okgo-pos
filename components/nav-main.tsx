@@ -17,6 +17,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import { ChevronRightIcon } from "lucide-react"
+import Link from "next/link"
 
 export function NavMain({
   groups,
@@ -52,10 +53,10 @@ export function NavMain({
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                      <a href={item.url}>
+                      <Link href={item.url}>
                         {item.icon}
                         <span>{item.title}</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
@@ -84,9 +85,9 @@ export function NavMain({
                           return (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton asChild isActive={isSubActive}>
-                                <a href={subItem.url}>
+                                <Link href={subItem.url}>
                                   <span>{subItem.title}</span>
-                                </a>
+                                </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           )

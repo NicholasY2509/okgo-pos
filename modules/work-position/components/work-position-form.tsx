@@ -13,9 +13,9 @@ export function WorkPositionForm({ onSuccess }: { onSuccess?: () => void }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4 pt-4">
       <div className="space-y-2 flex flex-col">
-        <label className="text-sm font-medium">Name</label>
+        <label className="text-sm font-medium">Nama</label>
         <Input
-          placeholder="e.g. Therapist, Receptionist"
+          placeholder="cth. Terapis, Resepsionis"
           {...form.register("name")}
         />
         {form.formState.errors.name && (
@@ -24,9 +24,9 @@ export function WorkPositionForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
 
       <div className="space-y-2 flex flex-col">
-        <label className="text-sm font-medium">Description (Optional)</label>
+        <label className="text-sm font-medium">Deskripsi (Opsional)</label>
         <Textarea
-          placeholder="Briefly describe the responsibilities..."
+          placeholder="Jelaskan secara singkat tanggung jawabnya..."
           {...form.register("description")}
         />
         {form.formState.errors.description && (
@@ -41,9 +41,9 @@ export function WorkPositionForm({ onSuccess }: { onSuccess?: () => void }) {
       )}
 
       <div className="flex justify-end gap-2 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={() => onSuccess?.()}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={() => onSuccess?.()}>Batal</Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Creating..." : "Create Position"}
+          {isSubmitting ? "Membuat..." : "Buat Posisi"}
         </Button>
       </div>
     </form>

@@ -22,23 +22,23 @@ export default async function ProductsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Services & Products"
-        description="Manage your massage parlor services, products, and categories."
+        title="Layanan & Produk"
+        description="Kelola layanan, produk, dan kategori tempat pijat Anda."
       />
 
       <Tabs defaultValue="services" className="w-full">
         <div className="flex justify-between items-center mb-6">
           <TabsList>
-            <TabsTrigger value="services">Services / Products</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="services">Layanan / Produk</TabsTrigger>
+            <TabsTrigger value="categories">Kategori</TabsTrigger>
           </TabsList>
 
           <div className="flex gap-2">
             <CategoryDialog>
-              <Button variant="outline">Add Category</Button>
+              <Button variant="outline">Tambah Kategori</Button>
             </CategoryDialog>
             <ProductDialog categories={categories}>
-              <Button>Add Service</Button>
+              <Button>Tambah Layanan</Button>
             </ProductDialog>
           </div>
         </div>

@@ -16,7 +16,7 @@ export const config = {
 
 export function proxy(req: NextRequest) {
   const url = req.nextUrl
-  
+
   // Get hostname of request (e.g. downtown.okgo.com, localhost:3000)
   const hostname = req.headers.get("host") || ""
 
@@ -24,7 +24,7 @@ export function proxy(req: NextRequest) {
   // For local development, we extract the part before localhost
   // Note: Adjust this logic based on your production root domain
   let subdomain = ""
-  
+
   if (hostname.includes("localhost")) {
     const parts = hostname.split(".")
     if (parts.length > 1 && parts[0] !== "localhost") {

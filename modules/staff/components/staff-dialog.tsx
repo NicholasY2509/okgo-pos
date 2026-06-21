@@ -19,14 +19,14 @@ export function StaffDialog({ workPositions, branches }: StaffDialogProps) {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Add Staff
+          Tambah Staf
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create Staff Member</DialogTitle>
+          <DialogTitle>Buat Anggota Staf</DialogTitle>
           <DialogDescription>
-            Add a new staff member to the system.
+            Tambahkan anggota staf baru ke sistem.
           </DialogDescription>
         </DialogHeader>
         <StaffForm 

@@ -47,7 +47,7 @@ export function BranchForm({ initialData, onSuccess }: BranchFormProps) {
       setError(result.error)
       toast.error(result.error)
     } else {
-      toast.success(`Branch ${isEditing ? 'updated' : 'created'} successfully!`)
+      toast.success(`Cabang berhasil ${isEditing ? 'diperbarui' : 'dibuat'}!`)
       if (!isEditing) {
         form.reset()
       }
@@ -62,10 +62,10 @@ export function BranchForm({ initialData, onSuccess }: BranchFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
       <div className="space-y-2">
-        <Label htmlFor="name">Branch Name</Label>
+        <Label htmlFor="name">Nama Cabang</Label>
         <Input
           id="name"
-          placeholder="e.g. Downtown Plaza"
+          placeholder="cth. Plaza Pusat Kota"
           {...form.register("name")}
         />
         {form.formState.errors.name && (
@@ -89,19 +89,19 @@ export function BranchForm({ initialData, onSuccess }: BranchFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="address">Address</Label>
+        <Label htmlFor="address">Alamat</Label>
         <Input
           id="address"
-          placeholder="123 Main St..."
+          placeholder="Jl. Sudirman No. 123..."
           {...form.register("address")}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number</Label>
+        <Label htmlFor="phone">Nomor Telepon</Label>
         <Input
           id="phone"
-          placeholder="+1 234 567 890"
+          placeholder="+62 812 3456 7890"
           {...form.register("phone")}
         />
       </div>
@@ -114,7 +114,7 @@ export function BranchForm({ initialData, onSuccess }: BranchFormProps) {
 
       <div className="pt-4 flex justify-end">
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? "Saving..." : isEditing ? "Update Branch" : "Create Branch"}
+          {isSubmitting ? "Menyimpan..." : isEditing ? "Perbarui Cabang" : "Buat Cabang"}
         </Button>
       </div>
     </form>

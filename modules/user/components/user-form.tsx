@@ -45,7 +45,7 @@ export function UserForm({ initialData, onSuccess }: UserFormProps) {
       setError(result.error)
       toast.error(result.error)
     } else {
-      toast.success(`User ${isEditing ? 'updated' : 'created'} successfully!`)
+      toast.success(`Pengguna berhasil ${isEditing ? 'diperbarui' : 'dibuat'}!`)
       if (!isEditing) {
         form.reset()
       }
@@ -60,10 +60,10 @@ export function UserForm({ initialData, onSuccess }: UserFormProps) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
       <div className="space-y-2">
-        <Label htmlFor="name">Full Name</Label>
+        <Label htmlFor="name">Nama Lengkap</Label>
         <Input
           id="name"
-          placeholder="e.g. John Doe"
+          placeholder="cth. Budi Santoso"
           {...form.register("name")}
         />
         {form.formState.errors.name && (
@@ -76,7 +76,7 @@ export function UserForm({ initialData, onSuccess }: UserFormProps) {
         <Input
           id="email"
           type="email"
-          placeholder="john@example.com"
+          placeholder="budi@example.com"
           {...form.register("email")}
         />
         {form.formState.errors.email && (
@@ -85,7 +85,7 @@ export function UserForm({ initialData, onSuccess }: UserFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password {isEditing && "(leave blank to keep current)"}</Label>
+        <Label htmlFor="password">Kata Sandi {isEditing && "(biarkan kosong untuk mempertahankan saat ini)"}</Label>
         <Input
           id="password"
           type="password"
@@ -105,7 +105,7 @@ export function UserForm({ initialData, onSuccess }: UserFormProps) {
 
       <div className="pt-4 flex justify-end">
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? "Saving..." : isEditing ? "Update User" : "Create User"}
+          {isSubmitting ? "Menyimpan..." : isEditing ? "Perbarui Pengguna" : "Buat Pengguna"}
         </Button>
       </div>
     </form>

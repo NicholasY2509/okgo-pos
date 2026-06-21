@@ -49,29 +49,29 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
         {children ? children : (
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            Add Service
+            Tambah Layanan
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] md:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Service" : "Add New Service"}</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Layanan" : "Tambah Layanan Baru"}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update service details." : "Create a new service/product."}
+            {isEditing ? "Perbarui detail layanan." : "Buat layanan/produk baru."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" {...form.register("name")} placeholder="e.g. Swedish Massage" />
+              <Label htmlFor="name">Nama</Label>
+              <Input id="name" {...form.register("name")} placeholder="cth. Pijat Swedia" />
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
               )}
             </div>
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
-              <Label htmlFor="price">Price (IDR)</Label>
+              <Label htmlFor="price">Harga (Rp)</Label>
               <Controller
                 control={form.control}
                 name="price"
@@ -95,7 +95,7 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
             </div>
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
-              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Label htmlFor="duration">Durasi (menit)</Label>
               <Input id="duration" type="number" {...form.register("duration")} />
               {form.formState.errors.duration && (
                 <p className="text-sm text-destructive">{form.formState.errors.duration.message}</p>
@@ -103,17 +103,17 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
             </div>
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
-              <Label htmlFor="categoryId">Category</Label>
+              <Label htmlFor="categoryId">Kategori</Label>
               <Controller
                 control={form.control}
                 name="categoryId"
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value || ""} defaultValue={field.value || ""}>
                     <SelectTrigger>
-                      <SelectValue placeholder="No Category" />
+                      <SelectValue placeholder="Tanpa Kategori" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">No Category</SelectItem>
+                      <SelectItem value="none">Tanpa Kategori</SelectItem>
                       {categories.map(c => (
                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                       ))}
@@ -134,7 +134,7 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
-                    <span className="text-sm font-medium leading-none">Active</span>
+                    <span className="text-sm font-medium leading-none">Aktif</span>
                   </label>
                 )}
               />
@@ -142,7 +142,7 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
           </div>
 
           <div className="space-y-2">
-            <Label>Service Image</Label>
+            <Label>Gambar Layanan</Label>
             <Controller
               control={form.control}
               name="image"
@@ -156,22 +156,22 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" {...form.register("description")} placeholder="Optional description" />
+            <Label htmlFor="description">Deskripsi</Label>
+            <Textarea id="description" {...form.register("description")} placeholder="Deskripsi opsional" />
           </div>
 
           <DialogFooter className="flex items-center sm:justify-between pt-4 border-t">
             {isEditing && (
               <Button type="button" variant="destructive" onClick={onDelete}>
-                Delete
+                Hapus
               </Button>
             )}
             <div className="flex gap-2 ml-auto">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
+                Batal
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save"}
+                {isSubmitting ? "Menyimpan..." : "Simpan"}
               </Button>
             </div>
           </DialogFooter>

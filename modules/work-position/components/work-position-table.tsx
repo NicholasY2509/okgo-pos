@@ -8,5 +8,5 @@ interface WorkPositionTableProps {
 }
 
 export function WorkPositionTable({ data }: WorkPositionTableProps) {
-  return <DataTable columns={workPositionColumns} data={data} emptyMessage="No work positions found." />
+  return <DataTable columns={workPositionColumns} data={data} emptyMessage="Tidak ada posisi kerja yang ditemukan." />
 }

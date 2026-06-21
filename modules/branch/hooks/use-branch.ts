@@ -26,7 +26,7 @@ export function useCreateBranch() {
       setError(result.error)
       toast.error(result.error)
     } else {
-      toast.success("Branch created successfully!")
+      toast.success("Cabang berhasil dibuat!")
       form.reset()
     }
     
@@ -61,7 +61,7 @@ export function useAssignUserBranch(branchId: string) {
       setError(result.error)
       toast.error(result.error)
     } else {
-      toast.success("User assigned to branch successfully!")
+      toast.success("Pengguna berhasil ditugaskan ke cabang!")
       form.reset({ branchId, userId: "", roleId: "" }) // Keep branchId, reset the rest
     }
     

@@ -25,17 +25,17 @@ export function BranchDialog({ initialData }: BranchDialogProps) {
         ) : (
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Add Branch
+            Tambah Cabang
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Branch" : "Create New Branch"}</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Cabang" : "Buat Cabang Baru"}</DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Make changes to the branch details below."
-              : "Add a new branch location to the system."}
+              ? "Buat perubahan pada detail cabang di bawah ini."
+              : "Tambahkan lokasi cabang baru ke sistem."}
           </DialogDescription>
         </DialogHeader>
         <BranchForm initialData={initialData} onSuccess={() => setOpen(false)} />

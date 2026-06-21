@@ -18,5 +18,5 @@ interface UserTableProps {
 }
 
 export function UserTable({ data }: UserTableProps) {
-  return <DataTable columns={userColumns} data={data} emptyMessage="No users found." />
+  return <DataTable columns={userColumns} data={data} emptyMessage="Tidak ada pengguna yang ditemukan." />
 }

@@ -14,7 +14,7 @@ export async function createCategoryAction(values: CreateCategoryInput) {
     const validatedFields = createCategorySchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid data." }
+      return { error: "Data tidak valid." }
     }
 
     const category = await CategoryService.createCategory(validatedFields.data)
@@ -22,7 +22,7 @@ export async function createCategoryAction(values: CreateCategoryInput) {
     return { success: true, data: category }
   } catch (error) {
     console.error("Failed to create category:", error)
-    return { error: "Failed to create category." }
+    return { error: "Gagal membuat kategori." }
   }
 }
 
@@ -31,7 +31,7 @@ export async function updateCategoryAction(values: UpdateCategoryInput) {
     const validatedFields = updateCategorySchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid data." }
+      return { error: "Data tidak valid." }
     }
 
     const { id, ...data } = validatedFields.data
@@ -40,7 +40,7 @@ export async function updateCategoryAction(values: UpdateCategoryInput) {
     return { success: true, data: category }
   } catch (error) {
     console.error("Failed to update category:", error)
-    return { error: "Failed to update category." }
+    return { error: "Gagal memperbarui kategori." }
   }
 }
 
@@ -51,6 +51,6 @@ export async function deleteCategoryAction(id: string) {
     return { success: true }
   } catch (error) {
     console.error("Failed to delete category:", error)
-    return { error: "Failed to delete category." }
+    return { error: "Gagal menghapus kategori." }
   }
 }

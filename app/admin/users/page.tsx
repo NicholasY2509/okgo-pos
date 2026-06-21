@@ -10,8 +10,8 @@ export default async function UsersPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Users"
-        description="Manage all users across the system."
+        title="Pengguna"
+        description="Kelola semua pengguna di seluruh sistem."
       >
         <UserDialog />
       </PageHeader>

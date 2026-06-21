@@ -51,7 +51,7 @@ export function useProductForm({ initialData, onSuccess }: UseProductFormOptions
       setError(result.error)
       toast.error(result.error)
     } else {
-      toast.success(`Service ${isEditing ? "updated" : "created"} successfully`)
+      toast.success(`Layanan berhasil ${isEditing ? "diperbarui" : "dibuat"}`)
       if (!isEditing) form.reset()
       onSuccess?.()
     }
@@ -61,12 +61,12 @@ export function useProductForm({ initialData, onSuccess }: UseProductFormOptions
 
   async function onDelete() {
     if (!isEditing) return
-    if (confirm("Are you sure you want to delete this service?")) {
+    if (confirm("Apakah Anda yakin ingin menghapus layanan ini?")) {
       const result = await deleteProductAction(initialData.id)
       if (result.error) {
         toast.error(result.error)
       } else {
-        toast.success("Service deleted successfully")
+        toast.success("Layanan berhasil dihapus")
         onSuccess?.()
       }
     }

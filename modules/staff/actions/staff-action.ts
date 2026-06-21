@@ -16,7 +16,7 @@ export async function createStaffAction(values: CreateStaffInput) {
     const validatedFields = createStaffSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid data." }
+      return { error: "Data tidak valid." }
     }
 
     const staff = await StaffService.createStaff(validatedFields.data)
@@ -24,7 +24,7 @@ export async function createStaffAction(values: CreateStaffInput) {
     return { success: true, data: staff }
   } catch (error) {
     console.error("Failed to create staff:", error)
-    return { error: "Failed to create staff." }
+    return { error: "Gagal membuat staf." }
   }
 }
 
@@ -33,7 +33,7 @@ export async function updateStaffAction(values: UpdateStaffInput) {
     const validatedFields = updateStaffSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid data." }
+      return { error: "Data tidak valid." }
     }
 
     const { id, ...data } = validatedFields.data
@@ -42,7 +42,7 @@ export async function updateStaffAction(values: UpdateStaffInput) {
     return { success: true, data: staff }
   } catch (error) {
     console.error("Failed to update staff:", error)
-    return { error: "Failed to update staff." }
+    return { error: "Gagal memperbarui staf." }
   }
 }
 
@@ -53,6 +53,6 @@ export async function deleteStaffAction(id: string) {
     return { success: true }
   } catch (error) {
     console.error("Failed to delete staff:", error)
-    return { error: "Failed to delete staff." }
+    return { error: "Gagal menghapus staf." }
   }
 }

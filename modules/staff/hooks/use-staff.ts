@@ -37,7 +37,7 @@ export function useCreateStaff(onSuccess?: () => void) {
       setError(result.error)
       toast.error(result.error)
     } else {
-      toast.success("Staff member created successfully!")
+      toast.success("Anggota staf berhasil dibuat!")
       form.reset()
       onSuccess?.()
     }

@@ -6,9 +6,11 @@ import { StaffTable } from "@/modules/staff/components/staff-table"
 import { StaffDialog } from "@/modules/staff/components/staff-dialog"
 import { PageHeader } from "@/components/page-header"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
-  title: "Staff Management | OKGO POS",
-  description: "Manage your staff members globally.",
+  title: "Manajemen Staf | OKGO POS",
+  description: "Kelola anggota staf Anda secara global.",
 }
 
 export default async function StaffPage() {
@@ -21,8 +23,8 @@ export default async function StaffPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Staff Management"
-        description="Manage your staff members globally."
+        title="Manajemen Staf"
+        description="Kelola anggota staf Anda secara global."
       >
         <StaffDialog
           workPositions={workPositions.map(wp => ({ id: wp.id, name: wp.name }))}

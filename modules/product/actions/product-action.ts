@@ -14,7 +14,7 @@ export async function createProductAction(values: CreateProductInput) {
     const validatedFields = createProductSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid data." }
+      return { error: "Data tidak valid." }
     }
 
     const product = await ProductService.createProduct(validatedFields.data)
@@ -22,7 +22,7 @@ export async function createProductAction(values: CreateProductInput) {
     return { success: true, data: product }
   } catch (error) {
     console.error("Failed to create product:", error)
-    return { error: "Failed to create product." }
+    return { error: "Gagal membuat produk." }
   }
 }
 
@@ -31,7 +31,7 @@ export async function updateProductAction(values: UpdateProductInput) {
     const validatedFields = updateProductSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid data." }
+      return { error: "Data tidak valid." }
     }
 
     const { id, ...data } = validatedFields.data
@@ -40,7 +40,7 @@ export async function updateProductAction(values: UpdateProductInput) {
     return { success: true, data: product }
   } catch (error) {
     console.error("Failed to update product:", error)
-    return { error: "Failed to update product." }
+    return { error: "Gagal memperbarui produk." }
   }
 }
 
@@ -51,6 +51,6 @@ export async function deleteProductAction(id: string) {
     return { success: true }
   } catch (error) {
     console.error("Failed to delete product:", error)
-    return { error: "Failed to delete product." }
+    return { error: "Gagal menghapus produk." }
   }
 }

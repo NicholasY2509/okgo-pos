@@ -8,5 +8,5 @@ interface StaffTableProps {
 }
 
 export function StaffTable({ data }: StaffTableProps) {
-  return <DataTable columns={staffColumns} data={data} emptyMessage="No staff found." />
+  return <DataTable columns={staffColumns} data={data} emptyMessage="Tidak ada staf yang ditemukan." />
 }

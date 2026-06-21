@@ -10,7 +10,7 @@ export async function createUserAction(values: CreateUserInput) {
     const validatedFields = createUserSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid user data." }
+      return { error: "Data pengguna tidak valid." }
     }
 
     const user = await UserService.createUser(validatedFields.data)
@@ -19,10 +19,10 @@ export async function createUserAction(values: CreateUserInput) {
     return { success: true, data: user }
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return { error: "Email already exists." }
+      return { error: "Email sudah terdaftar." }
     }
     console.error("Failed to create user:", error)
-    return { error: "Failed to create user." }
+    return { error: "Gagal membuat pengguna." }
   }
 }
 
@@ -31,7 +31,7 @@ export async function updateUserAction(values: UpdateUserInput) {
     const validatedFields = updateUserSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid user data." }
+      return { error: "Data pengguna tidak valid." }
     }
 
     const { id, ...data } = validatedFields.data
@@ -42,10 +42,10 @@ export async function updateUserAction(values: UpdateUserInput) {
     return { success: true, data: user }
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return { error: "Email already exists." }
+      return { error: "Email sudah terdaftar." }
     }
     console.error("Failed to update user:", error)
-    return { error: "Failed to update user." }
+    return { error: "Gagal memperbarui pengguna." }
   }
 }
 
@@ -56,6 +56,6 @@ export async function deleteUserAction(id: string) {
     return { success: true }
   } catch (error) {
     console.error("Failed to delete user:", error)
-    return { error: "Failed to delete user." }
+    return { error: "Gagal menghapus pengguna." }
   }
 }

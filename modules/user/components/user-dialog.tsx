@@ -25,17 +25,17 @@ export function UserDialog({ initialData }: UserDialogProps) {
         ) : (
           <Button>
             <Plus className="h-4 w-4 mr-2" /> 
-            Add User
+            Tambah Pengguna
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit User" : "Create New User"}</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Pengguna" : "Buat Pengguna Baru"}</DialogTitle>
           <DialogDescription>
             {isEditing 
-              ? "Make changes to the user's details below." 
-              : "Add a new user to the system."}
+              ? "Buat perubahan pada detail pengguna di bawah ini." 
+              : "Tambahkan pengguna baru ke sistem."}
           </DialogDescription>
         </DialogHeader>
         <UserForm initialData={initialData} onSuccess={() => setOpen(false)} />

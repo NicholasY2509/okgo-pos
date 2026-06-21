@@ -5,8 +5,8 @@ import { WorkPositionDialog } from "@/modules/work-position/components/work-posi
 import { PageHeader } from "@/components/page-header"
 
 export const metadata: Metadata = {
-  title: "Work Positions | OKGO POS",
-  description: "Manage work positions for your staff.",
+  title: "Posisi Pekerjaan | OKGO POS",
+  description: "Kelola posisi pekerjaan untuk staf Anda.",
 }
 
 export default async function WorkPositionsPage() {
@@ -15,8 +15,8 @@ export default async function WorkPositionsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Work Positions"
-        description="Manage work positions for your staff."
+        title="Posisi Pekerjaan"
+        description="Kelola posisi pekerjaan untuk staf Anda."
       >
         <WorkPositionDialog />
       </PageHeader>

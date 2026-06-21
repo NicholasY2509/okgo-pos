@@ -9,7 +9,7 @@ export async function createBranchAction(values: CreateBranchInput) {
     const validatedFields = createBranchSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid branch data." }
+      return { error: "Data cabang tidak valid." }
     }
 
     const branch = await BranchService.createBranch(validatedFields.data)
@@ -19,7 +19,7 @@ export async function createBranchAction(values: CreateBranchInput) {
     return { success: true, data: branch }
   } catch (error) {
     console.error("Failed to create branch:", error)
-    return { error: "Failed to create branch." }
+    return { error: "Gagal membuat cabang." }
   }
 }
 
@@ -28,7 +28,7 @@ export async function updateBranchAction(values: UpdateBranchInput) {
     const validatedFields = updateBranchSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid branch data." }
+      return { error: "Data cabang tidak valid." }
     }
 
     const { id, ...data } = validatedFields.data
@@ -39,7 +39,7 @@ export async function updateBranchAction(values: UpdateBranchInput) {
     return { success: true, data: branch }
   } catch (error) {
     console.error("Failed to update branch:", error)
-    return { error: "Failed to update branch." }
+    return { error: "Gagal memperbarui cabang." }
   }
 }
 
@@ -48,7 +48,7 @@ export async function assignUserToBranchAction(values: AssignUserBranchInput) {
     const validatedFields = assignUserBranchSchema.safeParse(values)
 
     if (!validatedFields.success) {
-      return { error: "Invalid assignment data." }
+      return { error: "Data penugasan tidak valid." }
     }
 
     const branchUser = await BranchService.assignUserToBranch(validatedFields.data)
@@ -58,6 +58,6 @@ export async function assignUserToBranchAction(values: AssignUserBranchInput) {
     return { success: true, data: branchUser }
   } catch (error) {
     console.error("Failed to assign user:", error)
-    return { error: "Failed to assign user to branch." }
+    return { error: "Gagal menugaskan pengguna ke cabang." }
   }
 }

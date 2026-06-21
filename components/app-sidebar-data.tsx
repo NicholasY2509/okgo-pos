@@ -7,57 +7,64 @@ import {
   LayoutDashboardIcon,
   StoreIcon,
   BriefcaseIcon,
-  ContactIcon
+  ContactIcon,
+  TicketIcon
 } from "lucide-react"
 
 export const adminNav = [
   {
-    label: "Main",
+    label: "Utama",
     items: [
       {
-        title: "Dashboard",
+        title: "Dasbor",
         url: "/",
         icon: (<LayoutDashboardIcon />),
         roles: ["Admin"],
       },
       {
-        title: "Branches",
+        title: "Cabang",
         url: "/branches",
         icon: (<BuildingIcon />),
         roles: ["Admin"],
       },
       {
-        title: "Products & Services",
+        title: "Produk & Layanan",
         url: "/products",
         icon: (<StoreIcon />),
+        roles: ["Admin"],
+      },
+      {
+        title: "Voucher",
+        url: "/vouchers",
+        icon: (<TicketIcon />),
         roles: ["Admin"],
       },
     ]
   },
   {
-    label: "Staff & Users",
+    label: "Staf & Pengguna",
     items: [
       {
-        title: "Users",
+        title: "Pengguna",
         url: "/users",
         icon: (<UsersIcon />),
         roles: ["Admin"],
       },
       // {
-      //   title: "Settings",
+      //   title: "Pengaturan",
       //   url: "/settings",
       //   icon: (<Settings2Icon />),
       //   roles: ["Admin"],
       // },
       {
-        title: "Staff",
+        title: "Staf",
         url: "/staff",
         icon: (<ContactIcon />),
         roles: ["Admin"],
       },
 
       {
-        title: "Work Positions",
+        title: "Posisi Kerja",
         url: "/work-positions",
         icon: (<BriefcaseIcon />),
         roles: ["Admin"],
@@ -68,24 +75,24 @@ export const adminNav = [
 
 export const branchNav = [
   {
-    label: "Branch Tools",
+    label: "Alat Cabang",
     items: [
       {
-        title: "POS Terminal",
+        title: "Kasir POS",
         url: "/pos",
         icon: (<StoreIcon />),
         roles: ["Admin", "Manager", "Cashier"],
         items: [],
       },
       {
-        title: "HRIS & Payroll",
+        title: "HRIS & Penggajian",
         url: "/hris",
         icon: (<BriefcaseIcon />),
         roles: ["Admin", "Manager"],
         items: [],
       },
       {
-        title: "Accounting",
+        title: "Akuntansi",
         url: "/accounting",
         icon: (<CalculatorIcon />),
         roles: ["Admin", "Manager"],

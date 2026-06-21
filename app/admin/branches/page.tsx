@@ -8,14 +8,16 @@ import { Badge } from "@/components/ui/badge"
 
 import { PageHeader } from "@/components/page-header"
 
+export const dynamic = "force-dynamic"
+
 export default async function BranchesPage() {
   const branches = await BranchService.getAllBranches()
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Branches"
-        description="Manage all your store locations and tenant access."
+        title="Cabang"
+        description="Kelola semua lokasi toko dan akses penyewa Anda."
       >
         <BranchDialog />
       </PageHeader>
@@ -32,22 +34,22 @@ export default async function BranchesPage() {
                   </CardDescription>
                 </div>
                 <Badge variant={branch.isActive ? "default" : "secondary"} className="font-normal text-xs">
-                  {branch.isActive ? "Active" : "Inactive"}
+                  {branch.isActive ? "Aktif" : "Tidak Aktif"}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
               <div className="flex items-start gap-3 text-sm">
                 <MapPin className="h-4 w-4 shrink-0 text-gray-400 mt-0.5" />
-                <span className="leading-snug">{branch.address || "No address provided"}</span>
+                <span className="leading-snug">{branch.address || "Tidak ada alamat"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="h-4 w-4 shrink-0 text-gray-400" />
-                <span>{branch.phone || "No phone provided"}</span>
+                <span>{branch.phone || "Tidak ada telepon"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Users className="h-4 w-4 shrink-0 text-gray-400" />
-                <span>{branch._count.users} Users Assigned</span>
+                <span>{branch._count.users} Pengguna Ditugaskan</span>
               </div>
             </CardContent>
             <CardFooter className="border-t flex justify-between gap-2">
@@ -56,11 +58,11 @@ export default async function BranchesPage() {
                 <Link href={`http://${branch.subdomain}.localhost:3000/pos`} target="_blank">
                   <Button variant="outline" size="sm" className="h-8 shadow-sm">
                     <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                    Visit
+                    Kunjungi
                   </Button>
                 </Link>
-                <Link href={`/branches/${branch.subdomain}/settings`}>
-                  <Button variant="default" size="sm" className="h-8 shadow-sm">Manage</Button>
+                <Link href={`/admin/branches/${branch.subdomain}/settings`}>
+                  <Button variant="default" size="sm" className="h-8 shadow-sm">Kelola</Button>
                 </Link>
               </div>
             </CardFooter>
@@ -68,8 +70,8 @@ export default async function BranchesPage() {
         ))}
         {branches.length === 0 && (
           <div className="col-span-full p-12 text-center border border-dashed rounded-xl">
-            <h3 className="text-lg font-medium ">No branches found</h3>
-            <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first branch location to get started.</p>
+            <h3 className="text-lg font-medium ">Cabang tidak ditemukan</h3>
+            <p className="text-sm text-muted-foreground mt-1 mb-4">Buat lokasi cabang pertama Anda untuk memulai.</p>
             <BranchDialog />
           </div>
         )}

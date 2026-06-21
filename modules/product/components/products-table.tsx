@@ -14,8 +14,8 @@ export function ProductsTable({ products, categories }: ProductsTableProps) {
   if (products.length === 0) {
     return (
       <div className="p-12 text-center border border-dashed rounded-xl bg-card">
-        <h3 className="text-lg font-medium">No services found</h3>
-        <p className="text-sm text-muted-foreground mt-1 mb-4">Add your first service or product.</p>
+        <h3 className="text-lg font-medium">Layanan tidak ditemukan</h3>
+        <p className="text-sm text-muted-foreground mt-1 mb-4">Tambahkan layanan atau produk pertama Anda.</p>
         <ProductDialog categories={categories} />
       </div>
     )
@@ -23,5 +23,5 @@ export function ProductsTable({ products, categories }: ProductsTableProps) {
 
   const columns = useMemo(() => getProductsColumns(categories), [categories])
 
-  return <DataTable columns={columns} data={products} emptyMessage="No services found." />
+  return <DataTable columns={columns} data={products} emptyMessage="Layanan tidak ditemukan." />
 }

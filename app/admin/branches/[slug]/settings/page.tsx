@@ -6,6 +6,8 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { notFound } from "next/navigation"
 
+export const dynamic = "force-dynamic"
+
 export default async function BranchSettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 
@@ -29,19 +31,19 @@ export default async function BranchSettingsPage({ params }: { params: Promise<{
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold">Branch Settings: {branch.name}</h1>
+        <h1 className="text-3xl font-bold">Pengaturan Cabang: {branch.name}</h1>
       </div>
 
       <div className="flex gap-6">
         <div className="flex-1 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Assigned Users</CardTitle>
-              <CardDescription>Users who have access to this branch.</CardDescription>
+              <CardTitle>Pengguna Ditugaskan</CardTitle>
+              <CardDescription>Pengguna yang memiliki akses ke cabang ini.</CardDescription>
             </CardHeader>
             <CardContent>
               {branchUsers.length === 0 ? (
-                <div className="text-muted-foreground text-sm py-4">No users assigned to this branch yet.</div>
+                <div className="text-muted-foreground text-sm py-4">Belum ada pengguna yang ditugaskan ke cabang ini.</div>
               ) : (
                 <div className="space-y-4">
                   {branchUsers.map((bu) => (

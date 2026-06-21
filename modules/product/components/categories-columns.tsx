@@ -8,12 +8,12 @@ import { Edit } from "lucide-react"
 export const getCategoriesColumns = (): ColumnDef<any>[] => [
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Nama",
     cell: ({ row }) => <div className="font-medium">{row.getValue("name") as string}</div>
   },
   {
     accessorKey: "description",
-    header: "Description",
+    header: "Deskripsi",
     cell: ({ row }) => {
       const description = row.getValue("description") as string | null
       return (
@@ -25,15 +25,15 @@ export const getCategoriesColumns = (): ColumnDef<any>[] => [
   },
   {
     accessorKey: "servicesCount",
-    header: "Services Count",
+    header: "Jumlah Layanan",
     cell: ({ row }) => {
       const count = row.original._count?.products || 0
-      return <div>{count} services</div>
+      return <div>{count} layanan</div>
     }
   },
   {
     id: "actions",
-    header: () => <div className="text-right pr-4">Actions</div>,
+    header: () => <div className="text-right pr-4">Aksi</div>,
     cell: ({ row }) => {
       const category = row.original
       return (
