@@ -103,9 +103,11 @@ function PacketCard({
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex justify-between items-center">
             <span>{packet.name}</span>
-            <span className="text-sm font-normal px-2 py-1 bg-secondary rounded-md">
-              {packet.quantity} Vouchers
-            </span>
+            {packet.codeSuffix && (
+              <span className="text-sm font-normal px-2 py-1 bg-secondary rounded-md">
+                {packet.codeSuffix}
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="pb-2">
@@ -119,7 +121,7 @@ function PacketCard({
             />
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Durasi: {packet.duration ? `${packet.duration} Bulan` : "Tanpa Kadaluarsa"}
+            Masa Berlaku: {packet.validityDays ? `${packet.validityDays} Hari` : "Tanpa Kadaluarsa"}
           </p>
         </CardContent>
         <CardFooter className="flex justify-end space-x-2 pt-4">

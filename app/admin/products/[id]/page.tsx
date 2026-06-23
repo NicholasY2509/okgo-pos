@@ -37,7 +37,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const formattedPackets = voucherPackets.map(vp => ({
     ...vp,
-    price: Number(vp.price)
+    price: Number(vp.price),
+    totalCreditAmount: vp.totalCreditAmount ? Number(vp.totalCreditAmount) : null
   }))
 
   return (

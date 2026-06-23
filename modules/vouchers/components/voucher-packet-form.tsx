@@ -10,7 +10,7 @@ import { Controller } from "react-hook-form"
 import { NumericFormat } from "react-number-format"
 
 interface VoucherPacketFormProps {
-  productId: string
+  productId?: string
   initialData?: VoucherPacketInput & { id: string }
   onSuccess?: () => void
   onCancel?: () => void
@@ -29,7 +29,7 @@ export function VoucherPacketForm({ productId, initialData, onSuccess, onCancel 
         <Label htmlFor="name">Nama Paket</Label>
         <Input
           id="name"
-          placeholder="cth. Paket 6 Sesi"
+          placeholder="cth. Paket 6 Sesi / Voucher Rp100rb"
           {...form.register("name")}
         />
         {form.formState.errors.name && (
@@ -37,56 +37,94 @@ export function VoucherPacketForm({ productId, initialData, onSuccess, onCancel 
         )}
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="codeSuffix">Code Suffix (Opsional)</Label>
+        <Input
+          id="codeSuffix"
+          placeholder="cth. PJT, SKS"
+          {...form.register("codeSuffix")}
+        />
+        {form.formState.errors.codeSuffix && (
+          <p className="text-sm text-red-500">{form.formState.errors.codeSuffix.message}</p>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="quantity">Kuantitas</Label>
+          <Label htmlFor="totalVisitCount">Jumlah Kunjungan (Opsional)</Label>
           <Input
-            id="quantity"
+            id="totalVisitCount"
             type="number"
             min="1"
-            {...form.register("quantity")}
+            placeholder="cth. 10"
+            {...form.register("totalVisitCount")}
           />
-          {form.formState.errors.quantity && (
-            <p className="text-sm text-red-500">{form.formState.errors.quantity.message}</p>
+          {form.formState.errors.totalVisitCount && (
+            <p className="text-sm text-red-500">{form.formState.errors.totalVisitCount.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="price">Harga</Label>
+          <Label htmlFor="totalCreditAmount">Jumlah Kredit (Opsional)</Label>
           <Controller
             control={form.control}
-            name="price"
+            name="totalCreditAmount"
             render={({ field }) => (
               <NumericFormat
-                id="price"
+                id="totalCreditAmount"
                 customInput={Input}
                 thousandSeparator="."
                 decimalSeparator=","
                 prefix="Rp "
+                placeholder="cth. Rp 500.000"
                 onValueChange={(values) => {
-                  field.onChange(values.floatValue || 0)
+                  field.onChange(values.floatValue || null)
                 }}
                 value={field.value as number | undefined}
               />
             )}
           />
-          {form.formState.errors.price && (
-            <p className="text-sm text-red-500">{form.formState.errors.price.message}</p>
+          {form.formState.errors.totalCreditAmount && (
+            <p className="text-sm text-red-500">{form.formState.errors.totalCreditAmount.message}</p>
           )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="duration">Durasi (Bulan - Opsional)</Label>
+        <Label htmlFor="price">Harga Jual</Label>
+        <Controller
+          control={form.control}
+          name="price"
+          render={({ field }) => (
+            <NumericFormat
+              id="price"
+              customInput={Input}
+              thousandSeparator="."
+              decimalSeparator=","
+              prefix="Rp "
+              onValueChange={(values) => {
+                field.onChange(values.floatValue || 0)
+              }}
+              value={field.value as number | undefined}
+            />
+          )}
+        />
+        {form.formState.errors.price && (
+          <p className="text-sm text-red-500">{form.formState.errors.price.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="validityDays">Masa Berlaku (Hari - Opsional)</Label>
         <Input
-          id="duration"
+          id="validityDays"
           type="number"
           min="1"
           placeholder="Biarkan kosong untuk tanpa kadaluarsa"
-          {...form.register("duration")}
+          {...form.register("validityDays")}
         />
-        {form.formState.errors.duration && (
-          <p className="text-sm text-red-500">{form.formState.errors.duration.message}</p>
+        {form.formState.errors.validityDays && (
+          <p className="text-sm text-red-500">{form.formState.errors.validityDays.message}</p>
         )}
       </div>
 
@@ -100,6 +138,12 @@ export function VoucherPacketForm({ productId, initialData, onSuccess, onCancel 
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
+      {form.formState.errors.root?.serverError?.message && (
+         <p className="text-sm text-red-500">{form.formState.errors.root.serverError.message}</p>
+      )}
+      {form.formState.errors.totalVisitCount && form.formState.errors.totalCreditAmount && (
+          <p className="text-sm text-red-500">Isi salah satu dari Jumlah Kunjungan atau Kredit</p>
+      )}
 
       <div className="flex justify-end space-x-2 pt-4">
         {onCancel && (

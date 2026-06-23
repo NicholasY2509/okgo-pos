@@ -2,7 +2,7 @@ import { prisma } from '../lib/prisma'
 import bcrypt from 'bcryptjs'
 
 async function main() {
-  const email = ' '
+  const email = 'admin@example.com'
 
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
@@ -45,7 +45,7 @@ async function main() {
     })
     createdRoles[role.name] = r.id
   }
-  
+
   console.log('✅ Default roles created successfully')
 
   // Seed Branches
@@ -80,9 +80,9 @@ async function main() {
       const lName = lastNames[Math.floor(Math.random() * lastNames.length)]
       const wp = wps[Math.floor(Math.random() * wps.length)]
       const branch = createdBranches[Math.floor(Math.random() * createdBranches.length)]
-      
+
       const staffEmail = `${fName.toLowerCase()}.${lName.toLowerCase()}${i}@example.com`
-      
+
       const staff = await prisma.staff.create({
         data: {
           firstName: fName,
@@ -105,7 +105,7 @@ async function main() {
             password: passwordHash,
           }
         })
-        
+
         await prisma.staffUser.create({
           data: {
             staffId: staff.id,

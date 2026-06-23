@@ -6,7 +6,7 @@ import { createVoucherPacketAction, updateVoucherPacketAction, deleteVoucherPack
 import { voucherPacketSchema, type VoucherPacketInput } from "../schemas/voucher-packet"
 
 interface UseVoucherPacketProps {
-  productId: string
+  productId?: string
   initialData?: VoucherPacketInput & { id: string }
   onSuccess?: () => void
 }
@@ -19,11 +19,13 @@ export function useVoucherPacket({ productId, initialData, onSuccess }: UseVouch
     resolver: zodResolver(voucherPacketSchema) as any,
     defaultValues: initialData || {
       name: "",
-      quantity: 1,
       price: 0,
-      duration: null,
+      codeSuffix: null,
+      totalVisitCount: null,
+      totalCreditAmount: null,
+      validityDays: null,
       isActive: true,
-      productId: productId
+      productId: productId || null
     },
   })
 
@@ -31,7 +33,7 @@ export function useVoucherPacket({ productId, initialData, onSuccess }: UseVouch
     setError(null)
 
     // Ensure productId is always correctly set
-    const submitValues = { ...values, productId }
+    const submitValues = { ...values, productId: productId || null }
 
     let result;
     if (initialData?.id) {
@@ -55,7 +57,7 @@ export function useVoucherPacket({ productId, initialData, onSuccess }: UseVouch
   async function onDelete(id: string) {
     try {
       setIsDeleting(true)
-      const result = await deleteVoucherPacketAction(id, productId)
+      const result = await deleteVoucherPacketAction(id, productId || "")
       if (result.error) {
         toast.error(result.error)
       } else {

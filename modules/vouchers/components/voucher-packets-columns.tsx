@@ -8,14 +8,16 @@ import Link from "next/link"
 export type VoucherPacketTableData = {
   id: string
   name: string
-  quantity: number
-  price: any // It might come as a Decimal from server if not mapped, but we should handle it
-  duration: number | null
+  codeSuffix: string | null
+  price: any 
+  totalVisitCount: number | null
+  totalCreditAmount: any
+  validityDays: number | null
   isActive: boolean
-  productId: string
+  productId: string | null
   product: {
     name: string
-  }
+  } | null
 }
 
 export const voucherPacketsColumns: ColumnDef<VoucherPacketTableData>[] = [
@@ -24,19 +26,21 @@ export const voucherPacketsColumns: ColumnDef<VoucherPacketTableData>[] = [
     header: "Nama",
   },
   {
-    accessorKey: "product.name",
-    header: "Produk",
+    accessorKey: "codeSuffix",
+    header: "Suffix",
     cell: ({ row }) => (
-      <Link href={`/admin/products/${row.original.productId}`} className="text-primary hover:underline">
-        {row.original.product.name}
-      </Link>
+      row.original.codeSuffix ? <Badge variant="outline">{row.original.codeSuffix}</Badge> : "-"
     ),
   },
   {
-    accessorKey: "quantity",
-    header: "Kuantitas",
+    accessorKey: "product.name",
+    header: "Produk",
     cell: ({ row }) => (
-      <Badge variant="outline">{row.original.quantity} Voucher</Badge>
+      row.original.productId && row.original.product ? (
+        <Link href={`/admin/products/${row.original.productId}`} className="text-primary hover:underline">
+          {row.original.product.name}
+        </Link>
+      ) : "-"
     ),
   },
   {
@@ -48,11 +52,21 @@ export const voucherPacketsColumns: ColumnDef<VoucherPacketTableData>[] = [
     },
   },
   {
-    accessorKey: "duration",
-    header: "Durasi",
+    accessorKey: "details",
+    header: "Detail",
     cell: ({ row }) => {
-      const duration = row.original.duration
-      return <div>{duration ? `${duration} Bulan` : "Tanpa Kadaluarsa"}</div>
+      const { totalVisitCount, totalCreditAmount } = row.original
+      if (totalVisitCount) return <div>{totalVisitCount} Kunjungan</div>
+      if (totalCreditAmount) return <div>Kredit {formatIDR(Number(totalCreditAmount))}</div>
+      return "-"
+    },
+  },
+  {
+    accessorKey: "validityDays",
+    header: "Masa Berlaku",
+    cell: ({ row }) => {
+      const duration = row.original.validityDays
+      return <div>{duration ? `${duration} Hari` : "Tanpa Kadaluarsa"}</div>
     },
   },
   {

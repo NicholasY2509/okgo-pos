@@ -1,0 +1,68 @@
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique // e.g. "Admin", "Cashier", "Manager"
+  description String?
+
+  permissions RolePermission[]
+  branchUsers BranchUser[]
+}
+
+model Permission {
+  id          String  @id @default(cuid())
+  action      String  @unique // e.g. "sales:create", "inventory:read"
+  description String?
+
+  roles RolePermission[]
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model WorkPosition {
+  id          String   @id @default(cuid())
+  name        String // e.g., Therapist, Receptionist
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  staff Staff[]
+}
+
+model Staff {
+  id             String  @id @default(cuid())
+  firstName      String
+  lastName       String
+  phone          String?
+  email          String?
+  isActive       Boolean @default(true)
+  workPositionId String
+  branchId       String? // Optional for central admin/global staff
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workPosition WorkPosition @relation(fields: [workPositionId], references: [id])
+  branch       Branch?      @relation(fields: [branchId], references: [id])
+  staffUsers   StaffUser[]
+}
+
+model StaffUser {
+  id        String   @id @default(cuid())
+  staffId   String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, userId])
+}

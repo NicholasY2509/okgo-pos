@@ -1,0 +1,236 @@
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  VOIDED
+  REFUNDED
+  PARTIAL_REFUND
+}
+
+enum PaymentMethodType {
+  CASH
+  EDC
+  QRIS
+  TRANSFER
+  VOUCHER
+}
+
+enum TransactionItemType {
+  SERVICE
+  VOUCHER_PACKET
+}
+
+enum CustomerVoucherStatus {
+  ACTIVE
+  USED_UP
+  EXPIRED
+  VOID
+}
+
+enum ServiceSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Transaction {
+  id                String              @id @default(cuid())
+
+  tenantId          String?
+  branchId          String
+  customerId        String?
+  cashierId         String?
+
+  transactionNumber String              @unique
+
+  subtotal          Decimal             
+  discountTotal     Decimal             @default(0) 
+  taxTotal          Decimal             @default(0) 
+  totalAmount       Decimal             
+  paidAmount        Decimal             @default(0) 
+  changeAmount      Decimal             @default(0) 
+
+  status            TransactionStatus   @default(PENDING)
+
+  customer          Customer?           @relation(fields: [customerId], references: [id])
+  items             TransactionItem[]
+  payments          TransactionPayment[]
+  voucherRedemptions VoucherRedemption[]
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([branchId])
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model TransactionPayment {
+  id              String        @id @default(cuid())
+
+  transactionId   String
+  paymentMethodId String
+
+  amount          Decimal       
+  referenceNumber String?
+  notes           String?
+
+  transaction     Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([transactionId])
+  @@index([paymentMethodId])
+}
+
+model PaymentMethod {
+  id          String              @id @default(cuid())
+
+  name        String
+  type        String              // Enum mapped as String for SQLite compatibility: CASH, EDC, QRIS, TRANSFER, VOUCHER
+  isActive    Boolean             @default(true)
+
+  payments    TransactionPayment[]
+
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model TransactionItem {
+  id                String              @id @default(cuid())
+
+  transactionId     String
+  type              String              // SERVICE, VOUCHER_PACKET
+
+  serviceId         String?
+  voucherPacketId   String?
+
+  itemNameSnapshot  String
+  unitPrice         Decimal             
+  quantity          Int                 @default(1)
+  discountAmount    Decimal             @default(0) 
+  subtotal          Decimal             
+
+  transaction       Transaction         @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  serviceSessions   ServiceSession[]
+  voucherRedemptions VoucherRedemption[]
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([transactionId])
+  @@index([serviceId])
+  @@index([voucherPacketId])
+}
+
+model CustomerVoucher {
+  id                        String                @id @default(cuid())
+
+  code                      String                @unique
+
+  customerId                String
+  voucherPacketId           String
+
+  sourceTransactionId       String?
+  sourceTransactionItemId   String?
+
+  initialVisitCount         Int?
+  remainingVisitCount       Int?
+
+  initialCreditAmount       Decimal?              
+  remainingCreditAmount     Decimal?              
+
+  status                    String                @default("ACTIVE") // ACTIVE, USED_UP, EXPIRED, VOID
+  expiresAt                 DateTime?
+
+  customer                  Customer              @relation(fields: [customerId], references: [id])
+  voucherPacket             VoucherPacket         @relation(fields: [voucherPacketId], references: [id])
+
+  redemptions               VoucherRedemption[]
+
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime              @updatedAt
+
+  @@index([customerId])
+  @@index([voucherPacketId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model VoucherRedemption {
+  id                  String            @id @default(cuid())
+
+  customerVoucherId   String
+  transactionId       String
+  transactionItemId   String?
+  serviceSessionId    String?
+
+  redeemedVisitCount  Int?
+  redeemedAmount      Decimal?          
+
+  redeemedAt          DateTime          @default(now())
+
+  customerVoucher     CustomerVoucher   @relation(fields: [customerVoucherId], references: [id])
+  transaction         Transaction       @relation(fields: [transactionId], references: [id])
+  transactionItem     TransactionItem?  @relation(fields: [transactionItemId], references: [id])
+  serviceSession      ServiceSession?   @relation(fields: [serviceSessionId], references: [id])
+
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([customerVoucherId])
+  @@index([transactionId])
+  @@index([transactionItemId])
+  @@index([serviceSessionId])
+}
+
+model ServiceSession {
+  id                String               @id @default(cuid())
+
+  transactionItemId String
+  customerId        String?
+  serviceId         String
+  staffId           String
+  roomId            String
+  branchId          String
+
+  status            String               @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+
+  startTime         DateTime?
+  endTime           DateTime?
+
+  transactionItem   TransactionItem      @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
+  voucherRedemptions VoucherRedemption[]
+
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([transactionItemId])
+  @@index([customerId])
+  @@index([serviceId])
+  @@index([staffId])
+  @@index([roomId])
+  @@index([branchId])
+  @@index([status])
+}
+
+model Customer {
+  id              String             @id @default(cuid())
+
+  name            String
+  phone           String?
+  email           String?
+
+  vouchers        CustomerVoucher[]
+  transactions    Transaction[]
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([phone])
+  @@index([email])
+}

@@ -7,7 +7,12 @@ export default async function VouchersPage() {
 
   const voucherPackets = rawVoucherPackets.map(packet => ({
     ...packet,
-    price: Number(packet.price)
+    price: Number(packet.price),
+    totalCreditAmount: packet.totalCreditAmount ? Number(packet.totalCreditAmount) : null,
+    product: packet.product ? {
+      ...packet.product,
+      price: Number(packet.product.price)
+    } : null
   }))
 
   return (

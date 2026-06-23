@@ -1,0 +1,49 @@
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal  @default(0)
+  duration    Int? // Duration in minutes
+  isActive    Boolean  @default(true)
+  image       String?
+  categoryId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category       Category?       @relation(fields: [categoryId], references: [id])
+  voucherPackets VoucherPacket[]
+}
+
+model VoucherPacket {
+  id                  String             @id @default(cuid())
+
+  name                String
+  codeSuffix          String?
+
+  price               Decimal            
+
+  totalVisitCount     Int?
+  totalCreditAmount   Decimal?           
+
+  validityDays        Int?
+  isActive            Boolean            @default(true)
+
+  productId           String?
+
+  customerVouchers    CustomerVoucher[]
+
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  product             Product?           @relation(fields: [productId], references: [id], onDelete: Cascade)
+}

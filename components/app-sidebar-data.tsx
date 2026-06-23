@@ -39,11 +39,27 @@ export const adminNav = [
         url: "/vouchers",
         icon: (<TicketIcon />),
         roles: ["Admin"],
+        items: [
+          {
+            title: "Paket Voucher",
+            url: "/vouchers",
+          },
+          {
+            title: "Voucher Terbit",
+            url: "/vouchers/issued",
+          }
+        ]
       },
       {
         title: "Ruang",
         url: "/rooms",
         icon: (<ArmchairIcon />),
+        roles: ["Admin"],
+      },
+      {
+        title: "Pelanggan",
+        url: "/customers",
+        icon: (<UsersIcon />),
         roles: ["Admin"],
       },
     ]
@@ -57,12 +73,12 @@ export const adminNav = [
         icon: (<UsersIcon />),
         roles: ["Admin"],
       },
-      // {
-      //   title: "Pengaturan",
-      //   url: "/settings",
-      //   icon: (<Settings2Icon />),
-      //   roles: ["Admin"],
-      // },
+      {
+        title: "Metode Pembayaran",
+        url: "/settings/payment-methods",
+        icon: (<Settings2Icon />),
+        roles: ["Admin"],
+      },
       {
         title: "Staf",
         url: "/staff",
