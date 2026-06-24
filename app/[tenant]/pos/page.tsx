@@ -2,6 +2,8 @@ import { PosClient } from "@/modules/pos/components/pos-client";
 import { PosDataService } from "@/modules/pos/services/pos-data-service";
 import { notFound } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 export default async function POSPage({ params }: { params: Promise<{ tenant: string }> }) {
   const { tenant } = await params;
 
@@ -21,6 +23,7 @@ export default async function POSPage({ params }: { params: Promise<{ tenant: st
       rooms={data.rooms}
       paymentMethods={data.paymentMethods}
       customers={data.customers}
+      activeDiscount={data.activeDiscount}
     />
   );
 }

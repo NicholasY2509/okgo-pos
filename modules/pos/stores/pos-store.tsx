@@ -17,6 +17,9 @@ export type CartItem = {
   discountAmount: number;
   staffName?: string;
   roomName?: string;
+  isVoucherRedemption?: boolean;
+  customerVoucherId?: string;
+  voucherCode?: string;
 };
 
 interface PosState {
@@ -29,6 +32,7 @@ interface PosActions {
   addItem: (item: Omit<CartItem, "cartId">) => void;
   removeItem: (cartId: string) => void;
   updateQuantity: (cartId: string, quantity: number) => void;
+  updateItemDiscount: (cartId: string, discountAmount: number) => void;
   clearCart: () => void;
 }
 
@@ -58,6 +62,10 @@ export const createPosStore = () => {
         updateQuantity: (cartId, quantity) =>
           set((state) => ({
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, quantity } : i)),
+          })),
+        updateItemDiscount: (cartId, discountAmount) =>
+          set((state) => ({
+            items: state.items.map((i) => (i.cartId === cartId ? { ...i, discountAmount } : i)),
           })),
         clearCart: () => set({ items: [], customerId: undefined }),
       }),
@@ -98,6 +106,7 @@ export function usePosCart() {
   const addItem = useStore(store, (s) => s.addItem);
   const removeItem = useStore(store, (s) => s.removeItem);
   const updateQuantity = useStore(store, (s) => s.updateQuantity);
+  const updateItemDiscount = useStore(store, (s) => s.updateItemDiscount);
   const clearCart = useStore(store, (s) => s.clearCart);
 
   const subtotal = items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
@@ -111,6 +120,7 @@ export function usePosCart() {
     addItem,
     removeItem,
     updateQuantity,
+    updateItemDiscount,
     clearCart,
     subtotal,
     discountTotal,

@@ -4,19 +4,38 @@ import { CategoryDialog } from "@/modules/product/components/category-dialog"
 import { ProductDialog } from "@/modules/product/components/product-dialog"
 import { ProductsTable } from "@/modules/product/components/products-table"
 import { CategoriesTable } from "@/modules/product/components/categories-table"
+import { DiscountWeeklyCalendar } from "@/modules/discount/components/discount-weekly-calendar"
+import { DiscountService } from "@/modules/discount/services/discount-service"
+import { BranchService } from "@/modules/branch/services/branch-service"
 import { PageHeader } from "@/components/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 
 export default async function ProductsPage() {
-  const [categories, rawProducts] = await Promise.all([
+  const [categories, rawProducts, rawDiscounts, branches] = await Promise.all([
     CategoryService.getAllCategories(),
-    ProductService.getAllProducts()
+    ProductService.getAllProducts(),
+    DiscountService.getDiscounts(),
+    BranchService.getAllBranches()
   ])
 
   const products = rawProducts.map(p => ({
     ...p,
     price: Number(p.price)
+  }))
+
+  const discounts = rawDiscounts.map(d => ({
+    id: d.id,
+    name: d.name,
+    dayOfWeek: d.dayOfWeek,
+    startTime: d.startTime,
+    endTime: d.endTime,
+    percentage: Number(d.percentage),
+    isActive: d.isActive,
+    branchId: d.branchId,
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
+    branch: d.branch ? { ...d.branch } : null
   }))
 
   return (
@@ -31,6 +50,7 @@ export default async function ProductsPage() {
           <TabsList>
             <TabsTrigger value="services">Layanan / Produk</TabsTrigger>
             <TabsTrigger value="categories">Kategori</TabsTrigger>
+            <TabsTrigger value="discounts">Diskon</TabsTrigger>
           </TabsList>
 
           <div className="flex gap-2">
@@ -49,6 +69,10 @@ export default async function ProductsPage() {
 
         <TabsContent value="categories" className="space-y-6">
           <CategoriesTable categories={categories} />
+        </TabsContent>
+
+        <TabsContent value="discounts" className="space-y-6">
+          <DiscountWeeklyCalendar data={discounts} branches={branches} />
         </TabsContent>
       </Tabs>
     </div>

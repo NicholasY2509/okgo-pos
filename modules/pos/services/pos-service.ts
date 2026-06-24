@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PosCheckoutInput } from "../schemas/pos-schema";
+import { DiscountService } from "../../discount/services/discount-service";
 import crypto from "crypto";
 
 export class PosService {
@@ -24,7 +25,8 @@ export class PosService {
         discountTotal,
         transactionItemsData,
         serviceSessionsData,
-        customerVouchersData
+        customerVouchersData,
+        itemVoucherRedemptionsData
       } = await this.processCartItems(tx, input);
 
       const totalAmount = subtotal - discountTotal;
@@ -35,6 +37,8 @@ export class PosService {
         transactionPaymentsData,
         voucherRedemptionsData
       } = await this.processPayments(tx, input, totalAmount);
+
+      const allVoucherRedemptionsData = [...voucherRedemptionsData, ...itemVoucherRedemptionsData];
 
       const transaction = await tx.transaction.create({
         data: {
@@ -62,7 +66,7 @@ export class PosService {
         transactionItemsData,
         serviceSessionsData,
         customerVouchersData,
-        voucherRedemptionsData
+        allVoucherRedemptionsData
       );
 
       return transaction;
@@ -87,6 +91,9 @@ export class PosService {
     const transactionItemsData: any[] = [];
     const serviceSessionsData: any[] = [];
     const customerVouchersData: any[] = [];
+    const itemVoucherRedemptionsData: any[] = []; // NEW
+
+    const applicableDiscountPercentage = await DiscountService.getApplicableDiscount(input.branchId);
 
     for (const item of input.items) {
       let unitPrice = 0;
@@ -114,6 +121,41 @@ export class PosService {
           customerId: input.customerId || null,
         });
 
+        // Handle item-level voucher redemption
+        if (item.isVoucherRedemption && item.customerVoucherId) {
+          const customerVoucher = await tx.customerVoucher.findUnique({
+            where: { id: item.customerVoucherId },
+            include: { voucherPacket: true }
+          });
+
+          if (!customerVoucher || customerVoucher.customerId !== input.customerId) {
+            throw new Error("Voucher not found or does not belong to the customer.");
+          }
+          if (customerVoucher.status !== "ACTIVE") throw new Error(`Voucher status is ${customerVoucher.status}.`);
+          if (customerVoucher.expiresAt && customerVoucher.expiresAt < new Date()) {
+            throw new Error("Voucher has expired.");
+          }
+
+          if (customerVoucher.remainingVisitCount != null) {
+            if (customerVoucher.remainingVisitCount <= 0) throw new Error("Voucher has no visits left.");
+            await tx.customerVoucher.update({
+              where: { id: customerVoucher.id },
+              data: {
+                remainingVisitCount: customerVoucher.remainingVisitCount - 1,
+                status: customerVoucher.remainingVisitCount - 1 === 0 ? "USED_UP" : "ACTIVE"
+              }
+            });
+            itemVoucherRedemptionsData.push({
+              customerVoucherId: customerVoucher.id,
+              redeemedVisitCount: 1,
+              redeemedAmount: null,
+              _tempItemIndex: transactionItemsData.length // to link later
+            });
+          } else {
+            throw new Error("Item-level redemption only supports visit-based vouchers currently.");
+          }
+        }
+
       } else if (item.type === "VOUCHER_PACKET") {
         if (!input.customerId) {
           throw new Error("Customer is required when purchasing a voucher packet.");
@@ -130,11 +172,20 @@ export class PosService {
         });
       }
 
-      const itemSubtotal = (unitPrice * item.quantity) - item.discountAmount;
+      let totalItemDiscount = 0;
+      if (item.type === "SERVICE") {
+        if (item.isVoucherRedemption) {
+          totalItemDiscount = unitPrice * item.quantity; // 100% discount
+        } else if (applicableDiscountPercentage > 0) {
+          totalItemDiscount = (unitPrice * item.quantity * applicableDiscountPercentage) / 100;
+        }
+      }
+
+      const itemSubtotal = (unitPrice * item.quantity) - totalItemDiscount;
       if (itemSubtotal < 0) throw new Error(`Discount cannot exceed item total for ${itemNameSnapshot}`);
 
       subtotal += (unitPrice * item.quantity);
-      discountTotal += item.discountAmount;
+      discountTotal += totalItemDiscount;
 
       transactionItemsData.push({
         type: item.type,
@@ -143,13 +194,13 @@ export class PosService {
         itemNameSnapshot,
         unitPrice,
         quantity: item.quantity,
-        discountAmount: item.discountAmount,
+        discountAmount: totalItemDiscount,
         subtotal: itemSubtotal,
         _tempType: item.type
       });
     }
 
-    return { subtotal, discountTotal, transactionItemsData, serviceSessionsData, customerVouchersData };
+    return { subtotal, discountTotal, transactionItemsData, serviceSessionsData, customerVouchersData, itemVoucherRedemptionsData };
   }
 
   private static async processPayments(tx: any, input: PosCheckoutInput, totalAmount: number) {
@@ -221,6 +272,7 @@ export class PosService {
         paymentMethodId: payment.paymentMethodId,
         amount: payment.amount,
         referenceNumber: payment.referenceNumber || null,
+        notes: payment.notes || null,
       });
     }
 
@@ -268,7 +320,12 @@ export class PosService {
 
           if (voucherRedemptionsData.length > 0) {
             for (const vr of voucherRedemptionsData) {
-              if (!vr.transactionId) {
+              if (vr._tempItemIndex === serviceIndex && !vr.transactionId) {
+                vr.transactionId = transaction.id;
+                vr.transactionItemId = createdItem.id;
+                vr.serviceSessionId = createdSession.id;
+              } else if (!vr._tempItemIndex && !vr.transactionId) {
+                // Payments voucher redemption doesn't have a specific item
                 vr.transactionId = transaction.id;
                 vr.transactionItemId = createdItem.id;
                 vr.serviceSessionId = createdSession.id;
@@ -330,15 +387,18 @@ export class PosService {
     }
 
     for (const vr of voucherRedemptionsData) {
+      const data: any = {
+        customerVoucherId: vr.customerVoucherId,
+        transactionId: vr.transactionId || transaction.id,
+        redeemedVisitCount: vr.redeemedVisitCount,
+        redeemedAmount: vr.redeemedAmount
+      };
+
+      if (vr.transactionItemId) data.transactionItemId = vr.transactionItemId;
+      if (vr.serviceSessionId) data.serviceSessionId = vr.serviceSessionId;
+
       await tx.voucherRedemption.create({
-        data: {
-          customerVoucherId: vr.customerVoucherId,
-          transactionId: transaction.id,
-          transactionItemId: vr.transactionItemId || null,
-          serviceSessionId: vr.serviceSessionId || null,
-          redeemedVisitCount: vr.redeemedVisitCount,
-          redeemedAmount: vr.redeemedAmount
-        }
+        data
       })
     }
   }

@@ -27,7 +27,7 @@ export function PosCart({ cart, customers, onCheckout }: PosCartProps) {
         {/* Decorative top bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-primary"></div>
 
-        <div className="flex items-center gap-2 mb-6 mt-1">
+        <div className="flex items-center gap-2 mb-6 mt-1 shrink-0">
           <ShoppingCart className="w-6 h-6 text-primary" />
           <h3 className="text-2xl font-bold text-foreground tracking-tight">Keranjang</h3>
           <div className="ml-auto bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full">
@@ -35,14 +35,14 @@ export function PosCart({ cart, customers, onCheckout }: PosCartProps) {
           </div>
         </div>
 
-        <div className="mb-5 bg-muted/50 p-3 rounded-xl border border-border">
+        <div className="mb-5 bg-muted/50 p-3 rounded-xl border border-border shrink-0">
           <div className="flex items-center gap-2 mb-2">
             <User className="w-4 h-4 text-muted-foreground" />
             <Label className="text-sm font-semibold text-foreground">Pelanggan (Opsional)</Label>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="ml-auto h-6 px-2 text-xs border-primary/20 text-primary hover:bg-primary/10" 
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto h-6 px-2 text-xs border-primary/20 text-primary hover:bg-primary/10"
               onClick={() => setIsNewCustomerOpen(true)}
             >
               <UserPlus className="w-3 h-3 mr-1" /> Baru
@@ -61,7 +61,7 @@ export function PosCart({ cart, customers, onCheckout }: PosCartProps) {
           </Select>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-2 space-y-3 min-h-[200px] scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto pr-2 space-y-3 min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
           {items.length === 0 ? (
             <div className="h-full border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center text-muted-foreground bg-muted/30">
               <ShoppingCart className="w-12 h-12 mb-3 text-muted-foreground/50" />
@@ -72,7 +72,7 @@ export function PosCart({ cart, customers, onCheckout }: PosCartProps) {
             items.map((item) => (
               <div key={item.cartId} className="p-4 border border-border rounded-xl bg-background shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
                 {/* Type indicator bar */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.type === 'VOUCHER_PACKET' ? 'bg-primary/60' : 'bg-primary'}`}></div>
+                <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.type === 'VOUCHER_PACKET' ? 'bg-primary/60' : item.isVoucherRedemption ? 'bg-green-500' : 'bg-primary'}`}></div>
 
                 <div className="flex justify-between items-start mb-3 pl-2">
                   <div className="pr-4">
@@ -90,6 +90,11 @@ export function PosCart({ cart, customers, onCheckout }: PosCartProps) {
                     {item.type === "VOUCHER_PACKET" && (
                       <span className="inline-block mt-1.5 text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm tracking-wide uppercase">
                         Voucher
+                      </span>
+                    )}
+                    {item.isVoucherRedemption && (
+                      <span className="inline-block mt-1.5 text-[10px] font-bold bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded-sm tracking-wide uppercase">
+                        Voucher: {item.voucherCode}
                       </span>
                     )}
                   </div>
@@ -121,8 +126,17 @@ export function PosCart({ cart, customers, onCheckout }: PosCartProps) {
                       <Plus size={14} />
                     </button>
                   </div>
-                  <span className="font-bold text-primary">
-                    Rp {(item.unitPrice * item.quantity).toLocaleString('id-ID')}
+                  <span className="font-bold text-primary flex flex-col items-end">
+                    {item.isVoucherRedemption ? (
+                      <>
+                        <span className="text-xs line-through text-muted-foreground opacity-70">
+                          Rp {(item.unitPrice * item.quantity).toLocaleString('id-ID')}
+                        </span>
+                        <span className="text-green-600">Rp 0</span>
+                      </>
+                    ) : (
+                      <>Rp {(item.unitPrice * item.quantity).toLocaleString('id-ID')}</>
+                    )}
                   </span>
                 </div>
               </div>
@@ -130,7 +144,7 @@ export function PosCart({ cart, customers, onCheckout }: PosCartProps) {
           )}
         </div>
 
-        <div className="border-t border-border pt-5 mt-4 bg-card relative z-10">
+        <div className="border-t border-border pt-5 mt-4 bg-card relative z-10 shrink-0">
           <div className="space-y-2.5 mb-5">
             <div className="flex justify-between text-sm font-medium">
               <span className="text-muted-foreground">Subtotal</span>
@@ -168,7 +182,7 @@ export function PosCart({ cart, customers, onCheckout }: PosCartProps) {
             <DialogTitle>Tambah Pelanggan Baru</DialogTitle>
           </DialogHeader>
           <div className="pt-4">
-            <CustomerForm 
+            <CustomerForm
               onSuccess={(customer) => {
                 setIsNewCustomerOpen(false);
                 router.refresh();

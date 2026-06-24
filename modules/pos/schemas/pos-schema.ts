@@ -5,6 +5,7 @@ export const posPaymentSchema = z.object({
   amount: z.number().positive("Amount must be positive"),
   referenceNumber: z.string().optional(),
   voucherCode: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 export const posItemServiceSchema = z.object({
@@ -14,6 +15,9 @@ export const posItemServiceSchema = z.object({
   staffId: z.string().min(1, "Staff is required"),
   roomId: z.string().min(1, "Room is required"),
   discountAmount: z.number().nonnegative().default(0),
+  isVoucherRedemption: z.boolean().optional(),
+  customerVoucherId: z.string().optional(),
+  voucherCode: z.string().optional(),
 });
 
 export const posItemVoucherPacketSchema = z.object({

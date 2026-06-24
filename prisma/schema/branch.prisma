@@ -8,9 +8,10 @@ model Branch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users  BranchUser[]
-  staffs Staff[]
-  rooms  Room[]
+  users     BranchUser[]
+  staffs    Staff[]
+  rooms     Room[]
+  discounts Discount[]
 }
 
 model BranchUser {

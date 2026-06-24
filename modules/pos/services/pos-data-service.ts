@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { DiscountService } from "../../discount/services/discount-service";
 
 export class PosDataService {
   static async getInitialData(tenant: string) {
@@ -9,6 +10,8 @@ export class PosDataService {
     if (!branch) {
       return null;
     }
+
+    const activeDiscount = await DiscountService.getApplicableDiscount(branch.id);
 
     const products = await prisma.product.findMany({
       where: { isActive: true },
@@ -58,7 +61,8 @@ export class PosDataService {
       staff,
       rooms,
       paymentMethods,
-      customers
+      customers,
+      activeDiscount
     };
   }
 }
