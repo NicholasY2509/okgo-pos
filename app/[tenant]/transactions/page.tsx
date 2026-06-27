@@ -16,7 +16,7 @@ export default async function TransactionsPage({ params }: { params: Promise<{ t
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto w-full">
+    <div className="max-w-7xl mx-auto w-full">
       <TransactionHistoryClient branchId={branch.id} />
     </div>
   );

@@ -148,6 +148,29 @@ export class TimetableService {
     });
   }
 
+  static async startSession(sessionId: string) {
+    const session = await prisma.serviceSession.findUnique({
+      where: { id: sessionId }
+    });
+
+    if (!session) throw new Error("Session not found");
+    if (session.status !== "SCHEDULED") throw new Error("Sesi tidak dalam status terjadwal");
+
+    const now = new Date();
+    const durationMs = session.endTime && session.startTime 
+      ? session.endTime.getTime() - session.startTime.getTime()
+      : 60 * 60 * 1000; // Default 1 hour if not set
+
+    return await prisma.serviceSession.update({
+      where: { id: sessionId },
+      data: { 
+        status: "IN_PROGRESS",
+        startTime: now,
+        endTime: new Date(now.getTime() + durationMs)
+      }
+    });
+  }
+
   static async updateSessionTime(sessionId: string, startTime: Date, endTime: Date) {
     if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
       throw new Error("Waktu tidak valid");

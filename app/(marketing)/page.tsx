@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { CheckCircle2, Moon, Leaf, ArrowRight, Sparkles, Send, Flower2, MapPin, Phone, Clock } from "lucide-react";
+import { CheckCircle2, Moon, Leaf, ArrowRight, Sparkles, Send, Flower2, MapPin, Phone, Clock, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -19,7 +19,7 @@ export default function MarketingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    setTheme("light");
+    // setTheme("light");
 
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
@@ -97,7 +97,30 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const targetPosition = element.getBoundingClientRect().top + window.scrollY;
+      const startPosition = window.scrollY;
+      const distance = targetPosition - startPosition;
+      const duration = 1200; // 1.2 seconds for a luxurious, slow scroll
+      let start: number | null = null;
+
+      const animation = (currentTime: number) => {
+        if (start === null) start = currentTime;
+        const timeElapsed = currentTime - start;
+        const progress = Math.min(timeElapsed / duration, 1);
+
+        // easeInOutQuart for a very premium feel
+        const ease = progress < 0.5
+          ? 8 * progress * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 4) / 2;
+
+        window.scrollTo(0, startPosition + distance * ease);
+
+        if (timeElapsed < duration) {
+          requestAnimationFrame(animation);
+        }
+      };
+
+      requestAnimationFrame(animation);
     }
   };
 
@@ -123,8 +146,8 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1, ease: "easeOut" }}
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled
-            ? "bg-background/70 backdrop-blur-xl border-b border-border/50 py-2"
-            : "bg-transparent border-b-transparent py-6"
+          ? "bg-background/10 backdrop-blur-xl border-b border-border/50 py-4"
+          : "bg-transparent border-b-transparent py-6"
           }`}
       >
         <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
@@ -153,7 +176,7 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
       </motion.nav>
 
       {/* HERO SECTION */}
-      <header className="hero-section relative pt-48 pb-32 px-6 flex flex-col items-center justify-center min-h-[90vh]">
+      <header className="hero-section relative pt-44 pb-32 px-6 flex flex-col items-center justify-center min-h-[90vh]">
         <motion.div
           variants={heroVariants}
           initial="hidden"
@@ -175,7 +198,7 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
               onClick={(e) => scrollTo(e, 'reservasi')}
               className="group flex items-center justify-center gap-3 border border-foreground/20 text-foreground px-10 py-4 rounded-full font-light tracking-wide hover:border-primary hover:text-primary transition-colors cursor-pointer w-full sm:w-auto"
             >
-              Booking Jadwal <ArrowRight className="w-4 h-4 text-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+              Booking Jadwal <ChevronRight className="w-4 h-4 text-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all" />
             </motion.button>
             <motion.button
               onClick={(e) => scrollTo(e, 'voucher')}
@@ -187,7 +210,7 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
         </motion.div>
 
         {/* Minimalist Image Reveal */}
-        <div className="absolute inset-0 z-0 overflow-hidden opacity-10 mix-blend-multiply pointer-events-none">
+        <div className="absolute inset-0 z-0 overflow-hidden opacity-30 pointer-events-none">
           <div className="hero-img absolute inset-[-10%] bg-[url('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center grayscale" />
         </div>
       </header>
@@ -283,63 +306,16 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
               <p className="text-muted-foreground font-light">Amankan jadwal relaksasi Anda sekarang. Konfirmasi instan via WhatsApp.</p>
             </div>
 
-            <form onSubmit={handleBooking} className="space-y-8">
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2">Nama Lengkap</label>
-                <input type="text" required value={formData.nama} onChange={e => setFormData({ ...formData, nama: e.target.value })}
-                  className="w-full bg-muted/30 px-6 py-4 rounded-2xl border-none focus:outline-none focus:ring-1 focus:ring-primary text-sm transition-shadow placeholder:text-muted-foreground/50"
-                  placeholder="Contoh: Andi Wijaya"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2">Tanggal</label>
-                  <input type="date" required value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })}
-                    className="w-full bg-muted/30 px-6 py-4 rounded-2xl border-none focus:outline-none focus:ring-1 focus:ring-primary text-sm transition-shadow"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2">Waktu</label>
-                  <input type="time" required value={formData.jam} onChange={e => setFormData({ ...formData, jam: e.target.value })}
-                    className="w-full bg-muted/30 px-6 py-4 rounded-2xl border-none focus:outline-none focus:ring-1 focus:ring-primary text-sm transition-shadow"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2">Layanan</label>
-                <select required value={formData.layanan} onChange={e => setFormData({ ...formData, layanan: e.target.value })}
-                  className="w-full bg-muted/30 px-6 py-4 rounded-2xl border-none focus:outline-none focus:ring-1 focus:ring-primary text-sm transition-shadow appearance-none cursor-pointer text-foreground">
-                  <option value="" disabled>Pilih layanan perawatan...</option>
-                  <option value="Paket Voucher 10 Lembar (Rp 1.125.000)">[PROMO] Paket Voucher 10 Sesi - Rp 1.125.000</option>
-                  <option value="Deep Sleep Body Massage 60 Menit (Rp 150.000)">Deep Sleep Body Massage - Rp 150.000</option>
-                  <option value="Refleksologi Nyenyak 45 Menit (Rp 100.000)">Refleksologi Nyenyak - Rp 100.000</option>
-                  <option value="Aromaterapi Lavender Deluxe 90 Menit (Rp 220.000)">Aromaterapi Lavender Deluxe - Rp 220.000</option>
-                </select>
-              </div>
-
-              <div className="space-y-4 pt-4">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2">Preferensi Terapis</label>
-                <div className="grid grid-cols-3 gap-4">
-                  {['Pria', 'Wanita', 'Mana Saja'].map(t => (
-                    <label key={t} className={`flex items-center justify-center p-4 rounded-2xl cursor-pointer transition-all ${formData.terapis === t ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'}`}>
-                      <input type="radio" name="terapis" value={t} checked={formData.terapis === t} onChange={e => setFormData({ ...formData, terapis: e.target.value })} className="sr-only" />
-                      <span className="text-sm font-medium">{t}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="w-full bg-foreground text-background font-medium tracking-wide py-5 rounded-full mt-8 flex items-center justify-center gap-2 group cursor-pointer"
+            <div className="flex justify-center mt-12">
+              <motion.a
+                href="/booking"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-foreground text-background font-medium tracking-wide py-5 px-12 rounded-full flex items-center gap-3 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all"
               >
-                Kirim ke WhatsApp <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
-            </form>
+                Buat Reservasi <ChevronRight className="w-5 h-5" />
+              </motion.a>
+            </div>
           </div>
         </div>
       </section>
@@ -347,8 +323,8 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
       {/* FOOTER */}
       <footer className="bg-background py-24 px-6 border-t border-border/30 text-center relative">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-          <p className="font-display text-2xl font-light text-foreground mb-8 tracking-[0.2em]">NYENYAK<span className="text-primary">.</span></p>
-          <div className="flex flex-col md:flex-row gap-8 md:gap-16 text-xs uppercase tracking-[0.1em] text-muted-foreground mb-16">
+          <p className="font-display text-2xl font-light text-foreground mb-8 tracking-[0.2em]">NYENYAK</p>
+          <div className="flex flex-col md:flex-row gap-8 md:gap-16 text-xs uppercase tracking-widest text-muted-foreground mb-16">
             <span className="flex items-center justify-center gap-3"><MapPin className="w-4 h-4 stroke-1" /> Jakarta, Indonesia</span>
             <span className="flex items-center justify-center gap-3"><Clock className="w-4 h-4 stroke-1" /> 10.00 - 22.00</span>
             <span className="flex items-center justify-center gap-3"><Phone className="w-4 h-4 stroke-1" /> +62 812 3456 7890</span>

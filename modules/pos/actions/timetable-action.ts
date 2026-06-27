@@ -37,3 +37,12 @@ export async function updateSessionTimeAction(sessionId: string, startTime: Date
     return { error: error.message || "Gagal memperbarui waktu sesi" };
   }
 }
+
+export async function startSessionAction(sessionId: string) {
+  try {
+    await TimetableService.startSession(sessionId);
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Gagal memulai sesi" };
+  }
+}
