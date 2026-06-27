@@ -4,6 +4,15 @@ import { revalidatePath } from "next/cache";
 import { customerSchema, type CustomerInput } from "../schemas/customer-schema";
 import { CustomerService } from "../services/customer-service";
 
+export async function searchCustomersAction(query: string = "", page: number = 1, limit: number = 20) {
+  try {
+    const result = await CustomerService.searchCustomers(query, page, limit);
+    return { success: true, data: result.data, metadata: result.metadata };
+  } catch (error: any) {
+    return { error: error.message || "An unexpected error occurred." };
+  }
+}
+
 export async function createCustomerAction(values: CustomerInput) {
   try {
     const validatedFields = customerSchema.safeParse(values);

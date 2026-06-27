@@ -15,6 +15,7 @@ export class PosDataService {
 
     const products = await prisma.product.findMany({
       where: { isActive: true },
+      include: { category: true },
       orderBy: { name: 'asc' }
     });
 

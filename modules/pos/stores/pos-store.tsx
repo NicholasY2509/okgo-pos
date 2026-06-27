@@ -94,6 +94,30 @@ export const PosStoreProvider = ({ children }: PosStoreProviderProps) => {
   );
 };
 
+export function usePosStoreSelector<T>(selector: (state: PosStore) => T): T {
+  const store = useContext(PosStoreContext);
+  if (!store) {
+    throw new Error("usePosStoreSelector must be used within PosStoreProvider");
+  }
+  return useStore(store, selector);
+}
+
+export function usePosStoreActions() {
+  const store = useContext(PosStoreContext);
+  if (!store) {
+    throw new Error("usePosStoreActions must be used within PosStoreProvider");
+  }
+  
+  return {
+    setCustomerId: useStore(store, (s) => s.setCustomerId),
+    addItem: useStore(store, (s) => s.addItem),
+    removeItem: useStore(store, (s) => s.removeItem),
+    updateQuantity: useStore(store, (s) => s.updateQuantity),
+    updateItemDiscount: useStore(store, (s) => s.updateItemDiscount),
+    clearCart: useStore(store, (s) => s.clearCart),
+  };
+}
+
 export function usePosCart() {
   const store = useContext(PosStoreContext);
   if (!store) {

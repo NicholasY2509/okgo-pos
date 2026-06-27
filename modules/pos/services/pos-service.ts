@@ -76,12 +76,12 @@ export class PosService {
   private static async validatePreconditions(tx: any, input: PosCheckoutInput) {
     const branch = await tx.branch.findUnique({ where: { id: input.branchId } });
     if (!branch || !branch.isActive) {
-      throw new Error("Invalid or inactive branch.");
+      throw new Error("Cabang tidak valid atau tidak aktif.");
     }
 
     if (input.customerId) {
       const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
-      if (!customer) throw new Error("Invalid customer.");
+      if (!customer) throw new Error("Pelanggan tidak valid.");
     }
   }
 
@@ -101,17 +101,17 @@ export class PosService {
 
       if (item.type === "SERVICE") {
         const product = await tx.product.findUnique({ where: { id: item.serviceId } });
-        if (!product || !product.isActive) throw new Error(`Invalid service: ${item.serviceId}`);
+        if (!product || !product.isActive) throw new Error(`Layanan tidak valid: ${item.serviceId}`);
 
         unitPrice = Number(product.price);
         itemNameSnapshot = product.name;
 
         const staff = await tx.staff.findUnique({ where: { id: item.staffId } });
-        if (!staff || !staff.isActive) throw new Error(`Invalid staff: ${item.staffId}`);
+        if (!staff || !staff.isActive) throw new Error(`Staf tidak valid: ${item.staffId}`);
 
         const room = await tx.room.findUnique({ where: { id: item.roomId } });
-        if (!room || !room.isActive) throw new Error(`Invalid room: ${item.roomId}`);
-        if (room.branchId !== input.branchId) throw new Error(`Room ${room.name} does not belong to the selected branch.`);
+        if (!room || !room.isActive) throw new Error(`Ruang tidak valid: ${item.roomId}`);
+        if (room.branchId !== input.branchId) throw new Error(`Ruang ${room.name} tidak berada di cabang yang dipilih.`);
 
         serviceSessionsData.push({
           serviceId: item.serviceId,
@@ -129,15 +129,15 @@ export class PosService {
           });
 
           if (!customerVoucher || customerVoucher.customerId !== input.customerId) {
-            throw new Error("Voucher not found or does not belong to the customer.");
+            throw new Error("Voucher tidak ditemukan atau bukan milik pelanggan ini.");
           }
-          if (customerVoucher.status !== "ACTIVE") throw new Error(`Voucher status is ${customerVoucher.status}.`);
+          if (customerVoucher.status !== "ACTIVE") throw new Error(`Status voucher adalah ${customerVoucher.status}.`);
           if (customerVoucher.expiresAt && customerVoucher.expiresAt < new Date()) {
-            throw new Error("Voucher has expired.");
+            throw new Error("Voucher telah kedaluwarsa.");
           }
 
           if (customerVoucher.remainingVisitCount != null) {
-            if (customerVoucher.remainingVisitCount <= 0) throw new Error("Voucher has no visits left.");
+            if (customerVoucher.remainingVisitCount <= 0) throw new Error("Kuota kunjungan voucher telah habis.");
             await tx.customerVoucher.update({
               where: { id: customerVoucher.id },
               data: {
@@ -152,16 +152,16 @@ export class PosService {
               _tempItemIndex: transactionItemsData.length // to link later
             });
           } else {
-            throw new Error("Item-level redemption only supports visit-based vouchers currently.");
+            throw new Error("Penukaran level item saat ini hanya mendukung voucher berbasis kunjungan.");
           }
         }
 
       } else if (item.type === "VOUCHER_PACKET") {
         if (!input.customerId) {
-          throw new Error("Customer is required when purchasing a voucher packet.");
+          throw new Error("Pelanggan wajib dipilih saat membeli paket voucher.");
         }
         const packet = await tx.voucherPacket.findUnique({ where: { id: item.voucherPacketId } });
-        if (!packet || !packet.isActive) throw new Error(`Invalid voucher packet: ${item.voucherPacketId}`);
+        if (!packet || !packet.isActive) throw new Error(`Paket voucher tidak valid: ${item.voucherPacketId}`);
 
         unitPrice = Number(packet.price);
         itemNameSnapshot = packet.name;
@@ -182,7 +182,7 @@ export class PosService {
       }
 
       const itemSubtotal = (unitPrice * item.quantity) - totalItemDiscount;
-      if (itemSubtotal < 0) throw new Error(`Discount cannot exceed item total for ${itemNameSnapshot}`);
+      if (itemSubtotal < 0) throw new Error(`Diskon tidak boleh melebihi total harga untuk ${itemNameSnapshot}`);
 
       subtotal += (unitPrice * item.quantity);
       discountTotal += totalItemDiscount;
@@ -210,11 +210,11 @@ export class PosService {
 
     for (const payment of input.payments) {
       const pm = await tx.paymentMethod.findUnique({ where: { id: payment.paymentMethodId } });
-      if (!pm || !pm.isActive) throw new Error(`Invalid payment method: ${payment.paymentMethodId}`);
+      if (!pm || !pm.isActive) throw new Error(`Metode pembayaran tidak valid: ${payment.paymentMethodId}`);
 
       if (pm.type === "VOUCHER") {
-        if (!payment.voucherCode) throw new Error("Voucher code is required for voucher payments.");
-        if (!input.customerId) throw new Error("Customer is required for voucher payments.");
+        if (!payment.voucherCode) throw new Error("Kode voucher wajib diisi untuk pembayaran dengan voucher.");
+        if (!input.customerId) throw new Error("Pelanggan wajib dipilih untuk pembayaran dengan voucher.");
 
         const customerVoucher = await tx.customerVoucher.findUnique({
           where: { code: payment.voucherCode },
@@ -222,15 +222,15 @@ export class PosService {
         });
 
         if (!customerVoucher || customerVoucher.customerId !== input.customerId) {
-          throw new Error("Voucher not found or does not belong to the customer.");
+          throw new Error("Voucher tidak ditemukan atau bukan milik pelanggan ini.");
         }
-        if (customerVoucher.status !== "ACTIVE") throw new Error(`Voucher status is ${customerVoucher.status}.`);
+        if (customerVoucher.status !== "ACTIVE") throw new Error(`Status voucher adalah ${customerVoucher.status}.`);
         if (customerVoucher.expiresAt && customerVoucher.expiresAt < new Date()) {
-          throw new Error("Voucher has expired.");
+          throw new Error("Voucher telah kedaluwarsa.");
         }
 
         if (customerVoucher.remainingVisitCount != null) {
-          if (customerVoucher.remainingVisitCount <= 0) throw new Error("Voucher has no visits left.");
+          if (customerVoucher.remainingVisitCount <= 0) throw new Error("Kuota kunjungan voucher telah habis.");
           await tx.customerVoucher.update({
             where: { id: customerVoucher.id },
             data: {
@@ -245,7 +245,7 @@ export class PosService {
           });
         } else if (customerVoucher.remainingCreditAmount != null) {
           if (Number(customerVoucher.remainingCreditAmount) < payment.amount) {
-            throw new Error("Insufficient voucher credit balance.");
+            throw new Error("Saldo nominal voucher tidak mencukupi.");
           }
           const newBalance = Number(customerVoucher.remainingCreditAmount) - payment.amount;
           await tx.customerVoucher.update({
@@ -261,10 +261,10 @@ export class PosService {
             redeemedAmount: payment.amount
           });
         } else {
-          throw new Error("Invalid voucher configuration.");
+          throw new Error("Konfigurasi voucher tidak valid.");
         }
       } else {
-        if (payment.voucherCode) throw new Error("Voucher code should not be provided for non-voucher payments.");
+        if (payment.voucherCode) throw new Error("Kode voucher tidak boleh diisi untuk pembayaran non-voucher.");
       }
 
       paidAmount += payment.amount;
@@ -277,7 +277,7 @@ export class PosService {
     }
 
     if (paidAmount < totalAmount) {
-      throw new Error(`Insufficient payment amount. Total is ${totalAmount}, but only ${paidAmount} was paid.`);
+      throw new Error(`Jumlah pembayaran kurang. Total tagihan Rp ${totalAmount}, tetapi hanya dibayar Rp ${paidAmount}.`);
     }
 
     const changeAmount = paidAmount - totalAmount;
@@ -413,9 +413,9 @@ export class PosService {
         }
       });
 
-      if (!transaction) throw new Error("Transaction not found.");
+      if (!transaction) throw new Error("Transaksi tidak ditemukan.");
       if (transaction.status === "VOIDED" || transaction.status === "CANCELLED") {
-        throw new Error("Transaction is already voided or cancelled.");
+        throw new Error("Transaksi sudah dibatalkan.");
       }
 
       // 1. Mark transaction as VOIDED
@@ -441,7 +441,7 @@ export class PosService {
 
       for (const voucher of generatedVouchers) {
         const redemptions = await tx.voucherRedemption.count({ where: { customerVoucherId: voucher.id } });
-        if (redemptions > 0) throw new Error("Cannot cancel transaction because generated vouchers have already been redeemed.");
+        if (redemptions > 0) throw new Error("Tidak dapat membatalkan transaksi karena voucher yang dibeli sudah digunakan.");
 
         await tx.customerVoucher.update({
           where: { id: voucher.id },

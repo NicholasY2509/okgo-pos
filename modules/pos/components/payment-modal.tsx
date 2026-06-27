@@ -16,13 +16,13 @@ import { NumericFormat } from "react-number-format";
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  cart: ReturnType<typeof usePosCart>;
   branchId: string;
   paymentMethods: any[];
   onSuccess: () => void;
 }
 
-export function PaymentModal({ isOpen, onClose, cart, branchId, paymentMethods, onSuccess }: PaymentModalProps) {
+export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSuccess }: PaymentModalProps) {
+  const cart = usePosCart();
   const [payment, setPayment] = useState({
     paymentMethodId: "",
     amount: cart.totalAmount,
@@ -35,31 +35,34 @@ export function PaymentModal({ isOpen, onClose, cart, branchId, paymentMethods, 
   const totalPaid = Number(payment.amount || 0);
   const remaining = Math.max(0, cart.totalAmount - totalPaid);
   const changeAmount = Math.max(0, totalPaid - cart.totalAmount);
+  const isZeroTotal = cart.totalAmount === 0;
 
   const handleUpdatePayment = (field: string, value: any) => {
     setPayment(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
-    if (totalPaid < cart.totalAmount) {
-      toast.error("Jumlah bayar masih kurang.");
-      return;
-    }
+    if (!isZeroTotal) {
+      if (totalPaid < cart.totalAmount) {
+        toast.error("Jumlah bayar masih kurang.");
+        return;
+      }
 
-    if (!payment.paymentMethodId) {
-      toast.error("Pilih metode pembayaran.");
-      return;
-    }
+      if (!payment.paymentMethodId) {
+        toast.error("Pilih metode pembayaran.");
+        return;
+      }
 
-    if (payment.amount <= 0) {
-      toast.error("Jumlah pembayaran harus lebih dari 0.");
-      return;
-    }
+      if (payment.amount <= 0) {
+        toast.error("Jumlah pembayaran harus lebih dari 0.");
+        return;
+      }
 
-    const pm = paymentMethods.find(x => x.id === payment.paymentMethodId);
-    if (pm?.type === "VOUCHER" && !payment.voucherCode) {
-      toast.error("Kode voucher wajib diisi untuk pembayaran dengan voucher.");
-      return;
+      const pm = paymentMethods.find(x => x.id === payment.paymentMethodId);
+      if (pm?.type === "VOUCHER" && !payment.voucherCode) {
+        toast.error("Kode voucher wajib diisi untuk pembayaran dengan voucher.");
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -79,7 +82,7 @@ export function PaymentModal({ isOpen, onClose, cart, branchId, paymentMethods, 
         customerVoucherId: i.customerVoucherId,
         voucherCode: i.voucherCode
       })) as any,
-      payments: [{
+      payments: isZeroTotal ? [] : [{
         paymentMethodId: payment.paymentMethodId,
         amount: Number(payment.amount),
         referenceNumber: payment.referenceNumber || undefined,
@@ -131,10 +134,7 @@ export function PaymentModal({ isOpen, onClose, cart, branchId, paymentMethods, 
                 <span className="w-32 text-right font-medium">({cart.discountTotal.toLocaleString('id-ID')})</span>
               </div>
 
-              <div className="flex justify-end items-center gap-2 text-sm text-muted-foreground pt-1 pb-1">
-                <input type="checkbox" className="rounded border-input w-4 h-4 accent-primary" />
-                <span>Discount Fix Rate</span>
-              </div>
+
 
               <div className="flex justify-between items-center">
                 <span className="font-medium text-muted-foreground ml-auto">Tax</span>
@@ -162,35 +162,37 @@ export function PaymentModal({ isOpen, onClose, cart, branchId, paymentMethods, 
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground font-medium">Uang Diterima</Label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-medium">Rp</span>
-                <NumericFormat
-                  value={payment.amount === 0 ? "" : payment.amount}
-                  onValueChange={(values) => {
-                    handleUpdatePayment("amount", values.floatValue || 0);
-                  }}
-                  thousandSeparator="."
-                  decimalSeparator=","
-                  allowNegative={false}
-                  customInput={Input}
-                  className="h-14 pl-11 text-xl text-foreground focus-visible:ring-primary/30 border-2 rounded-xl"
-                  onFocus={(e: any) => e.target.select()}
-                />
+            {!isZeroTotal && (
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground font-medium">Uang Diterima</Label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-medium">Rp</span>
+                  <NumericFormat
+                    value={payment.amount === 0 ? "" : payment.amount}
+                    onValueChange={(values) => {
+                      handleUpdatePayment("amount", values.floatValue || 0);
+                    }}
+                    thousandSeparator="."
+                    decimalSeparator=","
+                    allowNegative={false}
+                    customInput={Input}
+                    className="h-14 pl-11 text-xl text-foreground focus-visible:ring-primary/30 border-2 rounded-xl"
+                    onFocus={(e: any) => e.target.select()}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-auto pt-4">
               <Button
                 className="w-full h-14 text-lg rounded-xl font-medium"
                 onClick={handleSubmit}
-                disabled={isSubmitting || totalPaid < cart.totalAmount || !payment.paymentMethodId}
+                disabled={isSubmitting || (!isZeroTotal && (totalPaid < cart.totalAmount || !payment.paymentMethodId))}
               >
                 {isSubmitting ? "Memproses..." : (
                   <>
                     <CheckCircle2 className="w-5 h-5 mr-2" />
-                    Bayar Sekarang
+                    {isZeroTotal ? "Selesaikan Penukaran" : "Bayar Sekarang"}
                   </>
                 )}
               </Button>
@@ -199,29 +201,31 @@ export function PaymentModal({ isOpen, onClose, cart, branchId, paymentMethods, 
 
           {/* Right Panel: Methods & Notes */}
           <div className="p-6 flex flex-col space-y-6">
-            <div className="space-y-3">
-              <Label className="text-sm text-muted-foreground font-medium">Metode Pembayaran</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {paymentMethods.map(pm => {
-                  const isSelected = payment.paymentMethodId === pm.id;
-                  return (
-                    <div
-                      key={pm.id}
-                      onClick={() => handleUpdatePayment("paymentMethodId", pm.id)}
-                      className={`
-                        p-4 rounded-xl cursor-pointer transition-all duration-200 border-2 flex items-center gap-2
-                        ${isSelected
-                          ? 'border-primary bg-primary/5 text-primary font-medium'
-                          : 'border-border/50 bg-background text-foreground hover:border-primary/40'}
-                      `}
-                    >
-                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${isSelected ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
-                      <span className="text-sm truncate">{pm.name}</span>
-                    </div>
-                  );
-                })}
+            {!isZeroTotal && (
+              <div className="space-y-3">
+                <Label className="text-sm text-muted-foreground font-medium">Metode Pembayaran</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {paymentMethods.map(pm => {
+                    const isSelected = payment.paymentMethodId === pm.id;
+                    return (
+                      <div
+                        key={pm.id}
+                        onClick={() => handleUpdatePayment("paymentMethodId", pm.id)}
+                        className={`
+                          p-4 rounded-xl cursor-pointer transition-all duration-200 border-2 flex items-center gap-2
+                          ${isSelected
+                            ? 'border-primary bg-primary/5 text-primary font-medium'
+                            : 'border-border/50 bg-background text-foreground hover:border-primary/40'}
+                        `}
+                      >
+                        <div className={`w-3 h-3 rounded-full shrink-0 ${isSelected ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                        <span className="text-sm truncate">{pm.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground font-medium">Deskripsi / Catatan (Opsional)</Label>

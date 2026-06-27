@@ -29,6 +29,42 @@ export class CustomerService {
     });
   }
 
+  static async searchCustomers(query: string = "", page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit;
+    
+    const whereClause = query
+      ? {
+          OR: [
+            { name: { contains: query } },
+            { phone: { contains: query } },
+          ],
+        }
+      : {};
+
+    const [data, total] = await Promise.all([
+      prisma.customer.findMany({
+        where: whereClause,
+        skip,
+        take: limit,
+        orderBy: { name: "asc" },
+      }),
+      prisma.customer.count({
+        where: whereClause,
+      }),
+    ]);
+
+    return {
+      data,
+      metadata: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasMore: page * limit < total,
+      },
+    };
+  }
+
   static async getById(id: string) {
     return await prisma.customer.findUnique({
       where: { id },

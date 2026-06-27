@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StaffCombobox } from "../../staff/components/staff-combobox";
 import { Label } from "@/components/ui/label";
 
 interface ServiceSelectionDialogProps {
@@ -42,46 +43,42 @@ export function ServiceSelectionDialog({ selectedProduct, onClose, staff, rooms,
             <p className="font-semibold text-foreground text-lg">{selectedProduct?.name}</p>
           </div>
 
-          <div className="space-y-3">
-            <Label className="text-muted-foreground font-semibold">Terapis</Label>
-            <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
-              <SelectTrigger className="h-12 border-input">
-                <SelectValue placeholder="Pilih Terapis" />
-              </SelectTrigger>
-              <SelectContent>
-                {staff.map((s) => (
-                  <SelectItem key={s.id} value={s.id} className="py-3 cursor-pointer">
-                    {s.firstName} {s.lastName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <Label className="text-muted-foreground font-semibold">Terapis</Label>
+              <StaffCombobox
+                value={selectedStaffId}
+                onChange={setSelectedStaffId}
+                className=""
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-muted-foreground font-semibold">Ruangan</Label>
+              <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
+                <SelectTrigger className="w-full h-12 border-input">
+                  <SelectValue placeholder="Pilih Ruangan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rooms.map((r) => (
+                    <SelectItem key={r.id} value={r.id} className="cursor-pointer">
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            <Label className="text-muted-foreground font-semibold">Ruangan</Label>
-            <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
-              <SelectTrigger className="h-12 border-input">
-                <SelectValue placeholder="Pilih Ruangan" />
-              </SelectTrigger>
-              <SelectContent>
-                {rooms.map((r) => (
-                  <SelectItem key={r.id} value={r.id} className="py-3 cursor-pointer">
-                    {r.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
         </div>
         <div className="flex justify-end gap-3 pt-4 border-t border-border mt-2">
-          <Button variant="outline" onClick={onClose} className="h-11 px-6">
+          <Button variant="outline" onClick={onClose} className="">
             Batal
           </Button>
           <Button
             onClick={handleAdd}
             disabled={!selectedStaffId || !selectedRoomId}
-            className="h-11 px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
           >
             Tambahkan
           </Button>

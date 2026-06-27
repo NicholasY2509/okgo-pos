@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Search, Ticket, CheckCircle2, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import { User, Search, Ticket, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getCustomerVouchersAction, getVoucherByCodeAction } from "../../vouchers/actions/get-customer-vouchers-action";
+import { CustomerCombobox } from "../../customer/components/customer-combobox";
 
 interface VoucherRedeemTabProps {
   customers: any[];
@@ -19,8 +19,7 @@ interface VoucherRedeemTabProps {
 export function VoucherRedeemTab({ customers, onRedeemVoucher }: VoucherRedeemTabProps) {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>();
   const [serialNumber, setSerialNumber] = useState("");
-  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
-  
+
   const [ownedVouchers, setOwnedVouchers] = useState<any[]>([]);
   const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -43,35 +42,32 @@ export function VoucherRedeemTab({ customers, onRedeemVoucher }: VoucherRedeemTa
     fetchVouchers();
   }, [selectedCustomerId]);
 
-  const handleRedeem = async (code?: string) => {
-    const codeToRedeem = code || serialNumber;
-    if (!codeToRedeem) {
+  const [previewVoucher, setPreviewVoucher] = useState<any>(null);
+
+  const handleSearch = async () => {
+    if (!serialNumber) {
       toast.error("Masukkan kode voucher terlebih dahulu");
       return;
     }
 
-    if (code) {
-      // It came from the list, we already have the object in `ownedVouchers`
-      const voucher = ownedVouchers.find(v => v.code === code);
-      if (voucher) {
-        onRedeemVoucher(voucher);
-      }
-    } else {
-      // Manual entry
-      setIsRedeeming(true);
-      const result = await getVoucherByCodeAction(codeToRedeem);
-      setIsRedeeming(false);
+    setIsRedeeming(true);
+    const result = await getVoucherByCodeAction(serialNumber);
+    setIsRedeeming(false);
 
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
-
-      if (result.data) {
-        onRedeemVoucher(result.data);
-        setSerialNumber("");
-      }
+    if (result.error) {
+      toast.error(result.error);
+      return;
     }
+
+    if (result.data) {
+      setPreviewVoucher(result.data);
+    }
+  };
+
+  const confirmRedeem = (voucher: any) => {
+    onRedeemVoucher(voucher);
+    setPreviewVoucher(null);
+    setSerialNumber("");
   };
 
   return (
@@ -83,7 +79,6 @@ export function VoucherRedeemTab({ customers, onRedeemVoucher }: VoucherRedeemTa
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Left Column: Manual Entry */}
           <div className="space-y-4 flex flex-col">
             <div>
               <Label className="text-sm font-semibold mb-2 block">Redeem Manual</Label>
@@ -92,20 +87,59 @@ export function VoucherRedeemTab({ customers, onRedeemVoucher }: VoucherRedeemTa
               </p>
             </div>
 
-            <div className="flex items-center gap-2 mt-auto">
+            <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Masukkan nomor seri..."
                   className="pl-9"
                   value={serialNumber}
-                  onChange={(e) => setSerialNumber(e.target.value)}
+                  onChange={(e) => {
+                    setSerialNumber(e.target.value);
+                    if (previewVoucher) setPreviewVoucher(null);
+                  }}
                 />
               </div>
-              <Button onClick={() => handleRedeem()} disabled={isRedeeming} className="font-semibold">
-                {isRedeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
+              <Button onClick={handleSearch} disabled={isRedeeming || !serialNumber} className="font-semibold">
+                {isRedeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : "Cari"}
               </Button>
             </div>
+
+            {/* Voucher Preview Card */}
+            {previewVoucher && (
+              <div className="mt-4 border border-border bg-card shadow-sm rounded-xl p-4 space-y-4">
+                <div>
+                  <h3 className="font-bold text-lg">{previewVoucher.voucherPacket.name}</h3>
+                  <p className="text-sm text-muted-foreground font-mono">{previewVoucher.code}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-3 rounded-lg">
+                  <div>
+                    <p className="text-muted-foreground text-xs">Produk Berlaku</p>
+                    <p className="font-medium">{previewVoucher.voucherPacket.product?.name || "Semua Produk"}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Sisa Kuota / Nilai</p>
+                    <p className="font-medium">{previewVoucher.remainingCreditAmount ?? "1"}x</p>
+                  </div>
+                  {previewVoucher.expiresAt && (
+                    <div className="col-span-2 pt-2 border-t border-border/50">
+                      <p className="text-muted-foreground text-xs">Berlaku Hingga</p>
+                      <p className="font-medium">{format(new Date(previewVoucher.expiresAt), "dd MMMM yyyy", { locale: id })}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1" onClick={() => setPreviewVoucher(null)}>
+                    Batal
+                  </Button>
+                  <Button className="flex-1 font-bold" onClick={() => confirmRedeem(previewVoucher)}>
+                    Pakai Voucher
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column: Customer Search */}
@@ -119,49 +153,11 @@ export function VoucherRedeemTab({ customers, onRedeemVoucher }: VoucherRedeemTa
               </p>
             </div>
 
-            <Popover open={isCustomerDropdownOpen} onOpenChange={setIsCustomerDropdownOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={isCustomerDropdownOpen}
-                  className="w-full justify-between font-normal"
-                >
-                  {selectedCustomerId
-                    ? customers.find((c) => c.id === selectedCustomerId)?.name + (customers.find((c) => c.id === selectedCustomerId)?.phone ? ` (${customers.find((c) => c.id === selectedCustomerId)?.phone})` : "")
-                    : "Cari pelanggan..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Ketik nama atau nomor telepon..." />
-                  <CommandList>
-                    <CommandEmpty>Pelanggan tidak ditemukan.</CommandEmpty>
-                    <CommandGroup>
-                      {customers.map((c) => (
-                        <CommandItem
-                          key={c.id}
-                          value={`${c.name} ${c.phone || ""}`}
-                          onSelect={() => {
-                            setSelectedCustomerId(c.id === selectedCustomerId ? undefined : c.id);
-                            setIsCustomerDropdownOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedCustomerId === c.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {c.name} {c.phone ? `(${c.phone})` : ""}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <CustomerCombobox
+              selectedCustomerId={selectedCustomerId}
+              onSelectCustomer={setSelectedCustomerId}
+              initialCustomers={customers}
+            />
 
             {/* Owned Vouchers List */}
             {selectedCustomerId && (
@@ -190,7 +186,7 @@ export function VoucherRedeemTab({ customers, onRedeemVoucher }: VoucherRedeemTa
                           variant="outline"
                           size="sm"
                           className="h-8 text-xs border-primary text-primary hover:bg-primary hover:text-white"
-                          onClick={() => handleRedeem(v.code)}
+                          onClick={() => confirmRedeem(v)}
                         >
                           Pakai
                         </Button>

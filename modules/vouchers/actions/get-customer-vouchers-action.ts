@@ -19,7 +19,15 @@ export async function getVoucherByCodeAction(code: string) {
       return { error: "Voucher tidak ditemukan" }
     }
     if (voucher.status !== "ACTIVE") {
-      return { error: `Status voucher: ${voucher.status}` }
+      let friendlyMessage = `Voucher tidak dapat digunakan (Status: ${voucher.status})`;
+      if (voucher.status === "USED_UP") {
+        friendlyMessage = "Voucher ini sudah habis digunakan.";
+      } else if (voucher.status === "EXPIRED") {
+        friendlyMessage = "Voucher ini sudah kedaluwarsa.";
+      } else if (voucher.status === "VOID") {
+        friendlyMessage = "Voucher ini sudah dibatalkan.";
+      }
+      return { error: friendlyMessage };
     }
     return { success: true, data: voucher }
   } catch (error) {

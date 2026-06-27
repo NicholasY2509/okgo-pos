@@ -7,6 +7,8 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV !== "production",
 })
 
-const nextConfig: NextConfig = {}
+const nextConfig: NextConfig = {
+  allowedDevOrigins: ["192.168.1.76"],
+} as any
 
 export default withSerwist(nextConfig)

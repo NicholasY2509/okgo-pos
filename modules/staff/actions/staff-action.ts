@@ -11,6 +11,16 @@ import {
 
 // --- Staff Actions ---
 
+export async function getStaffListAction(branchId?: string) {
+  try {
+    const staff = await StaffService.getAllStaff(branchId)
+    return { success: true, data: staff }
+  } catch (error) {
+    console.error("Failed to fetch staff list:", error)
+    return { error: "Gagal mengambil data staf." }
+  }
+}
+
 export async function createStaffAction(values: CreateStaffInput) {
   try {
     const validatedFields = createStaffSchema.safeParse(values)

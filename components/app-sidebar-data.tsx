@@ -110,6 +110,13 @@ export const branchNav = [
         items: [],
       },
       {
+        title: "Riwayat Transaksi",
+        url: "/transactions",
+        icon: (<TicketIcon />),
+        roles: ["Admin", "Manager"],
+        items: [],
+      },
+      {
         title: "HRIS & Penggajian",
         url: "/hris",
         icon: (<BriefcaseIcon />),

@@ -7,8 +7,9 @@ import {
 export class StaffService {
   // --- Staff ---
 
-  static async getAllStaff() {
+  static async getAllStaff(branchId?: string) {
     return await prisma.staff.findMany({
+      where: branchId ? { branchId } : undefined,
       orderBy: { createdAt: "desc" },
       include: {
         workPosition: true,

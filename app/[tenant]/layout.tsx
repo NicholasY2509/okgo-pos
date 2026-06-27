@@ -1,4 +1,4 @@
-import { Store, Box, Users, Calculator } from "lucide-react";
+import { Store, Box, Users, Calculator, ReceiptText } from "lucide-react";
 import { PosStoreProvider } from "@/modules/pos/stores/pos-store";
 import Link from "next/link";
 
@@ -35,10 +35,14 @@ export default async function TenantLayout({
               <Calculator className="w-4 h-4" />
               Accounting
             </Link>
+            <Link href={`/transactions`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
+              <ReceiptText className="w-4 h-4" />
+              Riwayat Transaksi
+            </Link>
           </nav>
         </div>
       </header>
-      <main className="flex-1 p-6 max-w-[1600px] w-full mx-auto">
+      <main className="flex-1 p-6 container w-full mx-auto">
         <PosStoreProvider>
           {children}
         </PosStoreProvider>

@@ -4,6 +4,8 @@ import { CategoryDialog } from "@/modules/product/components/category-dialog"
 import { ProductDialog } from "@/modules/product/components/product-dialog"
 import { ProductsTable } from "@/modules/product/components/products-table"
 import { CategoriesTable } from "@/modules/product/components/categories-table"
+import { ProductFilters } from "@/modules/product/components/product-filters"
+import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { DiscountWeeklyCalendar } from "@/modules/discount/components/discount-weekly-calendar"
 import { DiscountService } from "@/modules/discount/services/discount-service"
 import { BranchService } from "@/modules/branch/services/branch-service"
@@ -11,15 +13,25 @@ import { PageHeader } from "@/components/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 
-export default async function ProductsPage() {
-  const [categories, rawProducts, rawDiscounts, branches] = await Promise.all([
+interface ProductsPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const params = await searchParams;
+  const page = typeof params.page === 'string' ? Number(params.page) : 1;
+  const limit = typeof params.limit === 'string' ? Number(params.limit) : 10;
+  const search = typeof params.search === 'string' ? params.search : undefined;
+  const categoryId = typeof params.categoryId === 'string' ? params.categoryId : undefined;
+
+  const [categories, productData, rawDiscounts, branches] = await Promise.all([
     CategoryService.getAllCategories(),
-    ProductService.getAllProducts(),
+    ProductService.getAllProducts({ page, limit, search, categoryId }),
     DiscountService.getDiscounts(),
     BranchService.getAllBranches()
   ])
 
-  const products = rawProducts.map(p => ({
+  const products = productData.products.map(p => ({
     ...p,
     price: Number(p.price)
   }))
@@ -64,7 +76,9 @@ export default async function ProductsPage() {
         </div>
 
         <TabsContent value="services" className="space-y-6">
+          <ProductFilters categories={categories} />
           <ProductsTable products={products} categories={categories} />
+          <DataTablePagination metadata={productData.metadata} />
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-6">

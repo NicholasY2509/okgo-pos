@@ -10,11 +10,29 @@ export class CustomerVoucherService {
       orderBy: { createdAt: "desc" }
     })
   }
+  private static serializeVoucher(voucher: any) {
+    if (!voucher) return voucher;
+    return {
+      ...voucher,
+      initialCreditAmount: voucher.initialCreditAmount ? Number(voucher.initialCreditAmount) : null,
+      remainingCreditAmount: voucher.remainingCreditAmount ? Number(voucher.remainingCreditAmount) : null,
+      voucherPacket: voucher.voucherPacket ? {
+        ...voucher.voucherPacket,
+        price: voucher.voucherPacket.price ? Number(voucher.voucherPacket.price) : null,
+        totalCreditAmount: voucher.voucherPacket.totalCreditAmount ? Number(voucher.voucherPacket.totalCreditAmount) : null,
+        product: voucher.voucherPacket.product ? {
+          ...voucher.voucherPacket.product,
+          price: voucher.voucherPacket.product.price ? Number(voucher.voucherPacket.product.price) : null,
+        } : undefined
+      } : undefined
+    }
+  }
+
   static async getByCustomerId(customerId: string) {
-    return await prisma.customerVoucher.findMany({
-      where: { 
+    const vouchers = await prisma.customerVoucher.findMany({
+      where: {
         customerId,
-        status: "ACTIVE" 
+        status: "ACTIVE"
       },
       include: {
         voucherPacket: {
@@ -24,11 +42,12 @@ export class CustomerVoucherService {
         }
       },
       orderBy: { createdAt: "desc" }
-    })
+    });
+    return vouchers.map(v => this.serializeVoucher(v));
   }
 
   static async getByCode(code: string) {
-    return await prisma.customerVoucher.findUnique({
+    const voucher = await prisma.customerVoucher.findUnique({
       where: { code },
       include: {
         customer: true,
@@ -38,8 +57,10 @@ export class CustomerVoucherService {
           }
         }
       }
-    })
+    });
+    return this.serializeVoucher(voucher);
   }
+
   static async getById(id: string) {
     return await prisma.customerVoucher.findUnique({
       where: { id },

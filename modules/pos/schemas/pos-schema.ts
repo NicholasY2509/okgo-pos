@@ -39,7 +39,7 @@ export const posCheckoutSchema = z.object({
     ])
   ).min(1, "At least one item is required"),
 
-  payments: z.array(posPaymentSchema).min(1, "At least one payment is required"),
+  payments: z.array(posPaymentSchema),
 });
 
 export type PosCheckoutInput = z.infer<typeof posCheckoutSchema>;
