@@ -49,9 +49,10 @@ model Staff {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  workPosition WorkPosition @relation(fields: [workPositionId], references: [id])
-  branch       Branch?      @relation(fields: [branchId], references: [id])
-  staffUsers   StaffUser[]
+  workPosition    WorkPosition     @relation(fields: [workPositionId], references: [id])
+  branch          Branch?          @relation(fields: [branchId], references: [id])
+  staffUsers      StaffUser[]
+  serviceSessions ServiceSession[]
 }
 
 model StaffUser {

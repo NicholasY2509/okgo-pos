@@ -25,25 +25,25 @@ model Product {
 }
 
 model VoucherPacket {
-  id                  String             @id @default(cuid())
+  id String @id @default(cuid())
 
-  name                String
-  codeSuffix          String?
+  name       String
+  codeSuffix String?
 
-  price               Decimal            
+  price Decimal
 
-  totalVisitCount     Int?
-  totalCreditAmount   Decimal?           
+  totalVisitCount   Int?
+  totalCreditAmount Decimal?
 
-  validityDays        Int?
-  isActive            Boolean            @default(true)
+  validityDays Int?
+  isActive     Boolean @default(true)
 
-  productId           String?
+  productId String?
 
-  customerVouchers    CustomerVoucher[]
+  customerVouchers CustomerVoucher[]
 
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  product             Product?           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
 }

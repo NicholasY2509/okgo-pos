@@ -22,3 +22,32 @@ export async function createPosTransactionAction(values: PosCheckoutInput) {
     return { error: error.message || "An unexpected error occurred." };
   }
 }
+
+export async function createDirectRedemptionAction(values: any) {
+  try {
+    const result = await PosService.directRedeem(values);
+    return { success: true, transactionId: result.id };
+  } catch (error: any) {
+    console.error("POS Direct Redeem Error:", error);
+    return { error: error.message || "An unexpected error occurred." };
+  }
+}
+
+export async function payExistingTransactionAction(values: {
+  transactionId: string;
+  payments: {
+    paymentMethodId: string;
+    amount: number;
+    referenceNumber?: string;
+    voucherCode?: string;
+    notes?: string;
+  }[];
+}) {
+  try {
+    const result = await PosService.payExistingTransaction(values);
+    return { success: true, transactionId: result.id };
+  } catch (error: any) {
+    console.error("POS Pay Existing Error:", error);
+    return { error: error.message || "Gagal memproses pembayaran." };
+  }
+}

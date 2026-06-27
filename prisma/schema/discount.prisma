@@ -1,18 +1,18 @@
 model Discount {
-  id             String   @id @default(cuid())
-  name           String
-  dayOfWeek      String   // "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
-  startTime      String   // Format "HH:mm"
-  endTime        String   // Format "HH:mm"
-  percentage     Decimal
-  isActive       Boolean  @default(true)
-  
-  branchId       String?  // If null, applies to all branches
+  id         String  @id @default(cuid())
+  name       String
+  dayOfWeek  String // "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
+  startTime  String // Format "HH:mm"
+  endTime    String // Format "HH:mm"
+  percentage Decimal
+  isActive   Boolean @default(true)
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  branchId String? // If null, applies to all branches
 
-  branch         Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@index([dayOfWeek])
   @@index([branchId])

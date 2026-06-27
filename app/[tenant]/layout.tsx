@@ -1,4 +1,4 @@
-import { Store, Box, Users, Calculator, ReceiptText } from "lucide-react";
+import { Store, Box, Users, Calculator, ReceiptText, CalendarClock } from "lucide-react";
 import { PosStoreProvider } from "@/modules/pos/stores/pos-store";
 import Link from "next/link";
 
@@ -38,6 +38,10 @@ export default async function TenantLayout({
             <Link href={`/transactions`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
               <ReceiptText className="w-4 h-4" />
               Riwayat Transaksi
+            </Link>
+            <Link href={`/timetable`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
+              <CalendarClock className="w-4 h-4" />
+              Jadwal
             </Link>
           </nav>
         </div>

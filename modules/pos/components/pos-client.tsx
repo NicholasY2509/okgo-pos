@@ -8,10 +8,11 @@ import { VoucherPacketList } from "./voucher-packet-list";
 import { ServiceSelectionDialog } from "./service-selection-dialog";
 import { VoucherRedeemTab } from "./voucher-redeem-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "lucide-react";
 
 interface PosClientProps {
   branchId: string;
-  tenant: string;
   products: any[];
   voucherPackets: any[];
   staff: any[];
@@ -21,7 +22,7 @@ interface PosClientProps {
   activeDiscount: number;
 }
 
-export function PosClient({ branchId, tenant, products, voucherPackets, staff, rooms, paymentMethods, customers, activeDiscount }: PosClientProps) {
+export function PosClient({ branchId, products, voucherPackets, staff, rooms, paymentMethods, customers, activeDiscount }: PosClientProps) {
   const {
     isPaymentModalOpen,
     setIsPaymentModalOpen,
@@ -33,17 +34,26 @@ export function PosClient({ branchId, tenant, products, voucherPackets, staff, r
     handleAddServiceToCart,
     handleVoucherPacketClick,
     clearCart,
-  } = usePosClient({ staff, rooms, activeDiscount });
+  } = usePosClient({ staff, rooms, activeDiscount, branchId });
 
   return (
     <div className="flex h-full gap-6 bg-muted/30 p-2 rounded-xl">
       <div className="flex-1 bg-background p-6 md:p-8 rounded-2xl shadow-sm border border-border overflow-y-auto flex flex-col">
         <Tabs defaultValue="services" className="w-full">
-          <TabsList className="grid w-[600px] grid-cols-3 mb-6">
-            <TabsTrigger value="services">Layanan</TabsTrigger>
-            <TabsTrigger value="vouchers">Paket Voucher</TabsTrigger>
-            <TabsTrigger value="redeem">Redeem Voucher</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between mb-6">
+            <TabsList className="grid w-[600px] grid-cols-3">
+              <TabsTrigger value="services">Layanan</TabsTrigger>
+              <TabsTrigger value="vouchers">Paket Voucher</TabsTrigger>
+              <TabsTrigger value="redeem">Redeem Voucher</TabsTrigger>
+            </TabsList>
+
+            <Button variant="outline" asChild>
+              <a href={`/timetable`}>
+                <Calendar className="w-4 h-4 mr-2" />
+                Lihat Jadwal
+              </a>
+            </Button>
+          </div>
 
           <TabsContent value="services" className="mt-0">
             <ServiceList products={products} onProductClick={handleProductClick} />

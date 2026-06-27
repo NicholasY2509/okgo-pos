@@ -53,7 +53,7 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] md:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px] md:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Layanan" : "Tambah Layanan Baru"}</DialogTitle>
           <DialogDescription>
@@ -102,7 +102,7 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
               )}
             </div>
 
-            <div className="space-y-2 col-span-2 sm:col-span-1">
+            <div className="space-y-2 col-span-2">
               <Label htmlFor="categoryId">Kategori</Label>
               <Controller
                 control={form.control}
@@ -123,7 +123,7 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
               />
             </div>
 
-            <div className="space-y-2 col-span-2 sm:col-span-1 flex items-center pb-1">
+            <div className="space-y-2 col-span-2 flex items-center pb-1">
               <Controller
                 control={form.control}
                 name="isActive"

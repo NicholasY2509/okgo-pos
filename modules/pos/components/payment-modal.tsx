@@ -41,8 +41,15 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
     setPayment(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async () => {
-    if (!isZeroTotal) {
+  const hasVoucherPacket = cart.items.some(i => i.type === "VOUCHER_PACKET");
+
+  const handleSubmit = async (isPayLater: boolean = false) => {
+    if (isPayLater) {
+      if (hasVoucherPacket) {
+        toast.error("Pembelian paket voucher tidak dapat menggunakan fitur Bayar Nanti.");
+        return;
+      }
+    } else if (!isZeroTotal) {
       if (totalPaid < cart.totalAmount) {
         toast.error("Jumlah bayar masih kurang.");
         return;
@@ -82,13 +89,14 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
         customerVoucherId: i.customerVoucherId,
         voucherCode: i.voucherCode
       })) as any,
-      payments: isZeroTotal ? [] : [{
+      payments: (isZeroTotal || isPayLater) ? [] : [{
         paymentMethodId: payment.paymentMethodId,
         amount: Number(payment.amount),
         referenceNumber: payment.referenceNumber || undefined,
         voucherCode: payment.voucherCode || undefined,
         notes: payment.notes || undefined
-      }]
+      }],
+      isPayLater
     };
 
     const res = await createPosTransactionAction(payload);
@@ -183,10 +191,10 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
               </div>
             )}
 
-            <div className="mt-auto pt-4">
+            <div className="mt-auto pt-4 flex flex-col gap-2">
               <Button
                 className="w-full h-14 text-lg rounded-xl font-medium"
-                onClick={handleSubmit}
+                onClick={() => handleSubmit(false)}
                 disabled={isSubmitting || (!isZeroTotal && (totalPaid < cart.totalAmount || !payment.paymentMethodId))}
               >
                 {isSubmitting ? "Memproses..." : (
@@ -196,6 +204,17 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
                   </>
                 )}
               </Button>
+              
+              {!isZeroTotal && !hasVoucherPacket && (
+                <Button
+                  variant="outline"
+                  className="w-full h-14 text-lg rounded-xl font-medium text-primary border-primary/20 hover:bg-primary/5"
+                  onClick={() => handleSubmit(true)}
+                  disabled={isSubmitting}
+                >
+                  Bayar Nanti & Mulai Sesi
+                </Button>
+              )}
             </div>
           </div>
 

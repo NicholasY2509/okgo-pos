@@ -16,7 +16,6 @@ export default async function POSPage({ params }: { params: Promise<{ tenant: st
   return (
     <PosClient
       branchId={data.branch.id}
-      tenant={tenant}
       products={data.products}
       voucherPackets={data.voucherPackets}
       staff={data.staff}

@@ -2,13 +2,16 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { usePosStoreActions, usePosStoreSelector } from "../stores/pos-store";
 
+import { createDirectRedemptionAction } from "../actions/pos-action";
+
 interface UsePosClientProps {
   staff: any[];
   rooms: any[];
   activeDiscount: number;
+  branchId: string;
 }
 
-export function usePosClient({ staff, rooms, activeDiscount }: UsePosClientProps) {
+export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosClientProps) {
   const { addItem, updateItemDiscount, clearCart, setCustomerId } = usePosStoreActions();
   const cartItems = usePosStoreSelector((state) => state.items);
   const cartCustomerId = usePosStoreSelector((state) => state.customerId);
@@ -48,7 +51,7 @@ export function usePosClient({ staff, rooms, activeDiscount }: UsePosClientProps
     }
   };
 
-  const handleAddServiceToCart = (staffId: string, roomId: string) => {
+  const handleAddServiceToCart = async (staffId: string, roomId: string) => {
     if (!selectedProduct || !staffId || !roomId) return;
 
     const staffMember = staff.find(s => s.id === staffId);
@@ -56,25 +59,19 @@ export function usePosClient({ staff, rooms, activeDiscount }: UsePosClientProps
     const unitPrice = Number(selectedProduct.price);
 
     if (selectedVoucherRedemption) {
-      if (cartCustomerId !== selectedVoucherRedemption.customerId) {
-        setCustomerId(selectedVoucherRedemption.customerId);
-      }
-
-      addItem({
-        type: "SERVICE",
-        serviceId: selectedProduct.id,
-        quantity: 1, // Force to 1 as recommended
-        staffId: staffId,
-        roomId: roomId,
-        discountAmount: unitPrice, // 100% discount
-        name: selectedProduct.name,
-        unitPrice: unitPrice,
-        staffName: staffMember?.firstName + " " + (staffMember?.lastName || ""),
-        roomName: room?.name,
-        isVoucherRedemption: true,
+      // Direct redemption
+      const res = await createDirectRedemptionAction({
+        branchId,
         customerVoucherId: selectedVoucherRedemption.id,
-        voucherCode: selectedVoucherRedemption.code,
+        roomId,
+        staffId
       });
+
+      if (res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Voucher berhasil ditukarkan dan sesi dimulai!");
+      }
       setSelectedVoucherRedemption(null);
     } else {
       const discountAmount = activeDiscount > 0 ? (unitPrice * activeDiscount) / 100 : 0;
