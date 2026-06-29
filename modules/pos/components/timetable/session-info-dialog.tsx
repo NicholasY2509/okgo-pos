@@ -29,17 +29,17 @@ export function SessionInfoDialog({
         <DialogHeader>
           <DialogTitle>Informasi Sesi</DialogTitle>
           <DialogDescription>
-            Detail sesi untuk {session.transactionItem?.itemNameSnapshot}
+            Detail sesi untuk {session.itemName}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-3 gap-4 border-b pb-4">
             <div className="text-sm text-muted-foreground">Pelanggan</div>
-            <div className="col-span-2 font-medium">{session.customer?.name || "Walk-in"}</div>
+            <div className="col-span-2 font-medium">{session.customerName}</div>
           </div>
           <div className="grid grid-cols-3 gap-4 border-b pb-4">
             <div className="text-sm text-muted-foreground">Layanan</div>
-            <div className="col-span-2 font-medium">{session.transactionItem?.itemNameSnapshot}</div>
+            <div className="col-span-2 font-medium">{session.itemName}</div>
           </div>
           <div className="grid grid-cols-3 gap-4 border-b pb-4">
             <div className="text-sm text-muted-foreground">Terapis</div>
@@ -98,7 +98,7 @@ export function SessionInfoDialog({
               <Button
                 className="w-full"
                 onClick={() => {
-                  if (session.transactionItem?.transaction?.status === "PENDING") {
+                  if (session.paymentStatus === "PENDING") {
                     toast.error("Tidak dapat menyelesaikan sesi. Pembayaran belum lunas.");
                     return;
                   }
@@ -110,7 +110,7 @@ export function SessionInfoDialog({
                 Selesaikan Sesi
               </Button>
             )}
-            {session.transactionItem?.transaction?.status === "PENDING" && (
+            {session.paymentStatus === "PENDING" && (
               <Button
                 className="w-full"
                 variant={session.status === "COMPLETED" ? "default" : "outline"}

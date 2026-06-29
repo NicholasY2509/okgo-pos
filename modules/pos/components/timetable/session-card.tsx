@@ -70,15 +70,15 @@ export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTi
         )}
 
         <div className="flex justify-between items-start gap-2 select-none pointer-events-none">
-          <span className="font-semibold text-xs truncate" title={session.transactionItem.itemNameSnapshot}>
-            {session.transactionItem.itemNameSnapshot}
+          <span className="font-semibold text-xs truncate" title={session.itemName}>
+            {session.itemName}
           </span>
         </div>
 
         <div className="text-[10px] text-muted-foreground flex flex-col gap-0.5 mt-auto select-none pointer-events-none">
           <div className="flex items-center justify-between">
-            <span className="truncate max-w-[50%] font-medium" title={session.customer?.name || "Walk-in"}>
-              {session.customer?.name || "Walk-in"}
+            <span className="truncate max-w-[50%] font-medium" title={session.customerName}>
+              {session.customerName}
             </span>
             <span className={cn("flex items-center gap-1 font-medium whitespace-nowrap", timerColor)}>
               {timerText}
@@ -88,7 +88,7 @@ export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTi
             <span className="truncate max-w-[60%]" title={session.staff ? `${session.staff.firstName} ${session.staff.lastName}` : "Terapis"}>
               Terapis: {session.staff ? session.staff.firstName : "-"}
             </span>
-            {session.transactionItem?.transaction?.status === "PENDING" && (
+            {session.paymentStatus === "PENDING" && (
               <Badge variant="destructive" className="text-[8px] px-1 py-0 h-4 uppercase">
                 Belum Lunas
               </Badge>
@@ -104,8 +104,10 @@ export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTi
         onStart={onStart}
         onComplete={onComplete}
         onPayNow={() => {
-          setSelectedPaymentTransaction(session.transactionItem.transaction);
-          setIsPaymentModalOpen(true);
+          if (session.transactionItem?.transaction) {
+            setSelectedPaymentTransaction(session.transactionItem.transaction);
+            setIsPaymentModalOpen(true);
+          }
         }}
       />
 

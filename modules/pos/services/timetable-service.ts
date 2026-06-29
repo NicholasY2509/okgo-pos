@@ -27,6 +27,12 @@ export class TimetableService {
             }
           }
         },
+        booking: {
+          include: {
+            items: true,
+            customer: { select: { name: true } }
+          }
+        },
         staff: {
           select: {
             firstName: true,
@@ -39,8 +45,29 @@ export class TimetableService {
       }
     });
 
-    return sessions.map(session => ({
+    return sessions.map(TimetableService.mapSessionOutput);
+  }
+
+  private static mapSessionOutput(session: any) {
+    const isBooking = !!session.booking;
+    const itemName = isBooking 
+      ? (session.booking.items?.[0]?.itemNameSnapshot || "Sesi") 
+      : (session.transactionItem?.itemNameSnapshot || "Sesi");
+      
+    const paymentStatus = isBooking 
+      ? session.booking.status 
+      : session.transactionItem?.transaction?.status;
+      
+    const customerName = session.transactionItem?.transaction?.customer?.name 
+      || session.booking?.customer?.name 
+      || session.booking?.customerName 
+      || "Walk-in";
+
+    return {
       ...session,
+      itemName,
+      paymentStatus,
+      customerName,
       transactionItem: session.transactionItem ? {
         ...session.transactionItem,
         unitPrice: session.transactionItem.unitPrice ? Number(session.transactionItem.unitPrice) : 0,
@@ -53,9 +80,18 @@ export class TimetableService {
           subtotal: session.transactionItem.transaction.subtotal ? Number(session.transactionItem.transaction.subtotal) : 0,
           discountTotal: session.transactionItem.transaction.discountTotal ? Number(session.transactionItem.transaction.discountTotal) : 0,
         } : null,
-      } : (null as any),
-      customer: session.transactionItem?.transaction?.customer || null
-    }));
+      } : null,
+      booking: session.booking ? {
+        ...session.booking,
+        totalAmount: session.booking.totalAmount ? Number(session.booking.totalAmount) : 0,
+        items: session.booking.items.map((item: any) => ({
+          ...item,
+          unitPrice: item.unitPrice ? Number(item.unitPrice) : 0,
+          subtotal: item.subtotal ? Number(item.subtotal) : 0,
+        }))
+      } : null,
+      customer: { name: customerName }
+    };
   }
 
   static async getSessionsByDate(branchId: string, dateStr: string) {
@@ -94,6 +130,12 @@ export class TimetableService {
             }
           }
         },
+        booking: {
+          include: {
+            items: true,
+            customer: { select: { name: true } }
+          }
+        },
         staff: {
           select: {
             firstName: true,
@@ -106,23 +148,7 @@ export class TimetableService {
       }
     });
 
-    return sessions.map(session => ({
-      ...session,
-      transactionItem: session.transactionItem ? {
-        ...session.transactionItem,
-        unitPrice: session.transactionItem.unitPrice ? Number(session.transactionItem.unitPrice) : 0,
-        discountAmount: session.transactionItem.discountAmount ? Number(session.transactionItem.discountAmount) : 0,
-        subtotal: session.transactionItem.subtotal ? Number(session.transactionItem.subtotal) : 0,
-        transaction: session.transactionItem.transaction ? {
-          ...session.transactionItem.transaction,
-          totalAmount: session.transactionItem.transaction.totalAmount ? Number(session.transactionItem.transaction.totalAmount) : 0,
-          paidAmount: session.transactionItem.transaction.paidAmount ? Number(session.transactionItem.transaction.paidAmount) : 0,
-          subtotal: session.transactionItem.transaction.subtotal ? Number(session.transactionItem.transaction.subtotal) : 0,
-          discountTotal: session.transactionItem.transaction.discountTotal ? Number(session.transactionItem.transaction.discountTotal) : 0,
-        } : null,
-      } : (null as any),
-      customer: session.transactionItem?.transaction?.customer || null
-    }));
+    return sessions.map(TimetableService.mapSessionOutput);
   }
 
   static async completeSession(sessionId: string) {
@@ -131,14 +157,15 @@ export class TimetableService {
       include: {
         transactionItem: {
           include: { transaction: true }
-        }
+        },
+        booking: true
       }
     });
 
     if (!session) throw new Error("Session not found");
     if (session.status !== "IN_PROGRESS") throw new Error("Session is not in progress");
 
-    if (session.transactionItem?.transaction?.status === "PENDING") {
+    if (session.transactionItem?.transaction?.status === "PENDING" || session.booking?.status === "PENDING") {
       throw new Error("Sesi tidak dapat diselesaikan karena pembayaran belum lunas.");
     }
 

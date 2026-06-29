@@ -34,7 +34,7 @@ export function StaffCombobox({ value, onChange, branchId, className }: StaffCom
   const selectedStaff = staffList.find((s) => s.id === value)
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -58,21 +58,26 @@ export function StaffCombobox({ value, onChange, branchId, className }: StaffCom
           <CommandList>
             <CommandEmpty>Terapis tidak ditemukan.</CommandEmpty>
             <CommandGroup>
+              <CommandItem
+                value=""
+                onSelect={() => {
+                  onChange("");
+                  setOpen(false);
+                }}
+                className="text-muted-foreground italic"
+              >
+                Kosongkan pilihan
+              </CommandItem>
               {staffList.map((staff) => (
                 <CommandItem
                   key={staff.id}
                   value={`${staff.firstName} ${staff.lastName}`}
+                  data-checked={value === staff.id}
                   onSelect={() => {
                     onChange(staff.id === value ? "" : staff.id)
                     setOpen(false)
                   }}
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === staff.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
                   {staff.firstName} {staff.lastName}
                 </CommandItem>
               ))}

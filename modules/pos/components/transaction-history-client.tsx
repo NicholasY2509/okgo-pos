@@ -122,70 +122,68 @@ export function TransactionHistoryClient({ branchId }: TransactionHistoryClientP
         </div>
       </div>
 
-      <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
-        <DataTable
-          columns={getTransactionHistoryColumns({
-            onView: (transaction) => {
-              setSelectedTransaction(transaction);
-              setIsDialogOpen(true);
-            },
-          })}
-          data={transactions}
-          emptyMessage={loading ? "Memuat transaksi..." : "Tidak ada transaksi ditemukan."}
-        />
+      <DataTable
+        columns={getTransactionHistoryColumns({
+          onView: (transaction) => {
+            setSelectedTransaction(transaction);
+            setIsDialogOpen(true);
+          },
+        })}
+        data={transactions}
+        emptyMessage={loading ? "Memuat transaksi..." : "Tidak ada transaksi ditemukan."}
+      />
 
-        {!loading && pagination.totalPages > 1 && (
-          <div className="p-4 border-t">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => handlePageChange(e, Math.max(1, page - 1))}
-                    className={page === 1 ? "pointer-events-none opacity-50" : ""}
-                  />
-                </PaginationItem>
+      {!loading && pagination.totalPages > 1 && (
+        <div className="p-4 border-t">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => handlePageChange(e, Math.max(1, page - 1))}
+                  className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
 
-                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                  let pageNum = i + 1;
-                  if (pagination.totalPages > 5 && page > 3) {
-                    pageNum = page - 2 + i;
-                    if (pageNum > pagination.totalPages) {
-                      pageNum = pagination.totalPages - (4 - i);
-                    }
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum = i + 1;
+                if (pagination.totalPages > 5 && page > 3) {
+                  pageNum = page - 2 + i;
+                  if (pageNum > pagination.totalPages) {
+                    pageNum = pagination.totalPages - (4 - i);
                   }
+                }
 
-                  return (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        href="#"
-                        isActive={page === pageNum}
-                        onClick={(e) => handlePageChange(e, pageNum)}
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
-
-                {pagination.totalPages > 5 && page < pagination.totalPages - 2 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
+                return (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      href="#"
+                      isActive={page === pageNum}
+                      onClick={(e) => handlePageChange(e, pageNum)}
+                    >
+                      {pageNum}
+                    </PaginationLink>
                   </PaginationItem>
-                )}
+                );
+              })}
 
+              {pagination.totalPages > 5 && page < pagination.totalPages - 2 && (
                 <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => handlePageChange(e, Math.min(pagination.totalPages, page + 1))}
-                    className={page === pagination.totalPages ? "pointer-events-none opacity-50" : ""}
-                  />
+                  <PaginationEllipsis />
                 </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
-      </div>
+              )}
+
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => handlePageChange(e, Math.min(pagination.totalPages, page + 1))}
+                  className={page === pagination.totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       <TransactionDetailDialog
         transaction={selectedTransaction}

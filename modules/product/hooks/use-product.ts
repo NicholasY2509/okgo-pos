@@ -41,6 +41,8 @@ export function useProductForm({ initialData, onSuccess }: UseProductFormOptions
       categoryId: data.categoryId === "none" ? null : data.categoryId
     }
 
+    console.log("Submitting payload:", payload)
+
     let result
     if (isEditing) {
       result = await updateProductAction({ ...payload, id: initialData.id })

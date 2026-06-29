@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatIDR } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useProductCombobox } from "../hooks/use-product-combobox";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductComboboxProps {
   branchId: string;
@@ -33,7 +34,7 @@ export function ProductCombobox({ branchId, value, onChange, error }: ProductCom
   const selectedProduct = services.find((p: any) => p.id === value);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -53,7 +54,7 @@ export function ProductCombobox({ branchId, value, onChange, error }: ProductCom
             </span>
           ) : selectedProduct ? (
             <span className="truncate">
-              {selectedProduct.name} ({selectedProduct.duration}m) - Rp {selectedProduct.price.toLocaleString('id-ID')}
+              {selectedProduct.name}
             </span>
           ) : (
             "Pilih layanan..."
@@ -67,22 +68,41 @@ export function ProductCombobox({ branchId, value, onChange, error }: ProductCom
           <CommandList>
             <CommandEmpty>Layanan tidak ditemukan.</CommandEmpty>
             <CommandGroup>
+              <CommandItem
+                value=""
+                onSelect={() => {
+                  onChange("");
+                  setOpen(false);
+                }}
+                className="text-muted-foreground italic py-3"
+              >
+                Kosongkan pilihan
+              </CommandItem>
               {services.map((p: any) => (
                 <CommandItem
                   key={p.id}
                   value={`${p.name} ${p.id}`}
+                  data-checked={value === p.id}
                   onSelect={() => {
                     onChange(p.id === value ? "" : p.id);
                     setOpen(false);
                   }}
+                  className="py-3 flex items-center"
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === p.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {p.name} ({p.duration || 0}m) - Rp {p.price?.toLocaleString('id-ID') || 0}
+                  <div className="flex flex-col">
+                    <div className="font-medium">
+                      {p.name}
+                      {p.isVip && (
+                        <Badge
+                          variant="outline"
+                          className="ml-2 border-amber-500 text-amber-700 bg-amber-50 text-[9px] px-2 py-0"
+                        >
+                          VIP
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-muted-foreground text-xs">{p.duration}m - {formatIDR(p.price)}</div>
+                  </div>
                 </CommandItem>
               ))}
             </CommandGroup>

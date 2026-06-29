@@ -27,10 +27,12 @@ export async function createProductAction(values: CreateProductInput) {
 }
 
 export async function updateProductAction(values: UpdateProductInput) {
+  console.log("Received values in update:", values)
   try {
     const validatedFields = updateProductSchema.safeParse(values)
 
     if (!validatedFields.success) {
+      console.log("Validation failed:", validatedFields.error)
       return { error: "Data tidak valid." }
     }
 

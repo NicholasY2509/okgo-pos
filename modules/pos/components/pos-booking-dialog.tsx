@@ -21,7 +21,7 @@ export function PosBookingDialog({ branchId }: PosBookingDialogProps) {
           Buat Booking
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Buat Booking Baru</DialogTitle>
         </DialogHeader>

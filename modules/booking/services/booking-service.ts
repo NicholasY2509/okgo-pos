@@ -101,7 +101,7 @@ export class BookingService {
         continue;
       }
 
-      const busyRoomIds = new Set<string>();
+      const roomSessionCounts = new Map<string, number>();
       const busyStaffIds = new Set<string>();
 
       for (const session of existingSessions) {
@@ -110,12 +110,21 @@ export class BookingService {
         const sessionEnd = session.endTime || addMinutes(sessionStart, 60);
 
         if (slotStart < sessionEnd && slotEnd > sessionStart) {
-          busyRoomIds.add(session.roomId);
+          roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
           busyStaffIds.add(session.staffId);
         }
       }
 
-      const availableRooms = rooms.filter(r => !busyRoomIds.has(r.id));
+      const availableRooms = [];
+      for (const r of rooms) {
+        const count = roomSessionCounts.get(r.id) || 0;
+        const capacity = r.capacity || 1;
+        const remaining = Math.max(0, capacity - count);
+        for (let i = 0; i < remaining; i++) {
+          availableRooms.push(r);
+        }
+      }
+
       const availableStaff = staff.filter(s => !busyStaffIds.has(s.id));
 
       const vipServicesCount = services.filter(s => s.isVip).length;
@@ -206,7 +215,7 @@ export class BookingService {
         }
       });
 
-      const busyRoomIds = new Set<string>();
+      const roomSessionCounts = new Map<string, number>();
       const busyStaffIds = new Set<string>();
 
       for (const session of existingSessions) {
@@ -215,12 +224,21 @@ export class BookingService {
         const sessionEnd = session.endTime || addMinutes(sessionStart, 60);
 
         if (slotStart < sessionEnd && slotEnd > sessionStart) {
-          busyRoomIds.add(session.roomId);
+          roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
           busyStaffIds.add(session.staffId);
         }
       }
 
-      const availableRooms = rooms.filter(r => !busyRoomIds.has(r.id));
+      const availableRooms = [];
+      for (const r of rooms) {
+        const count = roomSessionCounts.get(r.id) || 0;
+        const capacity = r.capacity || 1;
+        const remaining = Math.max(0, capacity - count);
+        for (let i = 0; i < remaining; i++) {
+          availableRooms.push(r);
+        }
+      }
+
       const availableStaff = staffList.filter(s => !busyStaffIds.has(s.id));
 
       const vipServicesCount = services.filter(s => s.isVip).length;

@@ -87,9 +87,7 @@ export function BookingList({ initialBookings }: { initialBookings: any[] }) {
         </div>
       </div>
 
-      <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
-        <DataTable columns={bookingColumns} data={filteredBookings} emptyMessage="Belum ada booking yang sesuai kriteria." />
-      </div>
+      <DataTable columns={bookingColumns} data={filteredBookings} emptyMessage="Belum ada booking yang sesuai kriteria." />
     </div>
   );
 }

@@ -57,16 +57,16 @@ export function TimetableClient({ branchId, rooms, paymentMethods }: TimetableCl
                 Buat Booking
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Buat Booking Baru</DialogTitle>
               </DialogHeader>
-              <AdminBookingForm 
-                branchId={branchId} 
+              <AdminBookingForm
+                branchId={branchId}
                 onSuccess={() => {
                   setIsBookingModalOpen(false);
                   fetchSessions(date);
-                }} 
+                }}
                 onCancel={() => setIsBookingModalOpen(false)}
               />
             </DialogContent>
@@ -107,7 +107,7 @@ export function TimetableClient({ branchId, rooms, paymentMethods }: TimetableCl
 
         {/* Y-Axis Body (Rooms & Sessions) */}
         <div className="flex-1 flex flex-col min-w-max relative pb-4 pt-4">
-          
+
           <CurrentTimeLine date={date} />
 
           {loading ? (
@@ -122,10 +122,10 @@ export function TimetableClient({ branchId, rooms, paymentMethods }: TimetableCl
                 <div className="flex-1 flex isolate">
                   {hoursArray.map(hour => (
                     <div key={`skel-grid-${hour}`} className="flex-1 min-w-[120px] border-r border-border h-full flex items-center px-2">
-                       {/* Randomly place a skeleton to look like a loading session */}
-                       {Math.random() > 0.7 && (
-                         <Skeleton className="h-12 w-full rounded-md opacity-50" />
-                       )}
+                      {/* Randomly place a skeleton to look like a loading session */}
+                      {Math.random() > 0.7 && (
+                        <Skeleton className="h-12 w-full rounded-md opacity-50" />
+                      )}
                     </div>
                   ))}
                 </div>
