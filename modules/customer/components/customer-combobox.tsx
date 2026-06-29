@@ -6,8 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { searchCustomersAction } from "../actions/customer-action";
-import { useDebounce } from "@/hooks/use-debounce"; // check if this exists, if not we will create it or use inline
+import { useCustomerCombobox } from "../hooks/use-customer-combobox";
 
 interface CustomerComboboxProps {
   selectedCustomerId?: string;
@@ -17,55 +16,17 @@ interface CustomerComboboxProps {
 }
 
 export function CustomerCombobox({ selectedCustomerId, onSelectCustomer, initialCustomers = [] }: CustomerComboboxProps) {
-  const [open, setOpen] = useState(false);
-  const [customers, setCustomers] = useState<any[]>(initialCustomers);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-
-  // Simple debounce inline if hook is missing
-  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
-
-  const loadCustomers = useCallback(async (query: string, pageNum: number, isNewSearch: boolean = false) => {
-    setLoading(true);
-    const result = await searchCustomersAction(query, pageNum, 20);
-    
-    if (result.success && result.data && result.metadata) {
-      if (isNewSearch) {
-        setCustomers(result.data);
-      } else {
-        setCustomers(prev => [...prev, ...result.data]);
-      }
-      setHasMore(result.metadata.hasMore);
-    }
-    setLoading(false);
-  }, []);
-
-  // Fetch when debounced search changes
-  useEffect(() => {
-    setPage(1);
-    loadCustomers(debouncedSearch, 1, true);
-  }, [debouncedSearch, loadCustomers]);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLDivElement;
-    if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
-      if (hasMore && !loading) {
-        const nextPage = page + 1;
-        setPage(nextPage);
-        loadCustomers(debouncedSearch, nextPage, false);
-      }
-    }
-  };
+  const {
+    open,
+    setOpen,
+    customers,
+    searchQuery,
+    setSearchQuery,
+    loading,
+    page,
+    hasMore,
+    handleScroll
+  } = useCustomerCombobox(initialCustomers);
 
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
   

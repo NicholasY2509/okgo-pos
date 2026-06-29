@@ -1,9 +1,5 @@
 "use client"
-
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
+import { useCategory } from "../hooks/use-category"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,54 +15,14 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Plus } from "lucide-react"
 
-import { createCategorySchema, type CreateCategoryInput } from "../schemas/category-schema"
-import { createCategoryAction, updateCategoryAction, deleteCategoryAction } from "../actions/category-action"
-
 interface CategoryDialogProps {
   initialData?: any
   children?: React.ReactNode
 }
 
 export function CategoryDialog({ initialData, children }: CategoryDialogProps) {
-  const [open, setOpen] = useState(false)
-  const isEditing = !!initialData
-  
-  const form = useForm<CreateCategoryInput>({
-    resolver: zodResolver(createCategorySchema),
-    defaultValues: {
-      name: initialData?.name || "",
-      description: initialData?.description || "",
-    },
-  })
+  const { open, setOpen, isEditing, form, onSubmit, onDelete, isSubmitting } = useCategory({ initialData })
 
-  async function onSubmit(data: CreateCategoryInput) {
-    let result
-    if (isEditing) {
-      result = await updateCategoryAction({ ...data, id: initialData.id })
-    } else {
-      result = await createCategoryAction(data)
-    }
-
-    if (result.error) {
-      toast.error(result.error)
-    } else {
-      toast.success(`Kategori berhasil ${isEditing ? "diperbarui" : "dibuat"}`)
-      setOpen(false)
-      if (!isEditing) form.reset()
-    }
-  }
-
-  async function onDelete() {
-    if (confirm("Apakah Anda yakin ingin menghapus kategori ini?")) {
-      const result = await deleteCategoryAction(initialData.id)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
-        toast.success("Kategori berhasil dihapus")
-        setOpen(false)
-      }
-    }
-  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -85,7 +41,7 @@ export function CategoryDialog({ initialData, children }: CategoryDialogProps) {
             {isEditing ? "Perbarui detail kategori." : "Buat kategori baru untuk mengelompokkan produk/layanan Anda."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+        <form onSubmit={onSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nama</Label>
             <Input id="name" {...form.register("name")} placeholder="cth. Pijat" />

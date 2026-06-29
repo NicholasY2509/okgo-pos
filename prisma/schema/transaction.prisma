@@ -191,7 +191,8 @@ model VoucherRedemption {
 model ServiceSession {
   id String @id @default(cuid())
 
-  transactionItemId String
+  transactionItemId String?
+  bookingId         String?
   customerId        String?
   serviceId         String
   staffId           String
@@ -204,13 +205,15 @@ model ServiceSession {
   endTime   DateTime?
 
   staff              Staff               @relation(fields: [staffId], references: [id])
-  transactionItem    TransactionItem     @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
+  transactionItem    TransactionItem?    @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
+  booking            Booking?            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   voucherRedemptions VoucherRedemption[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([transactionItemId])
+  @@index([bookingId])
   @@index([customerId])
   @@index([serviceId])
   @@index([staffId])
@@ -228,6 +231,7 @@ model Customer {
 
   vouchers     CustomerVoucher[]
   transactions Transaction[]
+  bookings     Booking[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

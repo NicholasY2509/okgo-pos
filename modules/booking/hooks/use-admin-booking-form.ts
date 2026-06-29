@@ -28,8 +28,7 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       branchId,
-      customerName: "",
-      customerPhone: "",
+      customerId: "",
       selections: [{ serviceId: "", staffId: undefined }],
       date: format(new Date(), "yyyy-MM-dd"),
       startTime: "",

@@ -1,74 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useBooking } from "../hooks/use-booking";
+import { useBookingWizard } from "../hooks/use-booking-wizard";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
-import { getBranchesAction, getServicesAction, getStaffStatusAction, getAvailableSlotsAction } from "../actions/booking-actions";
 import { StepIdentity } from "./steps/step-identity";
 import { StepCart } from "./steps/step-cart";
 import { StepTime } from "./steps/step-time";
 import { StepSummary } from "./steps/step-summary";
 
 export function BookingWizard() {
-  const { form, onSubmit, isSubmitting, error, step, nextStep, prevStep, isSuccess } = useBooking();
-  const [branches, setBranches] = useState<any[]>([]);
-  const [services, setServices] = useState<any[]>([]);
-  const [staffList, setStaffList] = useState<any[]>([]);
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingBranches, setLoadingBranches] = useState(true);
-
-  const selectedBranchId = form.watch("branchId");
-  const selections = form.watch("selections");
-  const selectedDate = form.watch("date");
-  const selectedTime = form.watch("startTime");
-  const customerName = form.watch("customerName");
-  const customerPhone = form.watch("customerPhone");
-
-  let canProceed = false;
-  if (step === 1) {
-    canProceed = !!(customerName && customerPhone && selectedBranchId);
-  } else if (step === 2) {
-    canProceed = selections && selections.length > 0 && selections.every((s: any) => !!s.serviceId);
-  } else if (step === 3) {
-    canProceed = !!(selectedDate && selectedTime);
-  } else if (step === 4) {
-    canProceed = true; // Final step is just a review before submit
-  }
-
-  useEffect(() => {
-    getBranchesAction().then((res) => {
-      if (res.success) setBranches(res.data);
-      setLoadingBranches(false);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (selectedBranchId) {
-      setLoading(true);
-      Promise.all([
-        getServicesAction(selectedBranchId),
-        getStaffStatusAction(selectedBranchId)
-      ]).then(([servicesRes, staffRes]) => {
-        if (servicesRes.success) setServices(servicesRes.data);
-        if (staffRes.success) setStaffList(staffRes.data);
-        setLoading(false);
-      });
-    }
-  }, [selectedBranchId]);
-
-  useEffect(() => {
-    const isCartValid = selections && selections.length > 0 && selections.every((s: any) => !!s.serviceId);
-    if (selectedBranchId && isCartValid && selectedDate) {
-      setLoading(true);
-      getAvailableSlotsAction(selectedBranchId, selectedDate, selections)
-        .then(res => {
-          if (res.success) setAvailableSlots(res.data);
-          setLoading(false);
-        });
-    }
-  }, [selectedBranchId, JSON.stringify(selections), selectedDate]);
+  const {
+    form,
+    onSubmit,
+    isSubmitting,
+    error,
+    step,
+    nextStep,
+    prevStep,
+    isSuccess,
+    branches,
+    services,
+    staffList,
+    availableSlots,
+    loading,
+    loadingBranches,
+    canProceed
+  } = useBookingWizard();
 
   if (isSuccess) {
     return (
@@ -78,7 +35,7 @@ export function BookingWizard() {
         </div>
         <h2 className="text-4xl font-display font-light tracking-tight">Booking Berhasil!</h2>
         <p className="text-muted-foreground font-light max-w-md text-lg">
-          Terima kasih {form.watch("customerName")}, jadwal Anda telah berhasil dipesan. Silakan datang ke cabang tepat waktu dan lakukan pembayaran di kasir.
+          Terima kasih {(form.watch as any)("customerName")}, jadwal Anda telah berhasil dipesan. Silakan datang ke cabang tepat waktu dan lakukan pembayaran di kasir.
         </p>
         <Button
           className="mt-8 bg-foreground text-background font-medium tracking-wide py-6 px-10 rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer hover:bg-primary hover:text-primary-foreground"

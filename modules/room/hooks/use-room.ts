@@ -23,12 +23,14 @@ export function useRoom({ initialData, onSuccess }: UseRoomProps = {}) {
           name: initialData.name,
           capacity: initialData.capacity || undefined,
           isActive: initialData.isActive,
+          isVip: initialData.isVip ?? false,
           branchId: initialData.branchId,
         }
       : {
           name: "",
           capacity: undefined,
           isActive: true,
+          isVip: false,
           branchId: "",
         },
   });

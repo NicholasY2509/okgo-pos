@@ -13,6 +13,15 @@ export async function searchCustomersAction(query: string = "", page: number = 1
   }
 }
 
+export async function getCustomerByIdAction(id: string) {
+  try {
+    const customer = await CustomerService.getById(id);
+    return { success: true, data: customer };
+  } catch (error: any) {
+    return { error: error.message || "An unexpected error occurred." };
+  }
+}
+
 export async function createCustomerAction(values: CustomerInput) {
   try {
     const validatedFields = customerSchema.safeParse(values);

@@ -35,9 +35,16 @@ export const getProductsColumns = (categories: any[]): ColumnDef<any>[] => [
       const description = row.original.description
       return (
         <div className="font-medium">
-          <div>{name}</div>
+          <div className="flex items-center gap-2">
+            <span>{name}</span>
+            {row.original.isVip && (
+              <Badge variant="outline" className="border-amber-500 text-amber-700 bg-amber-50 text-[10px] px-1.5 py-0">
+                VIP
+              </Badge>
+            )}
+          </div>
           {description && (
-            <div className="text-xs text-muted-foreground line-clamp-1">{description}</div>
+            <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{description}</div>
           )}
         </div>
       )

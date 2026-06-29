@@ -7,6 +7,7 @@ import { Calendar, Scissors, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatIDR } from "@/lib/utils";
+import { BookingActionCell } from "./booking-action-cell";
 
 export const bookingColumns: ColumnDef<any>[] = [
   {
@@ -15,7 +16,7 @@ export const bookingColumns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const booking = row.original;
       let earliestTime: Date | null = null;
-      const sessions = booking.items?.flatMap((item: any) => item.serviceSessions || []) || [];
+      const sessions = booking.serviceSessions || [];
 
       sessions.forEach((s: any) => {
         if (s.startTime) {
@@ -46,10 +47,10 @@ export const bookingColumns: ColumnDef<any>[] = [
     },
   },
   {
-    accessorKey: "transactionNumber",
+    accessorKey: "bookingNumber",
     header: "No. Booking",
     cell: ({ row }) => {
-      return <div className="font-mono font-medium">{row.original.transactionNumber}</div>;
+      return <div className="font-mono font-medium">{row.original.bookingNumber}</div>;
     },
   },
   {
@@ -97,11 +98,19 @@ export const bookingColumns: ColumnDef<any>[] = [
   {
     accessorKey: "status",
     header: () => <div className="text-center">Status</div>,
-    cell: () => {
+    cell: ({ row }) => {
+      const status = row.original.status;
       return (
         <div className="text-center">
-          <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 text-[10px] uppercase">
-            Pending
+          <Badge 
+            variant="secondary" 
+            className={`text-[10px] uppercase ${
+              status === 'PENDING' ? 'bg-orange-500/10 text-orange-600 hover:bg-orange-500/20' : 
+              status === 'PROCESSED' ? 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20' : 
+              'bg-gray-500/10 text-gray-600 hover:bg-gray-500/20'
+            }`}
+          >
+            {status}
           </Badge>
         </div>
       );
@@ -110,12 +119,10 @@ export const bookingColumns: ColumnDef<any>[] = [
   {
     id: "actions",
     header: () => <div className="text-center">Aksi</div>,
-    cell: () => {
+    cell: ({ row }) => {
       return (
         <div className="text-center">
-          <Button size="sm" className="rounded-full shadow-sm h-8">
-            Proses <Check className="w-3 h-3 ml-1" />
-          </Button>
+          <BookingActionCell booking={row.original} />
         </div>
       );
     },

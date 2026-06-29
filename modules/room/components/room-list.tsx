@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { RoomWithBranch } from "../types/room-types";
 import { DataTable } from "@/components/ui/data-table";
 import { getColumns } from "./room-columns";
@@ -14,8 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RoomForm } from "./room-form";
-import { deleteRoomAction } from "../actions/room-action";
-import { toast } from "sonner";
+import { useRoomList } from "../hooks/use-room-list";
 import {
   DialogFooter,
 } from "@/components/ui/dialog";
@@ -27,29 +25,18 @@ interface RoomListProps {
 }
 
 export function RoomList({ data, branches }: RoomListProps) {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingRoom, setEditingRoom] = useState<RoomWithBranch | null>(null);
-  const [deletingRoom, setDeletingRoom] = useState<RoomWithBranch | null>(null);
+  const {
+    isCreateOpen,
+    setIsCreateOpen,
+    editingRoom,
+    setEditingRoom,
+    deletingRoom,
+    setDeletingRoom,
+    handleEdit,
+    handleDeleteClick,
+    handleConfirmDelete
+  } = useRoomList();
 
-  const handleEdit = (room: RoomWithBranch) => {
-    setEditingRoom(room);
-  };
-
-  const handleDeleteClick = (room: RoomWithBranch) => {
-    setDeletingRoom(room);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deletingRoom) return;
-
-    const result = await deleteRoomAction(deletingRoom.id);
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success("Ruangan berhasil dihapus!");
-    }
-    setDeletingRoom(null);
-  };
 
   const columns = getColumns({ onEdit: handleEdit, onDelete: handleDeleteClick });
 

@@ -97,6 +97,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 </div>
 
                 <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Tipe Layanan</h3>
+                  <div className="mt-1">
+                    {product.isVip ? (
+                      <Badge variant="outline" className="border-amber-500 text-amber-700 bg-amber-50">
+                        VIP
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        Standar
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
                   <div className="mt-1">
                     <Badge variant={product.isActive ? "default" : "secondary"}>

@@ -38,9 +38,9 @@ export async function updateProductAction(values: UpdateProductInput) {
     const product = await ProductService.updateProduct(id, data)
     revalidatePath("/admin/products")
     return { success: true, data: product }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to update product:", error)
-    return { error: "Gagal memperbarui produk." }
+    return { error: `Gagal memperbarui produk: ${error?.message || "Unknown error"}` }
   }
 }
 

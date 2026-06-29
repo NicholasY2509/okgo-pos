@@ -38,7 +38,7 @@ export default async function TenantLayout({
           </nav>
         </div>
       </header>
-      <main className="flex-1 p-6 container w-full mx-auto">
+      <main className="flex-1 p-6 w-full mx-auto">
         <PosStoreProvider>
           {children}
         </PosStoreProvider>

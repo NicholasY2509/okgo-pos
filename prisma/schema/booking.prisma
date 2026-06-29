@@ -1,0 +1,52 @@
+model Booking {
+  id String @id @default(cuid())
+
+  branchId   String
+  customerId String?
+
+  bookingNumber String @unique
+  
+  customerName  String?
+  customerPhone String?
+
+  totalAmount   Decimal
+
+  status BookingStatus @default(PENDING)
+
+  customer Customer?     @relation(fields: [customerId], references: [id])
+  items    BookingItem[]
+  serviceSessions ServiceSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model BookingItem {
+  id String @id @default(cuid())
+
+  bookingId String
+  serviceId String
+
+  itemNameSnapshot String
+  unitPrice        Decimal
+  quantity         Int     @default(1)
+  subtotal         Decimal
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([serviceId])
+}
+
+enum BookingStatus {
+  PENDING
+  PROCESSED
+  CANCELLED
+}

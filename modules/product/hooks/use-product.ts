@@ -29,6 +29,7 @@ export function useProductForm({ initialData, onSuccess }: UseProductFormOptions
       duration: initialData?.duration || 60,
       categoryId: initialData?.categoryId || "",
       isActive: initialData?.isActive ?? true,
+      isVip: initialData?.isVip ?? false,
       image: initialData?.image || "",
     },
   })

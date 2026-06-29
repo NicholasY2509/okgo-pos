@@ -118,7 +118,13 @@ export class BookingService {
       const availableRooms = rooms.filter(r => !busyRoomIds.has(r.id));
       const availableStaff = staff.filter(s => !busyStaffIds.has(s.id));
 
-      if (availableRooms.length < selections.length) continue;
+      const vipServicesCount = services.filter(s => s.isVip).length;
+      const standardServicesCount = services.length - vipServicesCount;
+
+      const availableVipRooms = availableRooms.filter(r => r.isVip).length;
+      const availableStandardRooms = availableRooms.filter(r => !r.isVip).length;
+
+      if (availableVipRooms < vipServicesCount || availableStandardRooms < standardServicesCount) continue;
 
       let canFulfillAll = true;
 
@@ -150,20 +156,27 @@ export class BookingService {
 
   static async createBooking(data: BookingInput) {
     return await prisma.$transaction(async (tx) => {
-      // 1. Find or create customer
-      const customers = await tx.customer.findMany({
-        where: { phone: data.customerPhone }
-      });
-
-      let customer = customers.find(c => c.name.toLowerCase().trim() === data.customerName.toLowerCase().trim());
-
-      if (!customer) {
-        customer = await tx.customer.create({
-          data: {
-            name: data.customerName,
-            phone: data.customerPhone
-          }
+      // 1. Get or create customer
+      let customer;
+      if (data.customerId) {
+        customer = await tx.customer.findUnique({
+          where: { id: data.customerId }
         });
+        if (!customer) throw new Error("Pelanggan tidak ditemukan.");
+      } else if (data.customerName && data.customerPhone) {
+        customer = await tx.customer.findFirst({
+          where: { phone: data.customerPhone }
+        });
+        if (!customer) {
+          customer = await tx.customer.create({
+            data: {
+              name: data.customerName,
+              phone: data.customerPhone,
+            }
+          });
+        }
+      } else {
+        throw new Error("Pelanggan wajib diisi.");
       }
 
       const serviceIds = data.selections.map(s => s.serviceId);
@@ -210,7 +223,13 @@ export class BookingService {
       const availableRooms = rooms.filter(r => !busyRoomIds.has(r.id));
       const availableStaff = staffList.filter(s => !busyStaffIds.has(s.id));
 
-      if (availableRooms.length < data.selections.length || availableStaff.length < data.selections.length) {
+      const vipServicesCount = services.filter(s => s.isVip).length;
+      const standardServicesCount = services.length - vipServicesCount;
+
+      const availableVipRooms = availableRooms.filter(r => r.isVip).length;
+      const availableStandardRooms = availableRooms.filter(r => !r.isVip).length;
+
+      if (availableVipRooms < vipServicesCount || availableStandardRooms < standardServicesCount || availableStaff.length < data.selections.length) {
         throw new Error("Kapasitas ruangan/terapis tidak mencukupi untuk waktu ini.");
       }
 
@@ -221,7 +240,11 @@ export class BookingService {
         const service = services.find(s => s.id === sel.serviceId);
         if (!service) throw new Error("Service not found");
 
-        let assignedRoom = availableRooms.pop();
+        let assignedRoomIndex = availableRooms.findIndex(r => r.isVip === service.isVip);
+        if (assignedRoomIndex === -1) {
+          throw new Error(`Tidak ada ruangan ${service.isVip ? 'VIP' : 'Standar'} yang tersedia.`);
+        }
+        let assignedRoom = availableRooms.splice(assignedRoomIndex, 1)[0];
         let assignedStaff;
 
         if (sel.staffId) {
@@ -254,19 +277,19 @@ export class BookingService {
         });
       }
 
-      const transactionNumber = `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const bookingNumber = `BKG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-      const transaction = await tx.transaction.create({
+      const booking = await tx.booking.create({
         data: {
           branchId: data.branchId,
           customerId: customer.id,
-          transactionNumber,
-          subtotal,
+          bookingNumber,
+          customerName: customer.name,
+          customerPhone: customer.phone,
           totalAmount: subtotal,
           status: "PENDING",
           items: {
             create: transactionItems.map(item => ({
-              type: item.type,
               serviceId: item.serviceId,
               itemNameSnapshot: item.itemNameSnapshot,
               unitPrice: item.unitPrice,
@@ -281,13 +304,13 @@ export class BookingService {
       const createdSessions = [];
       for (let i = 0; i < transactionItems.length; i++) {
         const itemSpec = transactionItems[i];
-        const dbItem = transaction.items[i];
+        const dbItem = booking.items[i];
 
         const sessionSlotEnd = addMinutes(slotStart, itemSpec._duration);
 
         const session = await tx.serviceSession.create({
           data: {
-            transactionItemId: dbItem.id,
+            bookingId: booking.id,
             customerId: customer.id,
             serviceId: itemSpec.serviceId,
             staffId: itemSpec._assignedStaffId,
@@ -301,7 +324,7 @@ export class BookingService {
         createdSessions.push(session);
       }
 
-      return { transaction, serviceSessions: createdSessions };
+      return { booking, serviceSessions: createdSessions };
     });
   }
 }

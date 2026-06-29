@@ -14,6 +14,7 @@ model Product {
   description String?
   price       Decimal  @default(0)
   duration    Int? // Duration in minutes
+  isVip       Boolean  @default(false)
   isActive    Boolean  @default(true)
   image       String?
   categoryId  String?

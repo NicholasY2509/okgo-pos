@@ -10,3 +10,12 @@ export async function getBookingsAction(branchSlug: string) {
     return { error: error.message || "Gagal memuat daftar booking" };
   }
 }
+
+export async function updateBookingStatusAction(bookingId: string, status: 'PROCESSED' | 'CANCELLED') {
+  try {
+    const result = await BookingListService.updateBookingStatus(bookingId, status);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { error: error.message || `Gagal mengubah status booking` };
+  }
+}

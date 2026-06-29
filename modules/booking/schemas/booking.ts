@@ -2,8 +2,9 @@ import { z } from "zod";
 
 export const bookingSchema = z.object({
   branchId: z.string().min(1, "Cabang wajib dipilih"),
-  customerName: z.string().min(1, "Nama wajib diisi"),
-  customerPhone: z.string().min(8, "Nomor WhatsApp tidak valid"),
+  customerId: z.string().optional(),
+  customerName: z.string().optional(),
+  customerPhone: z.string().optional(),
   selections: z.array(z.object({
     serviceId: z.string().min(1, "Layanan wajib dipilih"),
     staffId: z.string().optional(),

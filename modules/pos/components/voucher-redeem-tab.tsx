@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { getCustomerVouchersAction, getVoucherByCodeAction } from "../../vouchers/actions/get-customer-vouchers-action";
+import { useVoucherRedeemTab } from "../hooks/use-voucher-redeem-tab";
 import { CustomerCombobox } from "../../customer/components/customer-combobox";
 
 interface VoucherRedeemTabProps {
@@ -17,65 +17,26 @@ interface VoucherRedeemTabProps {
 }
 
 export function VoucherRedeemTab({ customers, onRedeemVoucher }: VoucherRedeemTabProps) {
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>();
-  const [serialNumber, setSerialNumber] = useState("");
-
-  const [ownedVouchers, setOwnedVouchers] = useState<any[]>([]);
-  const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
-  const [isRedeeming, setIsRedeeming] = useState(false);
-
-  useEffect(() => {
-    async function fetchVouchers() {
-      if (!selectedCustomerId) {
-        setOwnedVouchers([]);
-        return;
-      }
-      setIsLoadingVouchers(true);
-      const result = await getCustomerVouchersAction(selectedCustomerId);
-      if (result.success && result.data) {
-        setOwnedVouchers(result.data);
-      } else {
-        toast.error("Gagal mengambil data voucher pelanggan.");
-      }
-      setIsLoadingVouchers(false);
-    }
-    fetchVouchers();
-  }, [selectedCustomerId]);
-
-  const [previewVoucher, setPreviewVoucher] = useState<any>(null);
-
-  const handleSearch = async () => {
-    if (!serialNumber) {
-      toast.error("Masukkan kode voucher terlebih dahulu");
-      return;
-    }
-
-    setIsRedeeming(true);
-    const result = await getVoucherByCodeAction(serialNumber);
-    setIsRedeeming(false);
-
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-
-    if (result.data) {
-      setPreviewVoucher(result.data);
-    }
-  };
-
-  const confirmRedeem = (voucher: any) => {
-    onRedeemVoucher(voucher);
-    setPreviewVoucher(null);
-    setSerialNumber("");
-  };
+  const {
+    selectedCustomerId,
+    setSelectedCustomerId,
+    serialNumber,
+    setSerialNumber,
+    ownedVouchers,
+    isLoadingVouchers,
+    isRedeeming,
+    previewVoucher,
+    setPreviewVoucher,
+    handleSearch,
+    confirmRedeem
+  } = useVoucherRedeemTab(onRedeemVoucher);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div className="space-y-4 flex flex-col">
         <div>
           <Label className="text-sm font-semibold mb-2 block">Redeem Manual</Label>
-          <p className="text-xs text-muted-foreground mb-4">
+          <p className="text-xs text-muted-foreground">
             Masukkan nomor seri voucher secara manual untuk melakukan redeem.
           </p>
         </div>

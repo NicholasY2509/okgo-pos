@@ -17,14 +17,15 @@ export function BookingList({ initialBookings }: { initialBookings: any[] }) {
       // Search term filter
       const matchesSearch =
         !searchTerm ||
-        booking.transactionNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (booking.customer?.name && booking.customer.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        booking.bookingNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (booking.customer?.name && booking.customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (booking.customerName && booking.customerName.toLowerCase().includes(searchTerm.toLowerCase()));
 
       // Date range filter
       let matchesDate = true;
       if (dateRange?.from) {
         let earliestTime: Date | null = null;
-        const sessions = booking.items?.flatMap((item: any) => item.serviceSessions || []) || [];
+        const sessions = booking.serviceSessions || [];
         sessions.forEach((s: any) => {
           if (s.startTime) {
             const d = new Date(s.startTime);

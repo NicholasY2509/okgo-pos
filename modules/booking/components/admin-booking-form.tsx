@@ -10,6 +10,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { CustomerSelector } from "../../pos/components/customer-selector";
+import { ProductCombobox } from "../../product/components/product-combobox";
+import { StaffCombobox } from "../../staff/components/staff-combobox";
 
 interface AdminBookingFormProps {
   branchId: string;
@@ -42,35 +45,23 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
   return (
     <Form {...form}>
       <form onSubmit={onSubmit} className="space-y-4 pt-2">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="customerName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nama Pelanggan</FormLabel>
-                <FormControl>
-                  <Input placeholder="Cth: Budi" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="customerPhone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>No WhatsApp</FormLabel>
-                <FormControl>
-                  <Input placeholder="Cth: 08123456789" type="tel" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="customerId"
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <FormLabel>Pelanggan</FormLabel>
+              <FormControl>
+                <CustomerSelector
+                  value={field.value}
+                  onChange={(val) => field.onChange(val || "")}
+                  error={!!fieldState.error}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
@@ -78,24 +69,14 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
           render={({ field }) => (
             <FormItem>
               <FormLabel>Layanan</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih layanan..." />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {services.map(category => (
-                    <optgroup label={category.name} key={category.id}>
-                      {category.products?.map((p: any) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.name} ({p.duration}m) - Rp {p.price.toLocaleString('id-ID')}
-                        </SelectItem>
-                      ))}
-                    </optgroup>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <ProductCombobox
+                  branchId={branchId}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={!!form.formState.errors.selections?.[0]?.serviceId}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -107,21 +88,13 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
           render={({ field }) => (
             <FormItem>
               <FormLabel>Terapis (Opsional)</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value || "none"}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Bebas (Siapa Saja)" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="none">Bebas (Siapa Saja)</SelectItem>
-                  {staffList.map(staff => (
-                    <SelectItem key={staff.id} value={staff.id}>
-                      {staff.firstName} {staff.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <StaffCombobox
+                  branchId={branchId}
+                  value={field.value || ""}
+                  onChange={(val) => field.onChange(val || undefined)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

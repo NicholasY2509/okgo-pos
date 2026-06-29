@@ -9,10 +9,8 @@ import { ServiceSelectionDialog } from "./service-selection-dialog";
 import { VoucherRedeemTab } from "./voucher-redeem-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Calendar, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AdminBookingForm } from "../../booking/components/admin-booking-form";
-import { useState } from "react";
+import { Calendar } from "lucide-react";
+import { PosBookingDialog } from "./pos-booking-dialog";
 
 interface PosClientProps {
   branchId: string;
@@ -39,8 +37,6 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
     clearCart,
   } = usePosClient({ staff, rooms, activeDiscount, branchId });
 
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-
   return (
     <div className="flex h-full gap-6 bg-muted/30 p-2 rounded-xl">
       <div className="flex-1 bg-background p-6 md:p-8 rounded-2xl shadow-sm border border-border overflow-y-auto flex flex-col">
@@ -53,24 +49,7 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
             </TabsList>
 
             <div className="flex gap-2">
-              <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Buat Booking
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>Buat Booking Baru</DialogTitle>
-                  </DialogHeader>
-                  <AdminBookingForm
-                    branchId={branchId}
-                    onSuccess={() => setIsBookingModalOpen(false)}
-                    onCancel={() => setIsBookingModalOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
+              <PosBookingDialog branchId={branchId} />
 
               <Button variant="outline" asChild>
                 <a href={`/timetable`}>
@@ -97,7 +76,6 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
 
       <div className="w-[400px] shrink-0 flex flex-col sticky top-20 h-[calc(100vh-8rem)] min-h-[500px]">
         <PosCart
-          customers={customers}
           onCheckout={() => setIsPaymentModalOpen(true)}
         />
       </div>

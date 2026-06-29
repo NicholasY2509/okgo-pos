@@ -86,6 +86,23 @@ export function RoomForm({ initialData, branches, onSuccess, onCancel }: RoomFor
         />
       </div>
 
+      <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm border-amber-200 bg-amber-50/30">
+        <div className="space-y-0.5">
+          <Label htmlFor="isVip" className="text-amber-700">Ruangan VIP</Label>
+        </div>
+        <Controller
+          control={form.control}
+          name="isVip"
+          render={({ field }) => (
+            <Switch
+              id="isVip"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
+      </div>
+
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex justify-end space-x-2 pt-4">

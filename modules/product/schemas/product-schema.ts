@@ -5,6 +5,7 @@ export const createProductSchema = z.object({
   description: z.string().optional().nullable(),
   price: z.coerce.number().min(0, "Harga harus lebih besar atau sama dengan 0"),
   duration: z.coerce.number().min(1, "Durasi minimal 1 menit").optional().nullable(),
+  isVip: z.boolean().default(false),
   isActive: z.boolean().default(true),
   categoryId: z.string().optional().nullable(),
   image: z.string().optional().nullable(),

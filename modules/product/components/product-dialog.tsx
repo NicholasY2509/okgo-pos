@@ -123,7 +123,7 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
               />
             </div>
 
-            <div className="space-y-2 col-span-2 flex items-center pb-1">
+            <div className="space-y-2 col-span-2 flex items-center gap-6 pb-1">
               <Controller
                 control={form.control}
                 name="isActive"
@@ -135,6 +135,20 @@ export function ProductDialog({ initialData, categories, children }: ProductDial
                       onCheckedChange={field.onChange}
                     />
                     <span className="text-sm font-medium leading-none">Aktif</span>
+                  </label>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name="isVip"
+                render={({ field }) => (
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <Checkbox
+                      id="isVip"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                    <span className="text-sm font-medium leading-none text-amber-600">VIP Layanan</span>
                   </label>
                 )}
               />

@@ -18,8 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { getStaffListAction } from "../actions/staff-action"
-import { toast } from "sonner"
+import { useStaffCombobox } from "../hooks/use-staff-combobox"
 
 interface StaffComboboxProps {
   value: string;
@@ -29,23 +28,8 @@ interface StaffComboboxProps {
 }
 
 export function StaffCombobox({ value, onChange, branchId, className }: StaffComboboxProps) {
-  const [open, setOpen] = React.useState(false)
-  const [staffList, setStaffList] = React.useState<any[]>([])
-  const [loading, setLoading] = React.useState(false)
+  const { open, setOpen, staffList, loading } = useStaffCombobox(branchId);
 
-  React.useEffect(() => {
-    async function fetchStaff() {
-      setLoading(true)
-      const res = await getStaffListAction(branchId)
-      if (res.error) {
-        toast.error(res.error)
-      } else if (res.data) {
-        setStaffList(res.data)
-      }
-      setLoading(false)
-    }
-    fetchStaff()
-  }, [branchId])
 
   const selectedStaff = staffList.find((s) => s.id === value)
 
