@@ -218,15 +218,13 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
       {/* PROMO BUNDLE VOUCHER */}
       <section id="voucher" className="py-40 px-6 bg-muted/30">
         <div className="max-w-5xl mx-auto reveal-section">
-          <div className="text-center mb-24">
-            <h2 className="text-5xl font-display font-light text-foreground mb-6">Penawaran Eksklusif</h2>
+          <div className="text-center mb-12">
+            <h2 className="text-5xl font-display font-light text-foreground mb-4">Penawaran Eksklusif</h2>
             <p className="text-muted-foreground max-w-md mx-auto font-light text-lg">Hadiahkan relaksasi premium untuk diri sendiri atau orang terkasih.</p>
           </div>
-
           <div className="bg-background rounded-[2rem] p-1 shadow-sm border border-border/50 max-w-4xl mx-auto flex flex-col md:flex-row">
             <div className="p-12 md:w-3/5 flex flex-col justify-center">
-              <div className="text-primary text-xs font-bold tracking-[0.2em] mb-4 uppercase">Bundle Package</div>
-              <h3 className="text-3xl font-display font-light text-foreground mb-6">10 Sesi Massage</h3>
+              <h3 className="text-5xl font-display font-light text-foreground mb-6">10 Sesi Massage</h3>
               <p className="text-muted-foreground leading-relaxed font-light mb-10">
                 Nikmati 10x sesi Full Body Massage (60 Menit). Berlaku selama 6 bulan, fleksibel, dan dapat dipindahtangankan.
               </p>

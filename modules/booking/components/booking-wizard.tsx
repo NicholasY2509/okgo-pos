@@ -29,27 +29,22 @@ export function BookingWizard() {
 
   if (isSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center p-16 text-center space-y-6 bg-background rounded-[2rem] shadow-sm border border-border/50 animate-in fade-in zoom-in duration-500">
-        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-2">
-          <CheckCircle2 className="w-10 h-10 text-primary" />
-        </div>
-        <h2 className="text-4xl font-display font-light tracking-tight">Booking Berhasil!</h2>
-        <p className="text-muted-foreground font-light max-w-md text-lg">
-          Terima kasih {(form.watch as any)("customerName")}, jadwal Anda telah berhasil dipesan. Silakan datang ke cabang tepat waktu dan lakukan pembayaran di kasir.
+      <div className="flex flex-col items-center justify-center py-32 px-6 text-center animate-in fade-in duration-1000">
+        <h2 className="text-2xl  md:text-4xl font-display font-light tracking-[0.2em] uppercase text-foreground mb-4">
+          Booking Berhasil
+        </h2>
+        <p className="text-muted-foreground font-light max-w-sm text-xs md:text-sm leading-loose mb-12">
+          Terima kasih, {(form.watch as any)("customerName")}. Jadwal Anda telah diamankan. Silakan datang tepat waktu dan selesaikan pembayaran di kasir.
         </p>
-        <Button
-          className="mt-8 bg-foreground text-background font-medium tracking-wide py-6 px-10 rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer hover:bg-primary hover:text-primary-foreground"
-          onClick={() => window.location.reload()}
-        >
-          Buat Booking Baru
-        </Button>
-        <Button
-          className="bg-transparent border-border/50 text-foreground font-medium tracking-wide py-6 px-10 rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer hover:bg-primary hover:text-primary-foreground"
-          onClick={() => window.location.href = "/"}
-        >
-          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-          Kembali ke Layar Utama
-        </Button>
+        <div className="flex flex-col items-center gap-4 w-full">
+          <Button
+            variant="outline"
+            className="min-w-[240px] text-muted-foreground font-medium tracking-widest uppercase text-xs h-14 rounded-full transition-all hover:text-foreground hover:bg-transparent"
+            onClick={() => window.location.href = "/"}
+          >
+            Kembali Ke Halaman Utama
+          </Button>
+        </div>
       </div>
     );
   }
