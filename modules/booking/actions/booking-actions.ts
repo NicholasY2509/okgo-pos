@@ -30,6 +30,15 @@ export async function getStaffStatusAction(branchId: string) {
   }
 }
 
+export async function getDailyScheduleAction(branchId: string, dateStr: string) {
+  try {
+    const data = await BookingService.getDailySchedule(branchId, dateStr);
+    return { success: true, data };
+  } catch (error: any) {
+    return { error: error.message || "Gagal memuat jadwal hari ini" };
+  }
+}
+
 export async function getAvailableSlotsAction(branchId: string, dateStr: string, selections: {serviceId: string, staffId?: string}[]) {
   try {
     const slots = await BookingService.getAvailableSlots(branchId, dateStr, selections);

@@ -277,7 +277,7 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
                 whileHover={{ y: -5 }}
                 className="group flex flex-col"
               >
-                <div className="aspect-[4/5] relative overflow-hidden rounded-2xl mb-8 bg-muted">
+                <div className="aspect-4/5 relative overflow-hidden rounded-2xl mb-8 bg-muted">
                   <div className="absolute inset-0 bg-foreground/10 group-hover:bg-transparent transition-colors duration-700 z-10" />
                   <img src={service.img} alt={service.title} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out" />
                 </div>

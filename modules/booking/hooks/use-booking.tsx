@@ -98,8 +98,8 @@ export function useBooking() {
     // Validate fields before proceeding
     const fieldsToValidate = {
       1: ["branchId", "customerName", "customerPhone"],
-      2: ["selections"],
-      3: ["date", "startTime"],
+      2: ["date", "startTime"],
+      3: ["selections"],
     }[step] as any;
 
     const isValid = await form.trigger(fieldsToValidate);

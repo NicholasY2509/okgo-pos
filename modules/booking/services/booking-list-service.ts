@@ -78,7 +78,11 @@ export class BookingListService {
     return await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.update({
         where: { id: bookingId },
-        data: { status }
+        data: { status },
+        include: {
+          items: true,
+          serviceSessions: true
+        }
       });
 
       if (status === 'CANCELLED') {
@@ -87,10 +91,52 @@ export class BookingListService {
           where: { bookingId },
           data: { status: 'CANCELLED' }
         });
+      } else if (status === 'PROCESSED') {
+        // Create Transaction
+        const today = new Date();
+        const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+        const randomStr = Math.floor(1000 + Math.random() * 9000).toString();
+        const transactionNumber = `TX-${dateStr}-${randomStr}`;
+
+        const subtotal = booking.items.reduce((acc, item) => acc + Number(item.subtotal), 0);
+
+        const transaction = await tx.transaction.create({
+          data: {
+            branchId: booking.branchId,
+            customerId: booking.customerId,
+            transactionNumber,
+            subtotal,
+            totalAmount: booking.totalAmount,
+            status: 'PENDING',
+          }
+        });
+
+        // Create TransactionItems and link them
+        for (const item of booking.items) {
+          const txItem = await tx.transactionItem.create({
+            data: {
+              transactionId: transaction.id,
+              type: 'SERVICE',
+              serviceId: item.serviceId,
+              itemNameSnapshot: item.itemNameSnapshot,
+              unitPrice: item.unitPrice,
+              quantity: item.quantity,
+              subtotal: item.subtotal,
+            }
+          });
+
+          // Link the corresponding ServiceSessions
+          for (const session of booking.serviceSessions) {
+            if (session.serviceId === item.serviceId && !(session as any)._linked) {
+              await tx.serviceSession.update({
+                where: { id: session.id },
+                data: { transactionItemId: txItem.id }
+              });
+              (session as any)._linked = true;
+            }
+          }
+        }
       }
-      
-      // If PROCESSED, maybe we update sessions to IN_PROGRESS? The user only mentioned marking booking as PROCESSED.
-      // Usually, session status might be managed individually, but since the customer arrived, IN_PROGRESS makes sense or we leave it SCHEDULED until they start. Let's leave session status alone for PROCESSED, except maybe updating it if needed later.
 
       return booking;
     });

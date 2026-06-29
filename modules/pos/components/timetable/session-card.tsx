@@ -5,7 +5,7 @@ import { useSessionCard } from "../../hooks/use-session-card";
 import { SessionInfoDialog } from "./session-info-dialog";
 import { Badge } from "@/components/ui/badge";
 
-export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTime, paymentMethods, onPaymentSuccess }: { session: any, lane?: number, onComplete: () => void, onStart: () => void, onUpdateTime?: (start: Date, end: Date) => void, paymentMethods: any[], onPaymentSuccess: () => void }) {
+export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTime, paymentMethods, onPaymentSuccess, onProcessBooking }: { session: any, lane?: number, onComplete: () => void, onStart: () => void, onUpdateTime?: (start: Date, end: Date) => void, paymentMethods: any[], onPaymentSuccess: () => void, onProcessBooking?: () => void }) {
   const {
     infoOpen,
     setInfoOpen,
@@ -85,14 +85,21 @@ export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTi
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="truncate max-w-[60%]" title={session.staff ? `${session.staff.firstName} ${session.staff.lastName}` : "Terapis"}>
+            <span className="truncate max-w-[50%]" title={session.staff ? `${session.staff.firstName} ${session.staff.lastName}` : "Terapis"}>
               Terapis: {session.staff ? session.staff.firstName : "-"}
             </span>
-            {session.paymentStatus === "PENDING" && (
-              <Badge variant="destructive" className="text-[8px] px-1 py-0 h-4 uppercase">
-                Belum Lunas
-              </Badge>
-            )}
+            <div className="flex items-center gap-1">
+              {(session.transactionItem?.transaction?.id || session.bookingId) && (
+                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4">
+                  #{(session.transactionItem?.transaction?.id || session.bookingId).slice(-4).toUpperCase()}
+                </Badge>
+              )}
+              {session.paymentStatus === "PENDING" && (
+                <Badge variant="destructive" className="text-[8px] px-1 py-0 h-4 uppercase">
+                  Belum Lunas
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -109,6 +116,7 @@ export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTi
             setIsPaymentModalOpen(true);
           }
         }}
+        onProcessBooking={onProcessBooking}
       />
 
       {isPaymentModalOpen && selectedPaymentTransaction && (

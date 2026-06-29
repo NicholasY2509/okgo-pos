@@ -21,7 +21,7 @@ export function BookingWizard() {
     branches,
     services,
     staffList,
-    availableSlots,
+    dailySchedule,
     loading,
     loadingBranches,
     canProceed
@@ -67,20 +67,15 @@ export function BookingWizard() {
         </div>
       </div>
 
-      {/* Progress Bar (Manual outside standard div)
-      <div className="h-1 w-full bg-muted/30 flex mb-8 rounded-full overflow-hidden">
-        <div className="h-full bg-primary transition-all duration-500 ease-in-out" style={{ width: `${(step / 4) * 100}%` }} />
-      </div> */}
-
       <form onSubmit={onSubmit} className="space-y-12">
         {/* STEP 1: Branch & Identity */}
         {step === 1 && <StepIdentity form={form} branches={branches} loadingBranches={loadingBranches} />}
 
-        {/* STEP 2: Cart (Services & Staff) */}
-        {step === 2 && <StepCart form={form} services={services} staffList={staffList} loading={loading} />}
+        {/* STEP 2: Date & Time */}
+        {step === 2 && <StepTime form={form} dailySchedule={dailySchedule} loading={loading} />}
 
-        {/* STEP 3: Date & Time */}
-        {step === 3 && <StepTime form={form} availableSlots={availableSlots} loading={loading} />}
+        {/* STEP 3: Cart (Services & Staff) */}
+        {step === 3 && <StepCart form={form} services={services} staffList={staffList} dailySchedule={dailySchedule} loading={loading} />}
 
         {/* STEP 4: Summary */}
         {step === 4 && <StepSummary form={form} services={services} staffList={staffList} branches={branches} />}

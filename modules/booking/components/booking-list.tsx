@@ -7,10 +7,22 @@ import { Input } from "@/components/ui/input";
 import { DatePickerWithRange } from "@/components/ui/date-picker-with-range";
 import { DateRange } from "react-day-picker";
 import { DataTable } from "@/components/ui/data-table";
-import { bookingColumns } from "./booking-columns";
+import { getBookingColumns } from "./booking-columns";
+import { BookingDetailDialog } from "./booking-detail-dialog";
+
 export function BookingList({ initialBookings }: { initialBookings: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  const handleViewDetail = (booking: any) => {
+    setSelectedBooking(booking);
+    setIsDetailOpen(true);
+  };
+
+  const columns = useMemo(() => getBookingColumns(handleViewDetail), []);
 
   const filteredBookings = useMemo(() => {
     return initialBookings.filter((booking) => {
@@ -60,34 +72,42 @@ export function BookingList({ initialBookings }: { initialBookings: any[] }) {
   };
 
   return (
-    <div className="space-y-4 mt-2">
-      <div className="bg-card border rounded-xl p-4 shadow-sm">
-        <div className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="space-y-2 flex-1">
-            <label className="text-xs font-semibold text-muted-foreground uppercase">Pencarian</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Cari No. Booking atau Pelanggan..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+    <>
+      <div className="space-y-4 mt-2">
+        <div className="bg-card border rounded-xl p-4 shadow-sm">
+          <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="space-y-2 flex-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Pencarian</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Cari No. Booking atau Pelanggan..."
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2 w-full md:w-[260px]">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Jadwal Booking</label>
+              <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={handleResetFilter} title="Reset Filter">
+                <FilterX className="w-4 h-4" />
+              </Button>
             </div>
           </div>
-          <div className="space-y-2 w-full md:w-[260px]">
-            <label className="text-xs font-semibold text-muted-foreground uppercase">Jadwal Booking</label>
-            <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-          </div>
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={handleResetFilter} title="Reset Filter">
-              <FilterX className="w-4 h-4" />
-            </Button>
-          </div>
         </div>
+
+        <DataTable columns={columns} data={filteredBookings} emptyMessage="Belum ada booking yang sesuai kriteria." />
       </div>
 
-      <DataTable columns={bookingColumns} data={filteredBookings} emptyMessage="Belum ada booking yang sesuai kriteria." />
-    </div>
+      <BookingDetailDialog
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        booking={selectedBooking}
+      />
+    </>
   );
 }

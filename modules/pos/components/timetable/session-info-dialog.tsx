@@ -11,6 +11,7 @@ interface SessionInfoDialogProps {
   onStart: () => void;
   onComplete: () => void;
   onPayNow: () => void;
+  onProcessBooking?: () => void;
 }
 
 export function SessionInfoDialog({
@@ -20,6 +21,7 @@ export function SessionInfoDialog({
   onStart,
   onComplete,
   onPayNow,
+  onProcessBooking,
 }: SessionInfoDialogProps) {
   if (!session) return null;
 
@@ -69,20 +71,41 @@ export function SessionInfoDialog({
                   session.status === "COMPLETED"
                     ? "secondary"
                     : session.status === "IN_PROGRESS"
-                    ? "default"
-                    : "outline"
+                      ? "default"
+                      : "outline"
                 }
               >
                 {session.status === "COMPLETED"
                   ? "Selesai"
                   : session.status === "IN_PROGRESS"
-                  ? "Berlangsung"
-                  : "Terjadwal"}
+                    ? "Berlangsung"
+                    : "Terjadwal"}
               </Badge>
             </div>
           </div>
+
+          {(session.transactionItem?.transaction?.id || session.bookingId) && (
+            <div className="grid grid-cols-3 gap-4 border-t pt-4 mt-2">
+              <div className="text-sm text-muted-foreground">ID Referensi</div>
+              <div className="col-span-2 font-medium font-mono text-sm text-muted-foreground">
+                {session.transactionItem?.transaction?.id || session.bookingId}
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-2 pt-4 border-t mt-4">
-            {session.status === "SCHEDULED" && (
+            {session.status === "SCHEDULED" && session.booking?.status === "PENDING" && (
+              <Button
+                className="w-full"
+                onClick={() => {
+                  if (onProcessBooking) onProcessBooking();
+                  onOpenChange(false);
+                }}
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Proses Booking
+              </Button>
+            )}
+            {session.status === "SCHEDULED" && session.booking?.status !== "PENDING" && (
               <Button
                 className="w-full"
                 onClick={() => {

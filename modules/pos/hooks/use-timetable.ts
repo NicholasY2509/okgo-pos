@@ -5,6 +5,7 @@ import {
   completeSessionAction,
   updateSessionTimeAction,
   startSessionAction,
+  getPendingBookingsAction
 } from "../actions/timetable-action";
 
 interface UseTimetableProps {
@@ -14,6 +15,7 @@ interface UseTimetableProps {
 export function useTimetable({ branchId }: UseTimetableProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [sessions, setSessions] = useState<any[]>([]);
+  const [pendingBookings, setPendingBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
@@ -28,11 +30,22 @@ export function useTimetable({ branchId }: UseTimetableProps) {
     setLoading(false);
   }, [branchId]);
 
+  const fetchPendingBookings = useCallback(async () => {
+    const res = await getPendingBookingsAction(branchId);
+    if (res.success) {
+      setPendingBookings(res.data);
+    }
+  }, [branchId]);
+
   useEffect(() => {
     fetchSessions(date);
-    const interval = setInterval(() => fetchSessions(date), 60000); // refresh every minute
+    fetchPendingBookings();
+    const interval = setInterval(() => {
+      fetchSessions(date);
+      fetchPendingBookings();
+    }, 60000); // refresh every minute
     return () => clearInterval(interval);
-  }, [date, fetchSessions]);
+  }, [date, fetchSessions, fetchPendingBookings]);
 
   const handleComplete = async (sessionId: string) => {
     const res = await completeSessionAction(sessionId);
@@ -81,6 +94,8 @@ export function useTimetable({ branchId }: UseTimetableProps) {
     date,
     setDate,
     sessions,
+    pendingBookings,
+    fetchPendingBookings,
     loading,
     isBookingModalOpen,
     setIsBookingModalOpen,

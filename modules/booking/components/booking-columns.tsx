@@ -3,13 +3,13 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Calendar, Scissors, Check } from "lucide-react";
+import { Calendar, Scissors, Check, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatIDR } from "@/lib/utils";
-import { BookingActionCell } from "./booking-action-cell";
 
-export const bookingColumns: ColumnDef<any>[] = [
+
+export const getBookingColumns = (onViewDetail: (booking: any) => void): ColumnDef<any>[] => [
   {
     accessorKey: "schedule",
     header: "Jadwal",
@@ -102,13 +102,12 @@ export const bookingColumns: ColumnDef<any>[] = [
       const status = row.original.status;
       return (
         <div className="text-center">
-          <Badge 
-            variant="secondary" 
-            className={`text-[10px] uppercase ${
-              status === 'PENDING' ? 'bg-orange-500/10 text-orange-600 hover:bg-orange-500/20' : 
-              status === 'PROCESSED' ? 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20' : 
-              'bg-gray-500/10 text-gray-600 hover:bg-gray-500/20'
-            }`}
+          <Badge
+            variant="secondary"
+            className={`text-[10px] uppercase ${status === 'PENDING' ? 'bg-orange-500/10 text-orange-600 hover:bg-orange-500/20' :
+              status === 'PROCESSED' ? 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20' :
+                'bg-gray-500/10 text-gray-600 hover:bg-gray-500/20'
+              }`}
           >
             {status}
           </Badge>
@@ -122,7 +121,10 @@ export const bookingColumns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-center">
-          <BookingActionCell booking={row.original} />
+          <Button size="sm" variant="outline" className="h-8 text-xs font-medium" onClick={() => onViewDetail(row.original)}>
+            <Eye className="w-3.5 h-3.5 mr-1" />
+            Detail
+          </Button>
         </div>
       );
     },

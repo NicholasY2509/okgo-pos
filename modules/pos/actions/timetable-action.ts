@@ -46,3 +46,12 @@ export async function startSessionAction(sessionId: string) {
     return { error: error.message || "Gagal memulai sesi" };
   }
 }
+
+export async function getPendingBookingsAction(branchId: string) {
+  try {
+    const bookings = await TimetableService.getPendingBookings(branchId);
+    return { success: true, data: bookings };
+  } catch (error: any) {
+    return { error: error.message || "Gagal memuat booking" };
+  }
+}

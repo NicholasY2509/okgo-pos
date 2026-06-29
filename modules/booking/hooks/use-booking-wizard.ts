@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getBranchesAction, getServicesAction, getStaffStatusAction, getAvailableSlotsAction } from "../actions/booking-actions";
+import { getBranchesAction, getServicesAction, getStaffStatusAction, getDailyScheduleAction } from "../actions/booking-actions";
 import { useBooking } from "./use-booking";
 
 export function useBookingWizard() {
@@ -10,6 +10,7 @@ export function useBookingWizard() {
   const [services, setServices] = useState<any[]>([]);
   const [staffList, setStaffList] = useState<any[]>([]);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [dailySchedule, setDailySchedule] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [loadingBranches, setLoadingBranches] = useState(true);
 
@@ -24,9 +25,9 @@ export function useBookingWizard() {
   if (step === 1) {
     canProceed = !!(customerName && customerPhone && selectedBranchId);
   } else if (step === 2) {
-    canProceed = selections && selections.length > 0 && selections.every((s: any) => !!s.serviceId);
-  } else if (step === 3) {
     canProceed = !!(selectedDate && selectedTime);
+  } else if (step === 3) {
+    canProceed = selections && selections.length > 0 && selections.every((s: any) => !!s.serviceId);
   } else if (step === 4) {
     canProceed = true;
   }
@@ -53,16 +54,17 @@ export function useBookingWizard() {
   }, [selectedBranchId]);
 
   useEffect(() => {
-    const isCartValid = selections && selections.length > 0 && selections.every((s: any) => !!s.serviceId);
-    if (selectedBranchId && isCartValid && selectedDate) {
+    if (selectedBranchId && selectedDate) {
       setLoading(true);
-      getAvailableSlotsAction(selectedBranchId, selectedDate, selections)
+      getDailyScheduleAction(selectedBranchId, selectedDate)
         .then(res => {
-          if (res.success && res.data) setAvailableSlots(res.data);
+          if (res.success && res.data) {
+            setDailySchedule(res.data);
+          }
           setLoading(false);
         });
     }
-  }, [selectedBranchId, JSON.stringify(selections), selectedDate]);
+  }, [selectedBranchId, selectedDate]);
 
   return {
     ...booking,
@@ -70,6 +72,7 @@ export function useBookingWizard() {
     services,
     staffList,
     availableSlots,
+    dailySchedule,
     loading,
     loadingBranches,
     canProceed

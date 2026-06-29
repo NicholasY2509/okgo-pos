@@ -50,17 +50,16 @@ export class TimetableService {
 
   private static mapSessionOutput(session: any) {
     const isBooking = !!session.booking;
-    const itemName = isBooking 
-      ? (session.booking.items?.[0]?.itemNameSnapshot || "Sesi") 
+    const itemName = isBooking
+      ? (session.booking.items?.[0]?.itemNameSnapshot || "Sesi")
       : (session.transactionItem?.itemNameSnapshot || "Sesi");
-      
-    const paymentStatus = isBooking 
-      ? session.booking.status 
-      : session.transactionItem?.transaction?.status;
-      
-    const customerName = session.transactionItem?.transaction?.customer?.name 
-      || session.booking?.customer?.name 
-      || session.booking?.customerName 
+
+    const paymentStatus = session.transactionItem?.transaction?.status
+      || (isBooking ? session.booking.status : undefined);
+
+    const customerName = session.transactionItem?.transaction?.customer?.name
+      || session.booking?.customer?.name
+      || session.booking?.customerName
       || "Walk-in";
 
     return {
@@ -184,13 +183,13 @@ export class TimetableService {
     if (session.status !== "SCHEDULED") throw new Error("Sesi tidak dalam status terjadwal");
 
     const now = new Date();
-    const durationMs = session.endTime && session.startTime 
+    const durationMs = session.endTime && session.startTime
       ? session.endTime.getTime() - session.startTime.getTime()
       : 60 * 60 * 1000; // Default 1 hour if not set
 
     return await prisma.serviceSession.update({
       where: { id: sessionId },
-      data: { 
+      data: {
         status: "IN_PROGRESS",
         startTime: now,
         endTime: new Date(now.getTime() + durationMs)
@@ -214,5 +213,36 @@ export class TimetableService {
         endTime
       }
     });
+  }
+
+  static async getPendingBookings(branchId: string) {
+    const bookings = await prisma.booking.findMany({
+      where: {
+        branchId,
+        status: 'PENDING'
+      },
+      include: {
+        customer: true,
+        items: true,
+        serviceSessions: {
+          include: {
+            staff: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'asc'
+      }
+    });
+
+    return bookings.map(booking => ({
+      ...booking,
+      totalAmount: booking.totalAmount ? Number(booking.totalAmount) : 0,
+      items: booking.items.map(item => ({
+        ...item,
+        unitPrice: item.unitPrice ? Number(item.unitPrice) : 0,
+        subtotal: item.subtotal ? Number(item.subtotal) : 0,
+      }))
+    }));
   }
 }

@@ -52,6 +52,54 @@ export class BookingService {
     });
   }
 
+  static async getDailySchedule(branchId: string, dateStr: string) {
+    const targetDate = new Date(dateStr);
+    const start = startOfDay(targetDate);
+    const end = endOfDay(targetDate);
+
+    const staff = await prisma.staff.findMany({
+      where: { branchId, isActive: true },
+      orderBy: { firstName: 'asc' }
+    });
+
+    const rooms = await prisma.room.findMany({
+      where: { branchId, isActive: true }
+    });
+
+    const sessions = await prisma.serviceSession.findMany({
+      where: {
+        branchId,
+        status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+        startTime: { gte: start, lte: end }
+      },
+      select: {
+        id: true,
+        staffId: true,
+        roomId: true,
+        startTime: true,
+        endTime: true,
+      }
+    });
+
+    const staffSchedules = staff.map(s => ({
+      ...s,
+      sessions: sessions
+        .filter(session => session.staffId === s.id)
+        .map(sess => ({
+          startTime: sess.startTime,
+          endTime: sess.endTime || addMinutes(sess.startTime!, 60),
+        }))
+    }));
+
+    const totalCapacity = rooms.reduce((acc, r) => acc + (r.capacity || 1), 0);
+    const roomSessions = sessions.filter(s => s.roomId).map(s => ({
+      startTime: s.startTime,
+      endTime: s.endTime || addMinutes(s.startTime!, 60)
+    }));
+
+    return { staffSchedules, roomSessions, totalCapacity, rooms };
+  }
+
   static async getAvailableSlots(branchId: string, dateStr: string, selections: { serviceId: string, staffId?: string }[]) {
     const date = new Date(dateStr);
     const start = startOfDay(date);

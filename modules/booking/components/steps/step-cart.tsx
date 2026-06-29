@@ -2,26 +2,60 @@ import { useState } from "react";
 import { useFieldArray, UseFormReturn } from "react-hook-form";
 import { BookingInput } from "../../schemas/booking";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Scissors, User, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Plus, Trash2, Scissors, User, ChevronDown, ChevronUp, X, AlertTriangle } from "lucide-react";
+import { addMinutes } from "date-fns";
 
 interface StepCartProps {
   form: UseFormReturn<BookingInput>;
   services: any[];
   staffList: any[];
+  dailySchedule: any;
   loading: boolean;
 }
 
-export function StepCart({ form, services, staffList, loading }: StepCartProps) {
+export function StepCart({ form, services, staffList, dailySchedule, loading }: StepCartProps) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "selections"
   });
 
   const [expandedIndex, setExpandedIndex] = useState<number>(0);
+  const selectedTime = form.watch("startTime");
 
   const handleAdd = () => {
     append({ serviceId: "", staffId: undefined });
     setExpandedIndex(fields.length); // Expand the newly added item
+  };
+
+  // Capacity calculation
+  let availableRooms = 99;
+  if (dailySchedule && selectedTime) {
+    let activeRoomSessions = 0;
+    const slotStart = new Date(selectedTime);
+    dailySchedule.roomSessions.forEach((sess: any) => {
+      const sStart = new Date(sess.startTime);
+      const sEnd = new Date(sess.endTime);
+      if (slotStart >= sStart && slotStart < sEnd) {
+        activeRoomSessions++;
+      }
+    });
+    availableRooms = Math.max(0, dailySchedule.totalCapacity - activeRoomSessions);
+  }
+  const isOverCapacity = fields.length > availableRooms;
+
+  const checkStaffBusy = (staffId: string, start: Date, end: Date) => {
+    if (!dailySchedule) return false;
+    const staffSched = dailySchedule.staffSchedules.find((s: any) => s.id === staffId);
+    if (!staffSched) return false;
+    
+    for (const session of staffSched.sessions) {
+      const sStart = new Date(session.startTime);
+      const sEnd = new Date(session.endTime);
+      if (start < sEnd && end > sStart) {
+        return `Sibuk ${sStart.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} - ${sEnd.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+      }
+    }
+    return false;
   };
 
   return (
@@ -42,6 +76,13 @@ export function StepCart({ form, services, staffList, loading }: StepCartProps) 
         </Button>
       </div>
 
+      {isOverCapacity && (
+        <div className="p-4 bg-orange-500/10 border border-orange-500/20 text-orange-600 rounded-xl flex gap-3 text-sm font-medium animate-in fade-in">
+          <AlertTriangle className="w-5 h-5 shrink-0" />
+          <p>Kapasitas cabang penuh! Hanya tersisa {availableRooms} ruangan di waktu ini. Harap kurangi layanan atau ganti jam.</p>
+        </div>
+      )}
+
       {loading && !services.length ? (
         <div className="py-12 text-center text-muted-foreground font-light tracking-widest text-xs uppercase">Memuat data...</div>
       ) : (
@@ -53,6 +94,10 @@ export function StepCart({ form, services, staffList, loading }: StepCartProps) 
             const selectedService = services.find(s => s.id === selectedServiceId);
             const selectedStaff = staffList.find(s => s.id === selectedStaffId);
             const isExpanded = expandedIndex === index;
+
+            const duration = selectedService?.duration || 60;
+            const itemStartTime = selectedTime ? new Date(selectedTime) : new Date();
+            const itemEndTime = addMinutes(itemStartTime, duration);
 
             return (
               <div key={field.id} className={`rounded-3xl border transition-all ${isExpanded ? 'border-primary/20 bg-background shadow-md' : 'border-border/50 bg-background/50 shadow-sm hover:border-primary/30'}`}>
@@ -117,37 +162,52 @@ export function StepCart({ form, services, staffList, loading }: StepCartProps) 
                         {form.formState.errors.selections?.[index]?.serviceId && <p className="text-xs text-destructive ml-2 mt-1">{form.formState.errors.selections[index]?.serviceId?.message}</p>}
                       </div>
 
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2 flex items-center gap-2">
-                          <User className="w-3 h-3" /> 2. Pilih Terapis (Opsional)
-                        </label>
-                        <div className="flex overflow-x-auto gap-3 pb-2 snap-x scroll-smooth px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                          <div
-                            className={`snap-center shrink-0 w-24 h-24 p-3 cursor-pointer transition-all rounded-2xl border flex flex-col items-center justify-center gap-2 ${selectedStaffId === undefined ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 bg-muted/10 hover:bg-muted/30'}`}
-                            onClick={() => form.setValue(`selections.${index}.staffId`, undefined, { shouldValidate: true })}
-                          >
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                              <span className="text-primary font-medium text-sm">?</span>
-                            </div>
-                            <div className="text-[10px] font-medium text-center leading-tight">Siapa Saja</div>
-                          </div>
-
-                          {staffList.map(staff => (
+                      {selectedServiceId && (
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2 flex items-center gap-2">
+                            <User className="w-3 h-3" /> 2. Pilih Terapis (Opsional)
+                          </label>
+                          <div className="flex overflow-x-auto gap-3 pb-2 snap-x scroll-smooth px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                             <div
-                              key={staff.id}
-                              className={`snap-center shrink-0 w-24 h-24 p-3 cursor-pointer transition-all rounded-2xl border flex flex-col items-center justify-center gap-2 ${selectedStaffId === staff.id ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 bg-muted/10 hover:bg-muted/30'}`}
-                              onClick={() => form.setValue(`selections.${index}.staffId`, staff.id, { shouldValidate: true })}
+                              className={`snap-center shrink-0 w-24 h-28 p-2 cursor-pointer transition-all rounded-2xl border flex flex-col items-center justify-start gap-1 pt-3 ${selectedStaffId === undefined ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 bg-muted/10 hover:bg-muted/30'}`}
+                              onClick={() => form.setValue(`selections.${index}.staffId`, undefined, { shouldValidate: true })}
                             >
-                              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                                <span className="text-muted-foreground font-medium text-sm">
-                                  {staff.firstName.charAt(0).toUpperCase()}
-                                </span>
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <span className="text-primary font-medium text-sm">?</span>
                               </div>
-                              <div className="text-[10px] font-medium text-center leading-tight truncate w-full">{staff.firstName}</div>
+                              <div className="text-[10px] font-medium text-center leading-tight mt-1">Siapa Saja</div>
+                              <div className="text-[8px] text-muted-foreground mt-1 text-center line-clamp-2">Tersedia</div>
                             </div>
-                          ))}
+
+                            {staffList.map(staff => {
+                              const busyReason = checkStaffBusy(staff.id, itemStartTime, itemEndTime);
+                              const isBusy = !!busyReason;
+                              
+                              return (
+                                <div
+                                  key={staff.id}
+                                  className={`snap-center shrink-0 w-24 h-28 p-2 transition-all rounded-2xl border flex flex-col items-center justify-start gap-1 pt-3 ${isBusy ? 'opacity-50 cursor-not-allowed bg-muted/20 border-border/30' : selectedStaffId === staff.id ? 'border-primary bg-primary/5 shadow-sm cursor-pointer' : 'border-border/50 bg-muted/10 hover:bg-muted/30 cursor-pointer'}`}
+                                  onClick={() => {
+                                    if (!isBusy) {
+                                      form.setValue(`selections.${index}.staffId`, staff.id, { shouldValidate: true })
+                                    }
+                                  }}
+                                >
+                                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                                    <span className="text-muted-foreground font-medium text-sm">
+                                      {staff.firstName.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] font-medium text-center leading-tight truncate w-full mt-1">{staff.firstName}</div>
+                                  <div className={`text-[8px] mt-1 text-center leading-[10px] line-clamp-2 w-full px-1 ${isBusy ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                                    {isBusy ? busyReason : 'Tersedia'}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
