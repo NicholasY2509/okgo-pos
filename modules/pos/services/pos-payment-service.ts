@@ -13,7 +13,8 @@ export class PosPaymentService {
   }) {
     return await prisma.$transaction(async (tx) => {
       const transaction = await tx.transaction.findUnique({
-        where: { id: input.transactionId }
+        where: { id: input.transactionId },
+        include: { items: true }
       });
 
       if (!transaction) throw new Error("Transaksi tidak ditemukan.");
@@ -21,10 +22,12 @@ export class PosPaymentService {
 
       const totalAmount = Number(transaction.totalAmount);
       let paidAmount = 0;
+      
+      // To keep track of which quantity of which item has been paid by a visit voucher in this loop
+      const visitVoucherUsage: Record<string, number> = {};
 
       for (const payment of input.payments) {
-        paidAmount += payment.amount;
-
+        let paymentAmount = payment.amount;
         const pm = await tx.paymentMethod.findUnique({ where: { id: payment.paymentMethodId } });
         if (!pm) throw new Error(`Metode pembayaran tidak valid: ${payment.paymentMethodId}`);
 
@@ -39,52 +42,105 @@ export class PosPaymentService {
           if (!customerVoucher || customerVoucher.status !== "ACTIVE") {
             throw new Error(`Voucher tidak valid atau sudah kadaluarsa: ${payment.voucherCode}`);
           }
-          if (!customerVoucher.voucherPacket.totalCreditAmount) {
-            throw new Error(`Voucher ${payment.voucherCode} bukan voucher nominal.`);
-          }
 
-          const remainingCredit = Number(customerVoucher.remainingCreditAmount || 0);
-          if (remainingCredit < payment.amount) {
-            throw new Error(`Saldo voucher tidak mencukupi. Saldo: ${remainingCredit}`);
-          }
-
-          const newRemaining = remainingCredit - payment.amount;
-          await tx.customerVoucher.update({
-            where: { id: customerVoucher.id },
-            data: {
-              remainingCreditAmount: newRemaining,
-              status: newRemaining <= 0 ? "USED_UP" : "ACTIVE"
+          if (customerVoucher.voucherPacket.totalVisitCount) {
+            // Visit voucher logic
+            const remainingVisit = customerVoucher.remainingVisitCount || 0;
+            if (remainingVisit < 1) {
+              throw new Error(`Kuota visit voucher habis.`);
             }
-          });
 
-          await tx.voucherRedemption.create({
-            data: {
-              customerVoucherId: customerVoucher.id,
-              transactionId: transaction.id,
-              redeemedAmount: payment.amount
+            // Find matching item
+            const productId = customerVoucher.voucherPacket.productId;
+            let matchedItem = null;
+
+            for (const item of transaction.items) {
+              if (!productId || item.serviceId === productId) {
+                const usedQty = visitVoucherUsage[item.id] || 0;
+                if (usedQty < item.quantity) {
+                  matchedItem = item;
+                  visitVoucherUsage[item.id] = usedQty + 1;
+                  break;
+                }
+              }
             }
-          });
+
+            if (!matchedItem) {
+              throw new Error(`Tidak ada layanan di transaksi ini yang sesuai dengan voucher ${payment.voucherCode}.`);
+            }
+
+            // Calculate value of 1 quantity (discounted)
+            paymentAmount = Number(matchedItem.subtotal) / matchedItem.quantity;
+
+            const newRemaining = remainingVisit - 1;
+            await tx.customerVoucher.update({
+              where: { id: customerVoucher.id },
+              data: {
+                remainingVisitCount: newRemaining,
+                status: newRemaining <= 0 ? "USED_UP" : "ACTIVE"
+              }
+            });
+
+            await tx.voucherRedemption.create({
+              data: {
+                customerVoucherId: customerVoucher.id,
+                transactionId: transaction.id,
+                transactionItemId: matchedItem.id, // Linking to specific item
+                redeemedAmount: paymentAmount
+              }
+            });
+
+          } else if (customerVoucher.voucherPacket.totalCreditAmount) {
+            // Nominal voucher logic
+            const remainingCredit = Number(customerVoucher.remainingCreditAmount || 0);
+            if (remainingCredit < paymentAmount) {
+              throw new Error(`Saldo voucher tidak mencukupi. Saldo: ${remainingCredit}`);
+            }
+
+            const newRemaining = remainingCredit - paymentAmount;
+            await tx.customerVoucher.update({
+              where: { id: customerVoucher.id },
+              data: {
+                remainingCreditAmount: newRemaining,
+                status: newRemaining <= 0 ? "USED_UP" : "ACTIVE"
+              }
+            });
+
+            await tx.voucherRedemption.create({
+              data: {
+                customerVoucherId: customerVoucher.id,
+                transactionId: transaction.id,
+                redeemedAmount: paymentAmount
+              }
+            });
+          } else {
+            throw new Error(`Tipe voucher tidak dikenali.`);
+          }
         }
+
+        paidAmount += paymentAmount;
 
         await tx.transactionPayment.create({
           data: {
             transactionId: transaction.id,
             paymentMethodId: payment.paymentMethodId,
-            amount: payment.amount,
+            amount: paymentAmount,
             referenceNumber: payment.referenceNumber,
             notes: payment.notes
           }
         });
       }
 
-      const changeAmount = Math.max(0, paidAmount - totalAmount);
+      const newPaidAmount = Number(transaction.paidAmount) + paidAmount;
+      const changeAmount = Math.max(0, newPaidAmount - totalAmount);
+      const isCompleted = newPaidAmount >= totalAmount;
 
       return await tx.transaction.update({
         where: { id: transaction.id },
         data: {
-          paidAmount: Number(transaction.paidAmount) + paidAmount,
+          paidAmount: newPaidAmount,
           changeAmount,
-          status: "COMPLETED"
+          status: isCompleted ? "COMPLETED" : "PENDING"
         }
       });
     });

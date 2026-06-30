@@ -23,6 +23,13 @@ export class StaffService {
     })
   }
 
+  static async getActiveStaff(branchId: string) {
+    return await prisma.staff.findMany({
+      where: { branchId, isActive: true },
+      orderBy: { firstName: "asc" },
+    })
+  }
+
   static async getStaffById(id: string) {
     return await prisma.staff.findUnique({
       where: { id },

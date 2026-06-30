@@ -4,19 +4,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarSessionCard } from "./sidebar-session-card";
 import { SidebarBookingCard } from "./sidebar-booking-card";
 
+import { useTimetableStore } from "../../stores/timetable-store";
+
 interface TimetableSidebarProps {
   isOpen: boolean;
-  sessions: any[];
-  pendingBookings: any[];
-  onProcessBooking: (bookingId: string) => void;
 }
 
 export function TimetableSidebar({
   isOpen,
-  sessions,
-  pendingBookings,
-  onProcessBooking,
 }: TimetableSidebarProps) {
+  const { sessions, pendingBookings, handleProcessBooking } = useTimetableStore();
   if (!isOpen) return null;
 
   return (
@@ -70,7 +67,7 @@ export function TimetableSidebar({
                 </div>
               ) : (
                 pendingBookings.map((booking) => (
-                  <SidebarBookingCard key={booking.id} booking={booking} onProcessBooking={onProcessBooking} />
+                  <SidebarBookingCard key={booking.id} booking={booking} onProcessBooking={handleProcessBooking} />
                 ))
               )}
             </div>

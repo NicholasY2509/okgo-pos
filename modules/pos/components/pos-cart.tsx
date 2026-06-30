@@ -13,8 +13,6 @@ interface PosCartProps {
 export function PosCart({ onCheckout }: PosCartProps) {
   return (
     <div className="flex-1 bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col h-full relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-primary"></div>
-
       <CartHeader />
       <div className="mb-2">
         <CartCustomer />

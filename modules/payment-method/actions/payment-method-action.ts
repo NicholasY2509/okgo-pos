@@ -43,3 +43,12 @@ export async function deletePaymentMethodAction(id: string) {
     return { error: error.message || "An unexpected error occurred." };
   }
 }
+
+export async function getActivePaymentMethodsAction() {
+  try {
+    const data = await PaymentMethodService.getActive();
+    return { success: true, data };
+  } catch (error: any) {
+    return { error: error.message || "An unexpected error occurred." };
+  }
+}

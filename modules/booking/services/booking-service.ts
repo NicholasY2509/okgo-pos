@@ -159,7 +159,9 @@ export class BookingService {
 
         if (slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
-          busyStaffIds.add(session.staffId);
+          if (session.staffId) {
+            busyStaffIds.add(session.staffId);
+          }
         }
       }
 
@@ -273,7 +275,9 @@ export class BookingService {
 
         if (slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
-          busyStaffIds.add(session.staffId);
+          if (session.staffId) {
+            busyStaffIds.add(session.staffId);
+          }
         }
       }
 
@@ -321,11 +325,11 @@ export class BookingService {
           assignedStaff = availableStaff[staffIndex];
           availableStaff.splice(staffIndex, 1);
         } else {
-          assignedStaff = availableStaff.pop();
+          assignedStaff = null;
         }
 
-        if (!assignedRoom || !assignedStaff) {
-          throw new Error("Gagal mengalokasikan ruangan/terapis.");
+        if (!assignedRoom) {
+          throw new Error("Gagal mengalokasikan ruangan.");
         }
 
         subtotal += Number(service.price);
@@ -338,7 +342,7 @@ export class BookingService {
           subtotal: service.price,
           quantity: 1,
           _assignedRoomId: assignedRoom.id,
-          _assignedStaffId: assignedStaff.id,
+          _assignedStaffId: assignedStaff?.id || null,
           _duration: service.duration || 60
         });
       }
@@ -379,7 +383,7 @@ export class BookingService {
             bookingId: booking.id,
             customerId: customer.id,
             serviceId: itemSpec.serviceId,
-            staffId: itemSpec._assignedStaffId,
+            staffId: itemSpec._assignedStaffId || undefined,
             roomId: itemSpec._assignedRoomId,
             branchId: data.branchId,
             status: "SCHEDULED",

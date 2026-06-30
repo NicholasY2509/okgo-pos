@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 export class BookingListService {
-  static async getBookings(branchSlug: string) {
+  static async getBookings(branchSlug: string, filters?: { search?: string, from?: Date, to?: Date, isHistory?: boolean }) {
     const branch = await prisma.branch.findUnique({
       where: { subdomain: branchSlug },
       select: { id: true }
@@ -14,11 +14,74 @@ export class BookingListService {
     });
     const roomMap = new Map(rooms.map(r => [r.id, r.name]));
 
+    const andConditions: any[] = [{ branchId: branch.id }];
+
+    if (filters?.search) {
+      andConditions.push({
+        OR: [
+          { bookingNumber: { contains: filters.search } },
+          { customerName: { contains: filters.search } },
+          { customer: { name: { contains: filters.search } } }
+        ]
+      });
+    }
+
+    if (filters?.from || filters?.to) {
+      const dateFilter: any = {};
+      if (filters.from) dateFilter.gte = filters.from;
+      if (filters.to) {
+        const toEnd = new Date(filters.to);
+        toEnd.setHours(23, 59, 59, 999);
+        dateFilter.lte = toEnd;
+      }
+      andConditions.push({
+        serviceSessions: { some: { startTime: dateFilter } }
+      });
+    }
+
+    if (filters?.isHistory) {
+      andConditions.push({
+        OR: [
+          { status: 'CANCELLED' },
+          {
+            status: 'PROCESSED',
+            serviceSessions: {
+              some: {
+                transactionItem: {
+                  transaction: {
+                    status: 'COMPLETED'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      });
+    } else {
+      // Active: PENDING or (PROCESSED and NOT paid)
+      andConditions.push({
+        OR: [
+          { status: 'PENDING' },
+          {
+            status: 'PROCESSED',
+            NOT: {
+              serviceSessions: {
+                some: {
+                  transactionItem: {
+                    transaction: {
+                      status: 'COMPLETED'
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      });
+    }
+
     const bookings = await prisma.booking.findMany({
-      where: {
-        branchId: branch.id,
-        status: { in: ['PENDING', 'PROCESSED'] }
-      },
+      where: { AND: andConditions },
       include: {
         customer: true,
         items: true,

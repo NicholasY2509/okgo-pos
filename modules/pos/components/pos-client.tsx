@@ -38,8 +38,8 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
   } = usePosClient({ staff, rooms, activeDiscount, branchId });
 
   return (
-    <div className="flex h-full gap-6 bg-muted/30 p-2 rounded-xl">
-      <div className="flex-1 bg-background p-6 md:p-8 rounded-2xl shadow-sm border border-border overflow-y-auto flex flex-col">
+    <div className="flex h-full gap-6 rounded-xl">
+      <div className="flex-1 bg-card p-6 md:p-8 rounded-2xl shadow-sm border border-border overflow-y-auto flex flex-col">
         <Tabs defaultValue="services" className="w-full">
           <div className="flex items-center justify-between mb-6">
             <TabsList className="grid w-[600px] grid-cols-3">

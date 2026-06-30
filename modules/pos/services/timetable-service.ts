@@ -124,7 +124,8 @@ export class TimetableService {
                 discountTotal: true,
                 customer: {
                   select: { name: true }
-                }
+                },
+                items: true
               }
             }
           }
@@ -181,6 +182,7 @@ export class TimetableService {
 
     if (!session) throw new Error("Session not found");
     if (session.status !== "SCHEDULED") throw new Error("Sesi tidak dalam status terjadwal");
+    if (!session.staffId) throw new Error("Terapis belum dipilih. Silakan pilih terapis terlebih dahulu.");
 
     const now = new Date();
     const durationMs = session.endTime && session.startTime
@@ -211,6 +213,28 @@ export class TimetableService {
       data: {
         startTime,
         endTime
+      }
+    });
+  }
+
+  static async updateSessionStaff(sessionId: string, staffId: string) {
+    const session = await prisma.serviceSession.findUnique({
+      where: { id: sessionId }
+    });
+
+    if (!session) throw new Error("Session not found");
+    if (session.status === "COMPLETED") throw new Error("Sesi sudah selesai");
+
+    // Optional: add validation to ensure staff is active and belongs to the branch
+    const staff = await prisma.staff.findUnique({
+      where: { id: staffId }
+    });
+    if (!staff || !staff.isActive) throw new Error("Terapis tidak valid atau tidak aktif");
+
+    return await prisma.serviceSession.update({
+      where: { id: sessionId },
+      data: {
+        staffId
       }
     });
   }

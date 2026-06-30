@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getDiffString, BUSINESS_HOURS_START, BUSINESS_HOURS_END, TOTAL_HOURS } from "../components/timetable/timetable-utils";
+import { useTimetableStore } from "../stores/timetable-store";
 
 interface UseSessionCardProps {
   session: any;
@@ -7,9 +8,7 @@ interface UseSessionCardProps {
 }
 
 export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
-  const [infoOpen, setInfoOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedPaymentTransaction, setSelectedPaymentTransaction] = useState<any>(null);
+  const { setSelectedSessionForInfo } = useTimetableStore();
   const [now, setNow] = useState(new Date());
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -132,7 +131,7 @@ export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
       const isClick = deltaX < 5;
 
       if (isClick && mode === "drag") {
-        setInfoOpen(true);
+        setSelectedSessionForInfo(session);
       } else if (!isClick && onUpdateTime) {
         const rawDeltaMs = calculateTimeDelta(upEvent.clientX, startX);
         if (mode === "drag") {
@@ -154,12 +153,6 @@ export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
   };
 
   return {
-    infoOpen,
-    setInfoOpen,
-    isPaymentModalOpen,
-    setIsPaymentModalOpen,
-    selectedPaymentTransaction,
-    setSelectedPaymentTransaction,
     cardRef,
     isDragging,
     isResizingLeft,

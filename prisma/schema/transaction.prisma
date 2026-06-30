@@ -195,7 +195,7 @@ model ServiceSession {
   bookingId         String?
   customerId        String?
   serviceId         String
-  staffId           String
+  staffId           String?
   roomId            String
   branchId          String
 
@@ -204,7 +204,7 @@ model ServiceSession {
   startTime DateTime?
   endTime   DateTime?
 
-  staff              Staff               @relation(fields: [staffId], references: [id])
+  staff              Staff?              @relation(fields: [staffId], references: [id])
   transactionItem    TransactionItem?    @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
   booking            Booking?            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   voucherRedemptions VoucherRedemption[]

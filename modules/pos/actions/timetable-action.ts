@@ -38,6 +38,15 @@ export async function updateSessionTimeAction(sessionId: string, startTime: Date
   }
 }
 
+export async function updateSessionStaffAction(sessionId: string, staffId: string) {
+  try {
+    await TimetableService.updateSessionStaff(sessionId, staffId);
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Gagal mengubah terapis" };
+  }
+}
+
 export async function startSessionAction(sessionId: string) {
   try {
     await TimetableService.startSession(sessionId);

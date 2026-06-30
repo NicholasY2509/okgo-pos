@@ -2,12 +2,33 @@ import { getBookingsAction } from "@/modules/booking/actions/booking-list-action
 import { BookingList } from "@/modules/booking/components/booking-list";
 
 export default async function TenantBookingsPage({
-  params
+  params,
+  searchParams,
 }: {
   params: Promise<{ tenant: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const { tenant } = await params;
-  const res = await getBookingsAction(tenant);
+  const resolvedSearchParams = await searchParams;
+
+  const search = typeof resolvedSearchParams.search === 'string' ? resolvedSearchParams.search : undefined;
+
+  let from: Date | undefined;
+  let to: Date | undefined;
+
+  if (resolvedSearchParams.from) {
+    from = new Date(resolvedSearchParams.from as string);
+  }
+
+  if (resolvedSearchParams.to) {
+    to = new Date(resolvedSearchParams.to as string);
+  }
+
+  const isHistory = resolvedSearchParams.history === 'true';
+
+  const filters = { search, from, to, isHistory };
+
+  const res = await getBookingsAction(tenant, filters);
 
   if (!res.success) {
     return <div className="p-12 text-center text-destructive">Error memuat daftar booking: {res.error}</div>;
@@ -21,7 +42,15 @@ export default async function TenantBookingsPage({
           <p className="text-muted-foreground mt-1">Kelola dan lihat daftar booking yang masuk.</p>
         </div>
 
-        <BookingList initialBookings={res.data} />
+        <BookingList
+          initialBookings={res.data}
+          initialFilters={{
+            search: search || "",
+            from: from || undefined,
+            to: to || undefined,
+            isHistory
+          }}
+        />
       </div>
     </div>
   );

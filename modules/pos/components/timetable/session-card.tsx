@@ -1,18 +1,14 @@
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ExistingTransactionPaymentModal } from "../existing-payment-modal";
 import { useSessionCard } from "../../hooks/use-session-card";
-import { SessionInfoDialog } from "./session-info-dialog";
 import { Badge } from "@/components/ui/badge";
 
-export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTime, paymentMethods, onPaymentSuccess, onProcessBooking }: { session: any, lane?: number, onComplete: () => void, onStart: () => void, onUpdateTime?: (start: Date, end: Date) => void, paymentMethods: any[], onPaymentSuccess: () => void, onProcessBooking?: () => void }) {
+import { useTimetableStore } from "../../stores/timetable-store";
+
+export function SessionCard({ session, lane = 0 }: { session: any, lane?: number }) {
+  const { handleComplete, handleStart, handleUpdateSessionTime, handleProcessBooking, setSelectedSessionForInfo } = useTimetableStore();
+
   const {
-    infoOpen,
-    setInfoOpen,
-    isPaymentModalOpen,
-    setIsPaymentModalOpen,
-    selectedPaymentTransaction,
-    setSelectedPaymentTransaction,
     cardRef,
     isDragging,
     isResizingLeft,
@@ -23,7 +19,7 @@ export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTi
     timerText,
     timerColor,
     handlePointerDown,
-  } = useSessionCard({ session, onUpdateTime });
+  } = useSessionCard({ session, onUpdateTime: (start, end) => handleUpdateSessionTime(session.id, start, end) });
 
   if (!session.startTime) return null;
   if (isOutsideBusinessHours) return null;
@@ -34,7 +30,7 @@ export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTi
         ref={cardRef}
         onPointerDown={(e) => handlePointerDown(e, 'drag')}
         onClick={() => {
-          if (session.status === "COMPLETED") setInfoOpen(true);
+          if (session.status === "COMPLETED") setSelectedSessionForInfo(session);
         }}
         className={cn(
           "absolute rounded-lg p-2 flex flex-col gap-1 overflow-hidden shadow-sm border group/card cursor-pointer",
@@ -103,38 +99,6 @@ export function SessionCard({ session, lane = 0, onComplete, onStart, onUpdateTi
           </div>
         </div>
       </div>
-
-      <SessionInfoDialog
-        open={infoOpen}
-        onOpenChange={setInfoOpen}
-        session={session}
-        onStart={onStart}
-        onComplete={onComplete}
-        onPayNow={() => {
-          if (session.transactionItem?.transaction) {
-            setSelectedPaymentTransaction(session.transactionItem.transaction);
-            setIsPaymentModalOpen(true);
-          }
-        }}
-        onProcessBooking={onProcessBooking}
-      />
-
-      {isPaymentModalOpen && selectedPaymentTransaction && (
-        <ExistingTransactionPaymentModal
-          isOpen={isPaymentModalOpen}
-          onClose={() => {
-            setIsPaymentModalOpen(false);
-            setSelectedPaymentTransaction(null);
-          }}
-          transaction={selectedPaymentTransaction}
-          paymentMethods={paymentMethods}
-          onSuccess={() => {
-            setIsPaymentModalOpen(false);
-            setSelectedPaymentTransaction(null);
-            onPaymentSuccess();
-          }}
-        />
-      )}
     </>
   );
 }

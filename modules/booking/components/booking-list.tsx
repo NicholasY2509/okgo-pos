@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, FilterX } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Search, FilterX, History, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePickerWithRange } from "@/components/ui/date-picker-with-range";
@@ -9,10 +9,25 @@ import { DateRange } from "react-day-picker";
 import { DataTable } from "@/components/ui/data-table";
 import { getBookingColumns } from "./booking-columns";
 import { BookingDetailDialog } from "./booking-detail-dialog";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-export function BookingList({ initialBookings }: { initialBookings: any[] }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+export function BookingList({ 
+  initialBookings,
+  initialFilters 
+}: { 
+  initialBookings: any[];
+  initialFilters: { search: string; from?: Date; to?: Date; isHistory: boolean }
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [searchTerm, setSearchTerm] = useState(initialFilters.search);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: initialFilters.from,
+    to: initialFilters.to,
+  });
+  const [isHistory, setIsHistory] = useState(initialFilters.isHistory);
 
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -24,51 +39,58 @@ export function BookingList({ initialBookings }: { initialBookings: any[] }) {
 
   const columns = useMemo(() => getBookingColumns(handleViewDetail), []);
 
-  const filteredBookings = useMemo(() => {
-    return initialBookings.filter((booking) => {
-      // Search term filter
-      const matchesSearch =
-        !searchTerm ||
-        booking.bookingNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (booking.customer?.name && booking.customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (booking.customerName && booking.customerName.toLowerCase().includes(searchTerm.toLowerCase()));
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const params = new URLSearchParams(Array.from(searchParams.entries()));
+      let changed = false;
 
-      // Date range filter
-      let matchesDate = true;
-      if (dateRange?.from) {
-        let earliestTime: Date | null = null;
-        const sessions = booking.serviceSessions || [];
-        sessions.forEach((s: any) => {
-          if (s.startTime) {
-            const d = new Date(s.startTime);
-            if (!earliestTime || d < earliestTime) {
-              earliestTime = d;
-            }
-          }
-        });
-
-        // Use earliest session time for filtering, fallback to createdAt if no session
-        const targetDate = earliestTime || new Date(booking.createdAt);
-
-        if (targetDate < dateRange.from) {
-          matchesDate = false;
-        }
-        if (dateRange.to) {
-          const end = new Date(dateRange.to);
-          end.setHours(23, 59, 59, 999);
-          if (targetDate > end) {
-            matchesDate = false;
-          }
-        }
+      if (searchTerm && params.get('search') !== searchTerm) {
+        params.set('search', searchTerm);
+        changed = true;
+      } else if (!searchTerm && params.has('search')) {
+        params.delete('search');
+        changed = true;
       }
 
-      return matchesSearch && matchesDate;
-    });
-  }, [initialBookings, searchTerm, dateRange]);
+      const fromStr = dateRange?.from?.toISOString();
+      if (fromStr && params.get('from') !== fromStr) {
+        params.set('from', fromStr);
+        changed = true;
+      } else if (!fromStr && params.has('from')) {
+        params.delete('from');
+        changed = true;
+      }
+
+      const toStr = dateRange?.to?.toISOString();
+      if (toStr && params.get('to') !== toStr) {
+        params.set('to', toStr);
+        changed = true;
+      } else if (!toStr && params.has('to')) {
+        params.delete('to');
+        changed = true;
+      }
+
+      const historyStr = isHistory ? 'true' : null;
+      if (historyStr && params.get('history') !== historyStr) {
+        params.set('history', historyStr);
+        changed = true;
+      } else if (!historyStr && params.has('history')) {
+        params.delete('history');
+        changed = true;
+      }
+
+      if (changed) {
+        router.push(`${pathname}?${params.toString()}`);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, dateRange, isHistory, pathname, router, searchParams]);
 
   const handleResetFilter = () => {
     setSearchTerm("");
     setDateRange(undefined);
+    setIsHistory(false);
   };
 
   return (
@@ -92,15 +114,24 @@ export function BookingList({ initialBookings }: { initialBookings: any[] }) {
               <label className="text-xs font-semibold text-muted-foreground uppercase">Jadwal Booking</label>
               <DatePickerWithRange date={dateRange} setDate={setDateRange} />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={handleResetFilter} title="Reset Filter">
                 <FilterX className="w-4 h-4" />
+              </Button>
+              <Button 
+                type="button" 
+                variant={isHistory ? "default" : "outline"} 
+                onClick={() => setIsHistory(!isHistory)} 
+                title={isHistory ? "Tampilkan Booking Aktif" : "Tampilkan Riwayat Booking"}
+              >
+                {isHistory ? <LayoutList className="w-4 h-4 mr-2" /> : <History className="w-4 h-4 mr-2" />}
+                {isHistory ? "Booking Aktif" : "Riwayat"}
               </Button>
             </div>
           </div>
         </div>
 
-        <DataTable columns={columns} data={filteredBookings} emptyMessage="Belum ada booking yang sesuai kriteria." />
+        <DataTable columns={columns} data={initialBookings} emptyMessage={isHistory ? "Belum ada riwayat booking." : "Belum ada booking yang sesuai kriteria."} />
       </div>
 
       <BookingDetailDialog

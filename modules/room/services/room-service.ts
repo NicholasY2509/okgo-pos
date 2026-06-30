@@ -31,6 +31,13 @@ export class RoomService {
     });
   }
 
+  static async getActiveByBranchId(branchId: string) {
+    return await prisma.room.findMany({
+      where: { branchId, isActive: true },
+      orderBy: { name: "asc" },
+    });
+  }
+
   static async create(data: RoomInput) {
     return await prisma.room.create({
       data: {

@@ -1,56 +1,59 @@
 "use client";
 
 import { useState } from "react";
-import { format, addDays, subDays } from "date-fns";
-import { id } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, CheckCircle2, Play, Plus, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { addDays, subDays } from "date-fns";
+import { ChevronLeft, ChevronRight, Plus, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { toast } from "sonner";
-import { updateBookingStatusAction } from "../../booking/actions/booking-list-actions";
-import { cn } from "@/lib/utils";
 import { CurrentTimeLine } from "./timetable/current-time-line";
 import { SessionCard } from "./timetable/session-card";
+import { SessionInfoDialog } from "./timetable/session-info-dialog";
+import { ExistingTransactionPaymentModal } from "./existing-payment-modal";
 import { TimetableSidebar } from "./timetable/timetable-sidebar";
-import { calculateSessionLanes, BUSINESS_HOURS_START, BUSINESS_HOURS_END, TOTAL_HOURS } from "./timetable/timetable-utils";
+import { calculateSessionLanes, BUSINESS_HOURS_START, TOTAL_HOURS } from "./timetable/timetable-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminBookingForm } from "../../booking/components/admin-booking-form";
-import { useTimetable } from "../hooks/use-timetable";
+import { useEffect } from "react";
+import { useTimetableStore } from "../stores/timetable-store";
 
 interface TimetableClientProps {
   branchId: string;
   rooms: any[];
   paymentMethods: any[];
+  staff: any[];
 }
 
-export function TimetableClient({ branchId, rooms, paymentMethods }: TimetableClientProps) {
+export function TimetableClient({ branchId, rooms, paymentMethods, staff }: TimetableClientProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   const {
     date,
     setDate,
     sessions,
     pendingBookings,
-    fetchPendingBookings,
     loading,
     isBookingModalOpen,
     setIsBookingModalOpen,
+    setInitialData,
     fetchSessions,
-    handleComplete,
-    handleStart,
-    handleUpdateSessionTime,
-  } = useTimetable({ branchId });
+    fetchPendingBookings,
+    selectedSessionForInfo,
+    setSelectedSessionForInfo,
+    setSelectedTransactionForPayment,
+  } = useTimetableStore();
 
-  const handleProcessBooking = async (bookingId: string) => {
-    const res = await updateBookingStatusAction(bookingId, 'PROCESSED');
-    if (res.success) {
-      toast.success("Booking berhasil diproses");
+  useEffect(() => {
+    setInitialData({ branchId, rooms, paymentMethods, staff });
+    fetchSessions();
+    fetchPendingBookings();
+
+    const interval = setInterval(() => {
+      fetchSessions();
       fetchPendingBookings();
-      fetchSessions(date);
-    } else {
-      toast.error(res.error || "Gagal memproses booking");
-    }
-  };
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [branchId, rooms, paymentMethods, staff, fetchSessions, fetchPendingBookings, setInitialData]);
 
   const hoursArray = Array.from({ length: TOTAL_HOURS }, (_, i) => i + BUSINESS_HOURS_START);
 
@@ -83,7 +86,7 @@ export function TimetableClient({ branchId, rooms, paymentMethods }: TimetableCl
                 branchId={branchId}
                 onSuccess={() => {
                   setIsBookingModalOpen(false);
-                  fetchSessions(date);
+                  fetchSessions();
                 }}
                 onCancel={() => setIsBookingModalOpen(false)}
               />
@@ -134,7 +137,7 @@ export function TimetableClient({ branchId, rooms, paymentMethods }: TimetableCl
             <CurrentTimeLine date={date} />
 
             {loading ? (
-              rooms.map((room) => (
+              rooms.map((room, roomIndex) => (
                 <div key={`skeleton-${room.id}`} className="flex border-b border-border h-24">
                   <div className="w-48 shrink-0 border-r border-border p-4 bg-background sticky left-0 z-20 shadow-[1px_0_0_0_hsl(var(--border))]">
                     <div className="flex flex-col gap-2">
@@ -143,10 +146,10 @@ export function TimetableClient({ branchId, rooms, paymentMethods }: TimetableCl
                     </div>
                   </div>
                   <div className="flex-1 flex isolate">
-                    {hoursArray.map(hour => (
+                    {hoursArray.map((hour, hourIndex) => (
                       <div key={`skel-grid-${hour}`} className="flex-1 min-w-[120px] border-r border-border h-full flex items-center px-2">
-                        {/* Randomly place a skeleton to look like a loading session */}
-                        {Math.random() > 0.7 && (
+                        {/* Deterministically place a skeleton to look like a loading session */}
+                        {(hourIndex + roomIndex) % 4 === 0 && (
                           <Skeleton className="h-12 w-full rounded-md opacity-50" />
                         )}
                       </div>
@@ -181,11 +184,6 @@ export function TimetableClient({ branchId, rooms, paymentMethods }: TimetableCl
                           key={session.id}
                           session={session}
                           lane={session.lane}
-                          onComplete={() => handleComplete(session.id)}
-                          onStart={() => handleStart(session.id)}
-                          onUpdateTime={(start, end) => handleUpdateSessionTime(session.id, start, end)}
-                          paymentMethods={paymentMethods}
-                          onPaymentSuccess={() => fetchSessions(date)}
                         />
                       ))}
                     </div>
@@ -200,14 +198,26 @@ export function TimetableClient({ branchId, rooms, paymentMethods }: TimetableCl
           </div>
         </div>
 
-        {/* Right Sidebar */}
         <TimetableSidebar
           isOpen={isSidebarOpen}
-          sessions={sessions}
-          pendingBookings={pendingBookings}
-          onProcessBooking={handleProcessBooking}
         />
       </div>
+
+      <SessionInfoDialog
+        open={!!selectedSessionForInfo}
+        onOpenChange={(open) => {
+          if (!open) setSelectedSessionForInfo(null);
+        }}
+        session={selectedSessionForInfo}
+        onPayNow={() => {
+          if (selectedSessionForInfo?.transactionItem?.transaction) {
+            setSelectedTransactionForPayment(selectedSessionForInfo.transactionItem.transaction);
+          }
+        }}
+        staff={staff}
+      />
+
+      <ExistingTransactionPaymentModal />
     </div>
   );
 }

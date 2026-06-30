@@ -52,8 +52,8 @@ async function main() {
   const existingBranchCount = await prisma.branch.count()
   const createdBranches = []
   if (existingBranchCount === 0) {
-    const b1 = await prisma.branch.create({ data: { name: 'Cabang Pusat', subdomain: 'pusat', address: 'Jl. Sudirman No. 1', phone: '021123456' } })
-    const b2 = await prisma.branch.create({ data: { name: 'Cabang Selatan', subdomain: 'selatan', address: 'Jl. Kemang Raya No. 10', phone: '021654321' } })
+    const b1 = await prisma.branch.create({ data: { name: 'Nyenyak Juanda', subdomain: 'juanda', address: 'Jl. Juanda', phone: '021123456' } })
+    const b2 = await prisma.branch.create({ data: { name: 'Nyenyak Amir Hamzah', subdomain: 'amir-hamzah', address: 'Jl. Amir Hamzah', phone: '021654321' } })
     createdBranches.push(b1, b2)
     console.log('✅ Default branches created')
   } else {
