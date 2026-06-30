@@ -49,12 +49,6 @@ export function SessionInfoDialog({
               </div>
               <Badge
                 variant={isCompleted ? "secondary" : isInProgress ? "default" : "outline"}
-                className={cn(
-                  "px-3 py-1 rounded-full border-0 font-medium tracking-wide shadow-sm shrink-0",
-                  isCompleted && "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
-                  isInProgress && "bg-blue-500 text-white shadow-blue-500/20",
-                  isScheduled && "bg-white border border-zinc-200 text-zinc-600 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300"
-                )}
               >
                 {isCompleted ? "Selesai" : isInProgress ? "Berlangsung" : "Terjadwal"}
               </Badge>

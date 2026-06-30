@@ -103,16 +103,16 @@ function ExistingTransactionPaymentModalContent({
             Selesaikan Pembayaran
           </DialogTitle>
           {voucherMethod && (
-            <Tabs value={isVoucher ? "VOUCHER" : "NORMAL"} onValueChange={handleModeChange} className="w-[300px]">
-              <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/50 rounded-xl">
-                <TabsTrigger value="NORMAL" className="rounded-lg h-9">Cash / EDC</TabsTrigger>
-                <TabsTrigger value="VOUCHER" className="rounded-lg h-9">Redeem Voucher</TabsTrigger>
+            <Tabs value={isVoucher ? "VOUCHER" : "NORMAL"} onValueChange={handleModeChange}>
+              <TabsList className="">
+                <TabsTrigger value="NORMAL">Cash / EDC</TabsTrigger>
+                <TabsTrigger value="VOUCHER">Redeem Voucher</TabsTrigger>
               </TabsList>
             </Tabs>
           )}
         </DialogHeader>
         <div className={cn(
-          "grid transition-[grid-template-columns] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex-1 min-h-0",
+          "grid transition-[grid-template-columns] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex-1 min-h-[650px]",
           isVoucher ? "grid-cols-1 md:grid-cols-[1fr_0fr_1.3fr]" : "grid-cols-1 md:grid-cols-[1fr_1fr_0fr]"
         )}>
           {/* Left Panel: Summary & Input */}
