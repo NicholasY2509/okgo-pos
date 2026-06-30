@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Logs } from "lucide-react"
 
 export type StaffData = {
   id: string
@@ -16,9 +17,11 @@ export type StaffData = {
   workPosition: {
     name: string
   }
-  branch: {
-    name: string
-  } | null
+  branchStaffs?: {
+    branch: {
+      name: string
+    }
+  }[]
   staffUsers?: {
     user: {
       name: string | null
@@ -38,9 +41,13 @@ export const staffColumns: ColumnDef<StaffData>[] = [
     header: "Posisi",
   },
   {
-    accessorKey: "branch.name",
+    id: "branches",
     header: "Cabang",
-    cell: ({ row }) => row.original.branch?.name || "Global",
+    cell: ({ row }) => {
+      const branches = row.original.branchStaffs
+      if (!branches || branches.length === 0) return "Global"
+      return branches.map(bs => bs.branch.name).join(", ")
+    },
   },
   {
     id: "linkedUser",
@@ -71,7 +78,7 @@ export const staffColumns: ColumnDef<StaffData>[] = [
     cell: ({ row }) => {
       return (
         <Link href={`/staff/${row.original.id}`}>
-          <Button variant="ghost" size="sm">Lihat Detail</Button>
+          <Button variant="outline" size="icon"><Logs /></Button>
         </Link>
       )
     }

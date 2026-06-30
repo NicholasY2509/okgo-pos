@@ -34,17 +34,17 @@ export default async function BranchSettingsPage({
       </Link>
 
       <PageHeader
-        title={`Pengaturan Cabang: ${branch.name}`}
+        title={`${branch.name}`}
         description="Kelola performa dan staf untuk cabang ini."
       />
 
       <Tabs value={tab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
           <TabsTrigger value="performance" asChild>
-            <Link href={`/admin/branches/${slug}/settings?tab=performance`} replace>Performa Cabang</Link>
+            <Link href={`/admin/branches/${slug}?tab=performance`} replace>Performa Cabang</Link>
           </TabsTrigger>
           <TabsTrigger value="staff" asChild>
-            <Link href={`/admin/branches/${slug}/settings?tab=staff`} replace>Staf Cabang</Link>
+            <Link href={`/admin/branches/${slug}?tab=staff`} replace>Staf Cabang</Link>
           </TabsTrigger>
         </TabsList>
 

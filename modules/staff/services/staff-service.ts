@@ -9,11 +9,10 @@ export class StaffService {
 
   static async getAllStaff(branchId?: string) {
     return await prisma.staff.findMany({
-      where: branchId ? { branchId } : undefined,
+      where: branchId ? { branchStaffs: { some: { branchId } } } : undefined,
       orderBy: { createdAt: "desc" },
       include: {
         workPosition: true,
-        branch: true,
         staffUsers: {
           include: {
             user: true,
@@ -25,7 +24,7 @@ export class StaffService {
 
   static async getActiveStaff(branchId: string) {
     return await prisma.staff.findMany({
-      where: { branchId, isActive: true },
+      where: { branchStaffs: { some: { branchId } }, isActive: true },
       orderBy: { firstName: "asc" },
     })
   }
@@ -35,7 +34,12 @@ export class StaffService {
       where: { id },
       include: {
         workPosition: true,
-        branch: true,
+        branchStaffs: {
+          include: {
+            branch: true,
+            role: true
+          }
+        },
         staffUsers: {
           include: {
             user: true,

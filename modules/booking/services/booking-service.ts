@@ -20,7 +20,7 @@ export class BookingService {
 
   static async getStaffStatus(branchId: string) {
     const staff = await prisma.staff.findMany({
-      where: { branchId, isActive: true },
+      where: { branchStaffs: { some: { branchId } }, isActive: true },
       orderBy: { firstName: 'asc' }
     });
 
@@ -58,7 +58,7 @@ export class BookingService {
     const end = endOfDay(targetDate);
 
     const staff = await prisma.staff.findMany({
-      where: { branchId, isActive: true },
+      where: { branchStaffs: { some: { branchId } }, isActive: true },
       orderBy: { firstName: 'asc' }
     });
 
@@ -118,7 +118,7 @@ export class BookingService {
     }
 
     const rooms = await prisma.room.findMany({ where: { branchId, isActive: true } });
-    const staff = await prisma.staff.findMany({ where: { branchId, isActive: true } });
+    const staff = await prisma.staff.findMany({ where: { branchStaffs: { some: { branchId } }, isActive: true } });
 
     if (rooms.length < selections.length || staff.length < selections.length) return [];
 
@@ -252,7 +252,7 @@ export class BookingService {
       const slotEnd = addMinutes(slotStart, maxDuration);
 
       const rooms = await tx.room.findMany({ where: { branchId: data.branchId, isActive: true } });
-      const staffList = await tx.staff.findMany({ where: { branchId: data.branchId, isActive: true } });
+      const staffList = await tx.staff.findMany({ where: { branchStaffs: { some: { branchId: data.branchId } }, isActive: true } });
 
       const existingSessions = await tx.serviceSession.findMany({
         where: {

@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { StaffService } from "@/modules/staff/services/staff-service"
+import { WorkPositionService } from "@/modules/work-position/services/work-position-service"
 import { UserService } from "@/modules/staff-user/services/user-service"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -8,6 +9,9 @@ import { Badge } from "@/components/ui/badge"
 import { User, Mail, Phone, MapPin, Briefcase } from "lucide-react"
 import { AssignUserDialog } from "@/modules/staff-user/components/assign-user-dialog"
 import { UnlinkUserButton } from "@/modules/staff-user/components/unlink-user-button"
+import { StaffDialog } from "@/modules/staff/components/staff-dialog"
+import { Button } from "@/components/ui/button"
+import { Pencil } from "lucide-react"
 
 export const dynamic = "force-dynamic"
 
@@ -18,9 +22,10 @@ export const metadata: Metadata = {
 export default async function StaffDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
 
-  const [staff, allUsers] = await Promise.all([
+  const [staff, allUsers, workPositions] = await Promise.all([
     StaffService.getStaffById(params.id),
-    UserService.getAllUsers()
+    UserService.getAllUsers(),
+    WorkPositionService.getAllWorkPositions()
   ])
 
   if (!staff) {
@@ -37,9 +42,21 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
         title={`${staff.firstName} ${staff.lastName}`}
         description="Lihat dan kelola detail serta akses staf."
       >
-        <Badge variant={staff.isActive ? "default" : "secondary"} className="ml-2">
-          {staff.isActive ? "Aktif" : "Tidak Aktif"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={staff.isActive ? "default" : "secondary"}>
+            {staff.isActive ? "Aktif" : "Tidak Aktif"}
+          </Badge>
+          <StaffDialog
+            workPositions={workPositions}
+            initialData={staff}
+            trigger={
+              <Button variant="outline" size="sm">
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            }
+          />
+        </div>
       </PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -55,7 +72,7 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span><span className="font-medium">Cabang:</span> {staff.branch?.name || "Global"}</span>
+                <span><span className="font-medium">Cabang:</span> {staff.branchStaffs.length > 0 ? staff.branchStaffs.map(bs => bs.branch.name).join(', ') : "Global"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="h-4 w-4 text-muted-foreground" />

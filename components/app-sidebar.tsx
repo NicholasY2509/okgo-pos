@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sidebar"
 import { BuildingIcon } from "lucide-react"
 
-import { adminNav, branchNav } from "./app-sidebar-data"
+import { adminNav } from "./app-sidebar-data"
 
 export function AppSidebar({ portalType = "branch", ...props }: React.ComponentProps<typeof Sidebar> & { portalType?: "admin" | "branch" }) {
   const pathname = usePathname()
@@ -34,7 +34,7 @@ export function AppSidebar({ portalType = "branch", ...props }: React.ComponentP
   const userRole = (session?.user as any)?.role?.name || "Admin" // Temporarily defaulting to Admin for testing if session isn't fully configured
 
   // 3. Select and filter the menu
-  const activeMenu = isAdminPortal ? adminNav : branchNav
+  const activeMenu = adminNav
   const permittedGroups = activeMenu.map(group => ({
     ...group,
     items: group.items.filter((item) => item.roles.includes(userRole))

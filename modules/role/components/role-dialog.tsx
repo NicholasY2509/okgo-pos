@@ -2,19 +2,17 @@
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { StaffForm } from "./staff-form"
+import { RoleForm } from "./role-form"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { UpdateRoleInput } from "../schemas/role-schema"
 
-import { UpdateStaffInput } from "../schemas/staff-schema"
-
-interface StaffDialogProps {
-  workPositions: { id: string; name: string }[]
-  initialData?: UpdateStaffInput
+interface RoleDialogProps {
+  initialData?: UpdateRoleInput
   trigger?: React.ReactNode
 }
 
-export function StaffDialog({ workPositions, initialData, trigger }: StaffDialogProps) {
+export function RoleDialog({ initialData, trigger }: RoleDialogProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -23,19 +21,18 @@ export function StaffDialog({ workPositions, initialData, trigger }: StaffDialog
         {trigger || (
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Tambah Staf
+            Tambah Role
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Anggota Staf" : "Buat Anggota Staf"}</DialogTitle>
+          <DialogTitle>{initialData ? "Edit Role" : "Buat Role"}</DialogTitle>
           <DialogDescription>
-            {initialData ? "Perbarui informasi anggota staf ini." : "Tambahkan anggota staf baru ke sistem."}
+            {initialData ? "Perbarui informasi role ini." : "Tambahkan role baru ke sistem."}
           </DialogDescription>
         </DialogHeader>
-        <StaffForm
-          workPositions={workPositions}
+        <RoleForm
           initialData={initialData}
           onSuccess={() => setOpen(false)}
         />

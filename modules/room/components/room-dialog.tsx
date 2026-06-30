@@ -2,19 +2,19 @@
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { StaffForm } from "./staff-form"
+import { RoomForm } from "./room-form"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { RoomWithBranch } from "../types/room-types"
+import { Branch } from "@/modules/branch/types/branch-types"
 
-import { UpdateStaffInput } from "../schemas/staff-schema"
-
-interface StaffDialogProps {
-  workPositions: { id: string; name: string }[]
-  initialData?: UpdateStaffInput
+interface RoomDialogProps {
+  initialData?: RoomWithBranch
+  branches: Pick<Branch, "id" | "name">[]
   trigger?: React.ReactNode
 }
 
-export function StaffDialog({ workPositions, initialData, trigger }: StaffDialogProps) {
+export function RoomDialog({ initialData, branches, trigger }: RoomDialogProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -23,21 +23,22 @@ export function StaffDialog({ workPositions, initialData, trigger }: StaffDialog
         {trigger || (
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Tambah Staf
+            Tambah Ruang
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Anggota Staf" : "Buat Anggota Staf"}</DialogTitle>
+          <DialogTitle>{initialData ? "Edit Ruang" : "Tambah Ruang"}</DialogTitle>
           <DialogDescription>
-            {initialData ? "Perbarui informasi anggota staf ini." : "Tambahkan anggota staf baru ke sistem."}
+            {initialData ? "Perbarui detail ruangan." : "Tambahkan ruangan baru ke cabang yang dipilih."}
           </DialogDescription>
         </DialogHeader>
-        <StaffForm
-          workPositions={workPositions}
+        <RoomForm
           initialData={initialData}
+          branches={branches}
           onSuccess={() => setOpen(false)}
+          onCancel={() => setOpen(false)}
         />
       </DialogContent>
     </Dialog>

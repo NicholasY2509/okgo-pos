@@ -7,7 +7,6 @@ export const createStaffSchema = z.object({
   email: z.string().email("Email tidak valid").optional().or(z.literal("")).nullable(),
   isActive: z.boolean().default(true),
   workPositionId: z.string().min(1, "Posisi kerja wajib diisi"),
-  branchId: z.string().optional().nullable(),
 })
 
 export type CreateStaffInput = z.input<typeof createStaffSchema>

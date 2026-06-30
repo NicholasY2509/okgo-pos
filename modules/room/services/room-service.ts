@@ -44,6 +44,7 @@ export class RoomService {
         name: data.name,
         capacity: data.capacity,
         isActive: data.isActive,
+        isVip: data.isVip,
         branchId: data.branchId,
       },
     });
@@ -56,6 +57,7 @@ export class RoomService {
         name: data.name,
         capacity: data.capacity,
         isActive: data.isActive,
+        isVip: data.isVip,
         branchId: data.branchId,
       },
     });

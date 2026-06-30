@@ -44,13 +44,11 @@ model Staff {
   email          String?
   isActive       Boolean @default(true)
   workPositionId String
-  branchId       String? // Optional for central admin/global staff
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   workPosition    WorkPosition     @relation(fields: [workPositionId], references: [id])
-  branch          Branch?          @relation(fields: [branchId], references: [id])
   staffUsers      StaffUser[]
   serviceSessions ServiceSession[]
   branchStaffs    BranchStaff[]

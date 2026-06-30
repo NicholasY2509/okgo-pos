@@ -19,20 +19,20 @@ export function useRoom({ initialData, onSuccess }: UseRoomProps = {}) {
     resolver: zodResolver(roomSchema) as any,
     defaultValues: initialData
       ? {
-          id: initialData.id,
-          name: initialData.name,
-          capacity: initialData.capacity || undefined,
-          isActive: initialData.isActive,
-          isVip: initialData.isVip ?? false,
-          branchId: initialData.branchId,
-        }
+        id: initialData.id,
+        name: initialData.name,
+        capacity: initialData.capacity || undefined,
+        isActive: initialData.isActive,
+        isVip: initialData.isVip,
+        branchId: initialData.branchId,
+      }
       : {
-          name: "",
-          capacity: undefined,
-          isActive: true,
-          isVip: false,
-          branchId: "",
-        },
+        name: "",
+        capacity: undefined,
+        isActive: true,
+        isVip: false,
+        branchId: "",
+      },
   });
 
   async function onSubmit(values: z.infer<typeof roomSchema>) {

@@ -9,7 +9,6 @@ model Branch {
   updatedAt DateTime @updatedAt
 
   branchStaffs BranchStaff[]
-  staffs       Staff[]
   rooms        Room[]
   discounts    Discount[]
 }

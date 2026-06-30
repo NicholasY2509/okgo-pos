@@ -61,7 +61,7 @@ export default async function BranchesPage() {
                     Kunjungi
                   </Button>
                 </Link>
-                <Link href={`/admin/branches/${branch.subdomain}/settings`}>
+                <Link href={`/branches/${branch.subdomain}`}>
                   <Button variant="default" size="sm" className="h-8 shadow-sm">Kelola</Button>
                 </Link>
               </div>

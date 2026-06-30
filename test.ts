@@ -5,8 +5,8 @@ async function main() {
   const staff = await prisma.staff.count();
   const users = await prisma.user.count();
   console.log({ staffUsers, branchStaffs, staff, users });
-  
-  const sampleStaff = await prisma.staff.findFirst({ include: { staffUsers: true, branch: true } });
+
+  const sampleStaff = await prisma.staff.findFirst({ include: { staffUsers: true } });
   console.log("Sample Staff:", sampleStaff);
 }
 main().catch(console.error).finally(() => prisma.$disconnect());

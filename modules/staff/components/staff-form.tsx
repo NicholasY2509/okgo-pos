@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { useCreateStaff } from "../hooks/use-staff"
+import { useStaffForm } from "../hooks/use-staff"
+import { UpdateStaffInput } from "../schemas/staff-schema"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -23,21 +24,19 @@ import {
 
 interface StaffFormProps {
   workPositions: { id: string; name: string }[]
-  branches: { id: string; name: string }[]
+  initialData?: UpdateStaffInput
   onSuccess?: () => void
 }
 
-export function StaffForm({ workPositions, branches, onSuccess }: StaffFormProps) {
-  const { form, onSubmit, isSubmitting, error } = useCreateStaff(onSuccess)
+export function StaffForm({ workPositions, initialData, onSuccess }: StaffFormProps) {
+  const { form, onSubmit, isSubmitting, error, isEditing } = useStaffForm(initialData, onSuccess)
 
   const [positionOpen, setPositionOpen] = React.useState(false)
-  const [branchOpen, setBranchOpen] = React.useState(false)
 
   const selectedPositionId = form.watch("workPositionId")
-  const selectedBranchId = form.watch("branchId")
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 pt-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2 flex flex-col">
           <label className="text-sm font-medium">Nama Depan</label>
@@ -88,7 +87,7 @@ export function StaffForm({ workPositions, branches, onSuccess }: StaffFormProps
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+          <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
             <Command>
               <CommandInput placeholder="Cari posisi..." />
               <CommandList>
@@ -122,55 +121,7 @@ export function StaffForm({ workPositions, branches, onSuccess }: StaffFormProps
         )}
       </div>
 
-      <div className="space-y-2 flex flex-col">
-        <label className="text-sm font-medium">Cabang (Opsional)</label>
-        <Popover open={branchOpen} onOpenChange={setBranchOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={branchOpen}
-              className={cn(
-                "w-full justify-between font-normal",
-                !selectedBranchId && "text-muted-foreground"
-              )}
-            >
-              {selectedBranchId
-                ? branches.find((b) => b.id === selectedBranchId)?.name
-                : "Pilih cabang (atau biarkan kosong untuk global)..."}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-            <Command>
-              <CommandInput placeholder="Cari cabang..." />
-              <CommandList>
-                <CommandEmpty>Cabang tidak ditemukan.</CommandEmpty>
-                <CommandGroup>
-                  {branches.map((b) => (
-                    <CommandItem
-                      key={b.id}
-                      value={b.name}
-                      onSelect={() => {
-                        form.setValue("branchId", b.id, { shouldValidate: true })
-                        setBranchOpen(false)
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedBranchId === b.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {b.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </div>
+
 
       {error && (
         <div className="text-sm font-medium text-destructive mt-2" aria-live="polite">
@@ -178,10 +129,10 @@ export function StaffForm({ workPositions, branches, onSuccess }: StaffFormProps
         </div>
       )}
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={() => onSuccess?.()}>Batal</Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Membuat..." : "Buat Staf"}
+          {isSubmitting ? "Menyimpan..." : (isEditing ? "Simpan Perubahan" : "Buat Staf")}
         </Button>
       </div>
     </form>

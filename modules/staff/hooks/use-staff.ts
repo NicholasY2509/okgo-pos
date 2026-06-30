@@ -13,32 +13,35 @@ import {
   type UpdateStaffInput,
 } from "../schemas/staff-schema"
 
-export function useCreateStaff(onSuccess?: () => void) {
+export function useStaffForm(initialData?: UpdateStaffInput, onSuccess?: () => void) {
   const [error, setError] = useState<string | null>(null)
 
-  const form = useForm<CreateStaffInput>({
-    resolver: zodResolver(createStaffSchema),
-    defaultValues: {
+  const isEditing = !!initialData?.id
+
+  const form = useForm<CreateStaffInput | UpdateStaffInput>({
+    resolver: zodResolver(isEditing ? updateStaffSchema : createStaffSchema),
+    defaultValues: initialData || {
       firstName: "",
       lastName: "",
       phone: "",
       email: "",
       isActive: true,
       workPositionId: "",
-      branchId: "",
     },
   })
 
-  async function onSubmit(values: CreateStaffInput) {
+  async function onSubmit(values: CreateStaffInput | UpdateStaffInput) {
     setError(null)
-    const result = await createStaffAction(values)
+    const result = isEditing
+      ? await updateStaffAction(values as UpdateStaffInput)
+      : await createStaffAction(values as CreateStaffInput)
 
     if (result.error) {
       setError(result.error)
       toast.error(result.error)
     } else {
-      toast.success("Anggota staf berhasil dibuat!")
-      form.reset()
+      toast.success(`Anggota staf berhasil ${isEditing ? 'diperbarui' : 'dibuat'}!`)
+      if (!isEditing) form.reset()
       onSuccess?.()
     }
 
@@ -50,5 +53,6 @@ export function useCreateStaff(onSuccess?: () => void) {
     onSubmit: form.handleSubmit(onSubmit),
     isSubmitting: form.formState.isSubmitting,
     error,
+    isEditing,
   }
 }

@@ -86,9 +86,9 @@ export function RoomForm({ initialData, branches, onSuccess, onCancel }: RoomFor
         />
       </div>
 
-      <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm border-amber-200 bg-amber-50/30">
+      <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
         <div className="space-y-0.5">
-          <Label htmlFor="isVip" className="text-amber-700">Ruangan VIP</Label>
+          <Label htmlFor="isVip" className="">Ruangan VIP</Label>
         </div>
         <Controller
           control={form.control}

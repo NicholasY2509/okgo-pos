@@ -14,10 +14,9 @@ export const metadata: Metadata = {
 }
 
 export default async function StaffPage() {
-  const [staff, workPositions, branches] = await Promise.all([
+  const [staff, workPositions] = await Promise.all([
     StaffService.getAllStaff(),
     WorkPositionService.getAllWorkPositions(),
-    BranchService.getAllBranches(),
   ])
 
   return (
@@ -28,7 +27,6 @@ export default async function StaffPage() {
       >
         <StaffDialog
           workPositions={workPositions.map(wp => ({ id: wp.id, name: wp.name }))}
-          branches={branches.map(b => ({ id: b.id, name: b.name }))}
         />
       </PageHeader>
 

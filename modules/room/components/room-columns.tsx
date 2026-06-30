@@ -3,22 +3,20 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Branch } from "@/modules/branch/types/branch-types";
+import { RoomDialog } from "./room-dialog";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { deleteRoomAction } from "../actions/room-action";
+import { toast } from "sonner";
+import { Pencil, Trash } from "lucide-react";
 import { RoomWithBranch } from "../types/room-types";
 
 interface GetColumnsProps {
-  onEdit: (room: RoomWithBranch) => void;
-  onDelete: (room: RoomWithBranch) => void;
+  branches: Pick<Branch, "id" | "name">[];
 }
 
-export const getColumns = ({ onEdit, onDelete }: GetColumnsProps): ColumnDef<RoomWithBranch>[] => [
+export const getColumns = ({ branches }: GetColumnsProps): ColumnDef<RoomWithBranch>[] => [
   {
     accessorKey: "name",
     header: "Nama Ruangan",
@@ -53,26 +51,60 @@ export const getColumns = ({ onEdit, onDelete }: GetColumnsProps): ColumnDef<Roo
       const room = row.original;
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Buka menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => onEdit(room)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(room)} className="text-red-600">
-              <Trash className="mr-2 h-4 w-4" />
-              Hapus
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex justify-end gap-2">
+          <RoomDialog
+            initialData={room}
+            branches={branches}
+            trigger={
+              <Button variant="ghost" size="icon">
+                <Pencil className="h-4 w-4" />
+              </Button>
+            }
+          />
+          <DeleteRoomButton id={room.id} name={room.name} />
+        </div>
       );
     },
   },
 ];
+
+function DeleteRoomButton({ id, name }: { id: string, name: string }) {
+  const [open, setOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  async function handleDelete() {
+    setIsDeleting(true)
+    const result = await deleteRoomAction(id)
+    setIsDeleting(false)
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("Ruangan berhasil dihapus!")
+      setOpen(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-destructive">
+          <Trash className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Hapus Ruangan?</DialogTitle>
+          <DialogDescription>
+            Apakah Anda yakin ingin menghapus ruangan <strong>{name}</strong>? Tindakan ini tidak dapat dibatalkan.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={isDeleting}>Batal</Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            {isDeleting ? "Menghapus..." : "Hapus"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}

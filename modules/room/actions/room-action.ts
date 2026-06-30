@@ -12,8 +12,8 @@ export async function createRoomAction(values: RoomInput) {
     }
 
     const result = await RoomService.create(validatedFields.data);
-    revalidatePath("/admin/rooms");
-    
+    revalidatePath("/rooms");
+
     return { success: true, data: result };
   } catch (error) {
     console.error("Failed to create room:", error);
@@ -29,8 +29,8 @@ export async function updateRoomAction(id: string, values: RoomInput) {
     }
 
     const result = await RoomService.update(id, validatedFields.data);
-    revalidatePath("/admin/rooms");
-    
+    revalidatePath("/rooms");
+
     return { success: true, data: result };
   } catch (error) {
     console.error("Failed to update room:", error);
@@ -41,7 +41,7 @@ export async function updateRoomAction(id: string, values: RoomInput) {
 export async function deleteRoomAction(id: string) {
   try {
     await RoomService.delete(id);
-    revalidatePath("/admin/rooms");
+    revalidatePath("/rooms");
     return { success: true };
   } catch (error) {
     console.error("Failed to delete room:", error);

@@ -89,8 +89,7 @@ async function main() {
           lastName: lName,
           phone: `081${Math.floor(100000000 + Math.random() * 900000000)}`,
           email: staffEmail,
-          workPositionId: wp.id,
-          branchId: branch?.id
+          workPositionId: wp.id
         }
       })
       staffCreated++

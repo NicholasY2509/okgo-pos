@@ -1,5 +1,6 @@
 import { RoomService } from "@/modules/room/services/room-service";
-import { RoomList } from "@/modules/room/components/room-list";
+import { RoomTable } from "@/modules/room/components/room-table";
+import { RoomDialog } from "@/modules/room/components/room-dialog";
 import { BranchService } from "@/modules/branch/services/branch-service";
 import { PageHeader } from "@/components/page-header";
 
@@ -16,8 +17,12 @@ export default async function RoomsPage() {
       <PageHeader
         title="Ruang"
         description="Kelola fasilitas ruangan untuk setiap cabang."
-      />
-      <RoomList data={rooms} branches={branches} />
+      >
+        <RoomDialog branches={branches} />
+      </PageHeader>
+      <div className="w-full">
+        <RoomTable data={rooms} branches={branches} />
+      </div>
     </div>
   );
 }
