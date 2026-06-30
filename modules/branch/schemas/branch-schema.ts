@@ -18,10 +18,10 @@ export const updateBranchSchema = z.object({
 })
 
 export type UpdateBranchInput = z.infer<typeof updateBranchSchema>
-export const assignUserBranchSchema = z.object({
+export const assignStaffBranchSchema = z.object({
   branchId: z.string().cuid(),
-  userId: z.string().cuid(),
+  staffId: z.string().cuid(),
   roleId: z.string().cuid(),
 })
 
-export type AssignUserBranchInput = z.infer<typeof assignUserBranchSchema>
+export type AssignStaffBranchInput = z.infer<typeof assignStaffBranchSchema>

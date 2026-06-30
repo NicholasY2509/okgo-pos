@@ -1,15 +1,24 @@
 import { BranchService } from "@/modules/branch/services/branch-service"
-import { AssignUserForm } from "@/modules/branch/components/assign-user-form"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { BranchStaffTab } from "@/modules/branch/components/branch-staff-tab"
+import { BranchPerformanceTab } from "@/modules/branch/components/branch-performance-tab"
+import { PageHeader } from "@/components/page-header"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ChevronLeft } from "lucide-react"
 import { notFound } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
-export default async function BranchSettingsPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BranchSettingsPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ slug: string }>,
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const { slug } = await params
+  const resolvedSearchParams = await searchParams
+  const tab = typeof resolvedSearchParams.tab === 'string' ? resolvedSearchParams.tab : 'performance'
 
   const branch = await BranchService.getBranchBySubdomain(slug)
 
@@ -17,56 +26,36 @@ export default async function BranchSettingsPage({ params }: { params: Promise<{
     notFound()
   }
 
-  const [users, roles, branchUsers] = await Promise.all([
-    BranchService.getAllUsers(),
-    BranchService.getAllRoles(),
-    BranchService.getBranchUsers(branch.id)
-  ])
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/branches">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">Pengaturan Cabang: {branch.name}</h1>
-      </div>
+    <div className="flex flex-col gap-6">
+      <Link href="/admin/branches" className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-fit">
+        <ChevronLeft className="w-4 h-4 mr-1" />
+        Kembali ke Daftar Cabang
+      </Link>
 
-      <div className="flex gap-6">
-        <div className="flex-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pengguna Ditugaskan</CardTitle>
-              <CardDescription>Pengguna yang memiliki akses ke cabang ini.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {branchUsers.length === 0 ? (
-                <div className="text-muted-foreground text-sm py-4">Belum ada pengguna yang ditugaskan ke cabang ini.</div>
-              ) : (
-                <div className="space-y-4">
-                  {branchUsers.map((bu) => (
-                    <div key={bu.id} className="flex justify-between items-center p-3 border rounded-md">
-                      <div>
-                        <div className="font-medium">{bu.user.name || bu.user.email}</div>
-                        <div className="text-sm text-muted-foreground">{bu.user.email}</div>
-                      </div>
-                      <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                        {bu.role.name}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+      <PageHeader
+        title={`Pengaturan Cabang: ${branch.name}`}
+        description="Kelola performa dan staf untuk cabang ini."
+      />
 
-        <div className="w-96 shrink-0">
-          <AssignUserForm branchId={branch.id} users={users} roles={roles} />
-        </div>
-      </div>
+      <Tabs value={tab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="performance" asChild>
+            <Link href={`/admin/branches/${slug}/settings?tab=performance`} replace>Performa Cabang</Link>
+          </TabsTrigger>
+          <TabsTrigger value="staff" asChild>
+            <Link href={`/admin/branches/${slug}/settings?tab=staff`} replace>Staf Cabang</Link>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="performance" className="space-y-4 pt-4">
+          {tab === 'performance' ? <BranchPerformanceTab branchId={branch.id} /> : null}
+        </TabsContent>
+
+        <TabsContent value="staff" className="space-y-4 pt-4">
+          {tab === 'staff' ? <BranchStaffTab branchId={branch.id} /> : null}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

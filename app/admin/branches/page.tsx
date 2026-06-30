@@ -49,7 +49,7 @@ export default async function BranchesPage() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Users className="h-4 w-4 shrink-0 text-gray-400" />
-                <span>{branch._count.users} Pengguna Ditugaskan</span>
+                <span>{branch._count.branchStaffs} Staf Ditugaskan</span>
               </div>
             </CardContent>
             <CardFooter className="border-t flex justify-between gap-2">

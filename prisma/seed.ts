@@ -113,11 +113,11 @@ async function main() {
           }
         })
 
-        // Assign BranchUser role based on WorkPosition
+        // Assign BranchStaff role based on WorkPosition
         const roleName = wp.name === 'Manajer Cabang' ? 'Manager' : 'Cashier'
-        await prisma.branchUser.create({
+        await prisma.branchStaff.create({
           data: {
-            userId: user.id,
+            staffId: staff.id,
             branchId: branch.id,
             roleId: createdRoles[roleName]
           }

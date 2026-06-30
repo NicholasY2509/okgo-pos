@@ -38,12 +38,12 @@ export class AuthService {
       }
 
       // Check if user is assigned to this branch
-      const assignment = await prisma.branchUser.findUnique({
+      const assignment = await prisma.branchStaff.findFirst({
         where: {
-          userId_branchId: {
-            userId: user.id,
-            branchId: branch.id,
+          staff: {
+            staffUsers: { some: { userId: user.id } }
           },
+          branchId: branch.id,
         },
         include: {
           role: true
@@ -53,13 +53,15 @@ export class AuthService {
       if (!assignment) {
         return null; // User not authorized for this branch
       }
-      
+
       userRole = assignment.role.name;
     } else if (subdomain === "admin") {
       // For admin portal, they must have the "Admin" role somewhere
-      const adminAssignment = await prisma.branchUser.findFirst({
+      const adminAssignment = await prisma.branchStaff.findFirst({
         where: {
-          userId: user.id,
+          staff: {
+            staffUsers: { some: { userId: user.id } }
+          },
           role: {
             name: "Admin"
           }
@@ -68,16 +70,20 @@ export class AuthService {
           role: true
         }
       });
-      
+
       if (!adminAssignment) {
         return null; // Not an admin
       }
-      
+
       userRole = "Admin";
     } else {
       // Fallback if no subdomain (e.g. main marketing site), just get their primary role if they have one
-      const primaryAssignment = await prisma.branchUser.findFirst({
-        where: { userId: user.id },
+      const primaryAssignment = await prisma.branchStaff.findFirst({
+        where: {
+          staff: {
+            staffUsers: { some: { userId: user.id } }
+          }
+        },
         include: { role: true }
       });
       if (primaryAssignment) {

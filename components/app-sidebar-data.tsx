@@ -10,7 +10,9 @@ import {
   ContactIcon,
   TicketIcon,
   ArmchairIcon,
-  PercentCircle
+  PercentCircle,
+  FileText,
+  Calendar1
 } from "lucide-react"
 
 export const adminNav = [
@@ -18,7 +20,7 @@ export const adminNav = [
     label: "Utama",
     items: [
       {
-        title: "Dasbor",
+        title: "Dashboard",
         url: "/",
         icon: (<LayoutDashboardIcon />),
         roles: ["Admin"],
@@ -67,35 +69,64 @@ export const adminNav = [
     ]
   },
   {
-    label: "Staf & Pengguna",
+    label: "Transaksi",
     items: [
       {
-        title: "Pengguna",
-        url: "/users",
-        icon: (<UsersIcon />),
-        roles: ["Admin"],
+        title: "Booking",
+        url: "/bookings",
+        icon: (<Calendar1 />),
+        roles: ["Admin", "Manager"],
       },
       {
-        title: "Metode Pembayaran",
-        url: "/settings/payment-methods",
-        icon: (<Settings2Icon />),
+        title: "Riwayat Transaksi",
+        url: "/transactions",
+        icon: (<FileText />),
         roles: ["Admin"],
       },
+    ]
+  },
+  {
+    label: "Staf & Pengguna",
+    items: [
+
       {
         title: "Staf",
         url: "/staff",
         icon: (<ContactIcon />),
         roles: ["Admin"],
       },
-
       {
         title: "Posisi Kerja",
         url: "/work-positions",
         icon: (<BriefcaseIcon />),
         roles: ["Admin"],
       },
+      {
+        title: "User",
+        url: "/users",
+        icon: (<UsersIcon />),
+        roles: ["Admin"],
+      },
     ]
-  }
+  },
+  {
+    label: "Pengaturan",
+    items: [
+      {
+        title: "Akuntansi",
+        url: "/accounting",
+        icon: (<CalculatorIcon />),
+        roles: ["Admin"],
+      },
+      {
+        title: "Metode Pembayaran",
+        url: "/payment-methods",
+        icon: (<Settings2Icon />),
+        roles: ["Admin"],
+      },
+    ]
+  },
+
 ]
 
 export const branchNav = [

@@ -7,10 +7,18 @@ export class UserService {
     return await prisma.user.findMany({
       orderBy: { name: 'asc' },
       include: {
-        branchUsers: {
+        staffUsers: {
           include: {
-            branch: true,
-            role: true
+            staff: {
+              include: {
+                branchStaffs: {
+                  include: {
+                    branch: true,
+                    role: true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -45,11 +53,10 @@ export class UserService {
   }
 
   static async deleteUser(id: string) {
-    // Delete all related branchUsers first if needed, though Prisma cascade might handle it depending on schema
-    await prisma.branchUser.deleteMany({
+    // Delete all related staffUsers first if needed
+    await prisma.staffUser.deleteMany({
       where: { userId: id }
     })
-    
     return await prisma.user.delete({
       where: { id },
     })

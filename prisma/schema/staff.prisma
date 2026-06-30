@@ -3,8 +3,8 @@ model Role {
   name        String  @unique // e.g. "Admin", "Cashier", "Manager"
   description String?
 
-  permissions RolePermission[]
-  branchUsers BranchUser[]
+  permissions  RolePermission[]
+  branchStaffs BranchStaff[]
 }
 
 model Permission {
@@ -53,6 +53,7 @@ model Staff {
   branch          Branch?          @relation(fields: [branchId], references: [id])
   staffUsers      StaffUser[]
   serviceSessions ServiceSession[]
+  branchStaffs    BranchStaff[]
 }
 
 model StaffUser {

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useAssignUserBranch } from "../hooks/use-branch"
+import { useAssignStaffBranch } from "../hooks/use-branch"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Check, ChevronsUpDown } from "lucide-react"
@@ -19,71 +19,78 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import type { Staff, WorkPosition } from "@/lib/generated/prisma"
 
-interface AssignUserFormProps {
+interface AssignStaffFormProps {
   branchId: string
-  users: { id: string; name: string | null; email: string | null }[]
+  staffs: (Staff & { workPosition: WorkPosition })[]
   roles: { id: string; name: string }[]
 }
 
-export function AssignUserForm({ branchId, users, roles }: AssignUserFormProps) {
-  const { form, onSubmit, isSubmitting, error } = useAssignUserBranch(branchId)
+export function AssignStaffForm({ branchId, staffs, roles }: AssignStaffFormProps) {
+  const { form, onSubmit, isSubmitting, error } = useAssignStaffBranch(branchId)
 
-  const [userOpen, setUserOpen] = React.useState(false)
+  const [staffOpen, setStaffOpen] = React.useState(false)
   const [roleOpen, setRoleOpen] = React.useState(false)
 
-  const selectedUserId = form.watch("userId")
+  const selectedStaffId = form.watch("staffId")
   const selectedRoleId = form.watch("roleId")
 
   return (
     <Card className="w-full shadow-md">
       <CardHeader>
-        <CardTitle>Tugaskan Pengguna</CardTitle>
-        <CardDescription>Tugaskan pengguna ke cabang ini dengan peran tertentu.</CardDescription>
+        <CardTitle>Tugaskan Staf</CardTitle>
+        <CardDescription>Tugaskan staf ke cabang ini dengan peran tertentu.</CardDescription>
       </CardHeader>
       <form onSubmit={onSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2 flex flex-col">
-            <label className="text-sm font-medium">Pengguna</label>
-            <Popover open={userOpen} onOpenChange={setUserOpen}>
+            <label className="text-sm font-medium">Staf</label>
+            <Popover open={staffOpen} onOpenChange={setStaffOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   role="combobox"
-                  aria-expanded={userOpen}
+                  aria-expanded={staffOpen}
                   className={cn(
                     "w-full justify-between font-normal",
-                    !selectedUserId && "text-muted-foreground"
+                    !selectedStaffId && "text-muted-foreground"
                   )}
                 >
-                  {selectedUserId
-                    ? users.find((user) => user.id === selectedUserId)?.name || users.find((user) => user.id === selectedUserId)?.email
-                    : "Pilih pengguna..."}
+                  {selectedStaffId
+                    ? (() => {
+                        const s = staffs.find((staff) => staff.id === selectedStaffId)
+                        return s ? `${s.firstName} ${s.lastName} (${s.workPosition.name})` : "Pilih staf..."
+                      })()
+                    : "Pilih staf..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Cari pengguna..." />
+                  <CommandInput placeholder="Cari staf..." />
                   <CommandList>
-                    <CommandEmpty>Pengguna tidak ditemukan.</CommandEmpty>
+                    <CommandEmpty>Staf tidak ditemukan.</CommandEmpty>
                     <CommandGroup>
-                      {users.map((user) => (
+                      {staffs.map((staff) => (
                         <CommandItem
-                          key={user.id}
-                          value={user.name || user.email || user.id}
+                          key={staff.id}
+                          value={`${staff.firstName} ${staff.lastName}`}
                           onSelect={() => {
-                            form.setValue("userId", user.id, { shouldValidate: true })
-                            setUserOpen(false)
+                            form.setValue("staffId", staff.id, { shouldValidate: true })
+                            setStaffOpen(false)
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              selectedUserId === user.id ? "opacity-100" : "opacity-0"
+                              selectedStaffId === staff.id ? "opacity-100" : "opacity-0"
                             )}
                           />
-                          {user.name || user.email}
+                          {staff.firstName} {staff.lastName}
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            {staff.workPosition.name}
+                          </span>
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -91,8 +98,8 @@ export function AssignUserForm({ branchId, users, roles }: AssignUserFormProps) 
                 </Command>
               </PopoverContent>
             </Popover>
-            {form.formState.errors.userId && (
-              <p className="text-sm text-destructive">{form.formState.errors.userId.message as string}</p>
+            {form.formState.errors.staffId && (
+              <p className="text-sm text-destructive">{form.formState.errors.staffId.message as string}</p>
             )}
           </div>
 
@@ -157,7 +164,7 @@ export function AssignUserForm({ branchId, users, roles }: AssignUserFormProps) 
         </CardContent>
         <CardFooter className="mt-4">
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Menugaskan..." : "Tugaskan Pengguna"}
+            {isSubmitting ? "Menugaskan..." : "Tugaskan Staf"}
           </Button>
         </CardFooter>
       </form>

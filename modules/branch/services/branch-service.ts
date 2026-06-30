@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { AssignUserBranchInput, CreateBranchInput, UpdateBranchInput } from "../schemas/branch-schema"
+import { AssignStaffBranchInput, CreateBranchInput, UpdateBranchInput } from "../schemas/branch-schema"
 
 export class BranchService {
   static async getAllBranches() {
@@ -7,7 +7,7 @@ export class BranchService {
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
-          select: { users: true }
+          select: { branchStaffs: true }
         }
       }
     })
@@ -32,21 +32,21 @@ export class BranchService {
     })
   }
 
-  static async getBranchUsers(branchId: string) {
-    return await prisma.branchUser.findMany({
+  static async getBranchStaffs(branchId: string) {
+    return await prisma.branchStaff.findMany({
       where: { branchId },
       include: {
-        user: { select: { id: true, name: true, email: true } },
+        staff: { include: { workPosition: true } },
         role: { select: { id: true, name: true } },
       }
     })
   }
 
-  static async assignUserToBranch(data: AssignUserBranchInput) {
-    return await prisma.branchUser.upsert({
+  static async assignStaffToBranch(data: AssignStaffBranchInput) {
+    return await prisma.branchStaff.upsert({
       where: {
-        userId_branchId: {
-          userId: data.userId,
+        staffId_branchId: {
+          staffId: data.staffId,
           branchId: data.branchId,
         }
       },
@@ -54,10 +54,16 @@ export class BranchService {
         roleId: data.roleId,
       },
       create: {
-        userId: data.userId,
+        staffId: data.staffId,
         branchId: data.branchId,
         roleId: data.roleId,
       }
+    })
+  }
+
+  static async removeBranchStaff(branchStaffId: string) {
+    return await prisma.branchStaff.delete({
+      where: { id: branchStaffId }
     })
   }
 
@@ -67,10 +73,10 @@ export class BranchService {
     })
   }
 
-  static async getAllUsers() {
-    return await prisma.user.findMany({
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true, email: true }
+  static async getAllStaffs() {
+    return await prisma.staff.findMany({
+      orderBy: { firstName: 'asc' },
+      include: { workPosition: true }
     })
   }
 }

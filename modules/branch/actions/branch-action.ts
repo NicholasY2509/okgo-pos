@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { BranchService } from "../services/branch-service"
-import { createBranchSchema, assignUserBranchSchema, updateBranchSchema, type CreateBranchInput, type AssignUserBranchInput, type UpdateBranchInput } from "../schemas/branch-schema"
+import { createBranchSchema, assignStaffBranchSchema, updateBranchSchema, type CreateBranchInput, type AssignStaffBranchInput, type UpdateBranchInput } from "../schemas/branch-schema"
 
 export async function createBranchAction(values: CreateBranchInput) {
   try {
@@ -43,21 +43,38 @@ export async function updateBranchAction(values: UpdateBranchInput) {
   }
 }
 
-export async function assignUserToBranchAction(values: AssignUserBranchInput) {
+export async function assignStaffToBranchAction(values: AssignStaffBranchInput) {
   try {
-    const validatedFields = assignUserBranchSchema.safeParse(values)
+    const validatedFields = assignStaffBranchSchema.safeParse(values)
 
     if (!validatedFields.success) {
       return { error: "Data penugasan tidak valid." }
     }
 
-    const branchUser = await BranchService.assignUserToBranch(validatedFields.data)
+    const branchStaff = await BranchService.assignStaffToBranch(validatedFields.data)
 
     revalidatePath(`/admin/branches/${validatedFields.data.branchId}/settings`)
 
-    return { success: true, data: branchUser }
+    return { success: true, data: branchStaff }
   } catch (error) {
-    console.error("Failed to assign user:", error)
-    return { error: "Gagal menugaskan pengguna ke cabang." }
+    console.error("Failed to assign staff:", error)
+    return { error: "Gagal menugaskan staf ke cabang." }
+  }
+}
+
+export async function removeBranchStaffAction(branchStaffId: string, branchId: string) {
+  try {
+    if (!branchStaffId) {
+      return { error: "ID penugasan tidak valid." }
+    }
+
+    await BranchService.removeBranchStaff(branchStaffId)
+
+    revalidatePath(`/admin/branches/${branchId}/settings`)
+
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to remove staff:", error)
+    return { error: "Gagal menghapus penugasan staf dari cabang." }
   }
 }

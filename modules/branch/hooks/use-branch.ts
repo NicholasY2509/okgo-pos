@@ -2,8 +2,8 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { createBranchAction, assignUserToBranchAction } from "../actions/branch-action"
-import { createBranchSchema, assignUserBranchSchema, type CreateBranchInput, type AssignUserBranchInput } from "../schemas/branch-schema"
+import { createBranchAction, assignStaffToBranchAction } from "../actions/branch-action"
+import { createBranchSchema, assignStaffBranchSchema, type CreateBranchInput, type AssignStaffBranchInput } from "../schemas/branch-schema"
 
 export function useCreateBranch() {
   const [error, setError] = useState<string | null>(null)
@@ -41,28 +41,28 @@ export function useCreateBranch() {
   }
 }
 
-export function useAssignUserBranch(branchId: string) {
+export function useAssignStaffBranch(branchId: string) {
   const [error, setError] = useState<string | null>(null)
 
-  const form = useForm<AssignUserBranchInput>({
-    resolver: zodResolver(assignUserBranchSchema),
+  const form = useForm<AssignStaffBranchInput>({
+    resolver: zodResolver(assignStaffBranchSchema),
     defaultValues: {
       branchId,
-      userId: "",
+      staffId: "",
       roleId: "",
     },
   })
 
-  async function onSubmit(values: AssignUserBranchInput) {
+  async function onSubmit(values: AssignStaffBranchInput) {
     setError(null)
-    const result = await assignUserToBranchAction(values)
+    const result = await assignStaffToBranchAction(values)
 
     if (result.error) {
       setError(result.error)
       toast.error(result.error)
     } else {
-      toast.success("Pengguna berhasil ditugaskan ke cabang!")
-      form.reset({ branchId, userId: "", roleId: "" }) // Keep branchId, reset the rest
+      toast.success("Staf berhasil ditugaskan ke cabang!")
+      form.reset({ branchId, staffId: "", roleId: "" }) // Keep branchId, reset the rest
     }
     
     return result

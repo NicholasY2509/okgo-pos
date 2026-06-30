@@ -5,16 +5,16 @@ model Booking {
   customerId String?
 
   bookingNumber String @unique
-  
+
   customerName  String?
   customerPhone String?
 
-  totalAmount   Decimal
+  totalAmount Decimal
 
   status BookingStatus @default(PENDING)
 
-  customer Customer?     @relation(fields: [customerId], references: [id])
-  items    BookingItem[]
+  customer        Customer?        @relation(fields: [customerId], references: [id])
+  items           BookingItem[]
   serviceSessions ServiceSession[]
 
   createdAt DateTime @default(now())
@@ -37,7 +37,7 @@ model BookingItem {
   subtotal         Decimal
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
