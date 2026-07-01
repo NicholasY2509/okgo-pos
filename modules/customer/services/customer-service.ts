@@ -1,32 +1,17 @@
-import { prisma } from "@/lib/prisma";
 import { CustomerInput } from "../schemas/customer-schema";
+import { CustomerRepository } from "../repositories/customer-repository";
 
 export class CustomerService {
   static async create(data: CustomerInput) {
-    return await prisma.customer.create({
-      data: {
-        name: data.name,
-        phone: data.phone || null,
-        email: data.email || null,
-      },
-    });
+    return await CustomerRepository.create(data);
   }
 
   static async update(id: string, data: CustomerInput) {
-    return await prisma.customer.update({
-      where: { id },
-      data: {
-        name: data.name,
-        phone: data.phone || null,
-        email: data.email || null,
-      },
-    });
+    return await CustomerRepository.update(id, data);
   }
 
   static async getAll() {
-    return await prisma.customer.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    return await CustomerRepository.getAll();
   }
 
   static async searchCustomers(query: string = "", page: number = 1, limit: number = 20) {
@@ -42,15 +27,8 @@ export class CustomerService {
       : {};
 
     const [data, total] = await Promise.all([
-      prisma.customer.findMany({
-        where: whereClause,
-        skip,
-        take: limit,
-        orderBy: { name: "asc" },
-      }),
-      prisma.customer.count({
-        where: whereClause,
-      }),
+      CustomerRepository.findManyWithFilter(whereClause, skip, limit),
+      CustomerRepository.count(whereClause),
     ]);
 
     return {
@@ -66,27 +44,10 @@ export class CustomerService {
   }
 
   static async getById(id: string) {
-    return await prisma.customer.findUnique({
-      where: { id },
-      include: {
-        vouchers: {
-          include: {
-            voucherPacket: true
-          }
-        },
-        transactions: {
-          take: 10,
-          orderBy: { createdAt: 'desc' }
-        }
-      }
-    });
+    return await CustomerRepository.getById(id);
   }
 
   static async delete(id: string) {
-    return await prisma.customer.delete({
-      where: { id },
-    });
+    return await CustomerRepository.delete(id);
   }
-
-
 }

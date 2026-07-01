@@ -53,33 +53,39 @@ The core business logic of Okgo POS is isolated inside the `modules/` directory.
 
 ---
 
-## 3. The `Component ➡️ Hook ➡️ Action ➡️ Service` Pattern
+## 3. The `Component ➡️ Hook ➡️ Action ➡️ Service ➡️ Repository` Pattern
 
-Every data submission flow within a module must follow this strict four-layer architecture. This isolates concerns, prevents messy "fat components," and guarantees security boundaries.
+Every data submission flow within a module must follow this strict five-layer architecture. This isolates concerns, prevents messy "fat components," and guarantees security boundaries.
 
 ### Layer 1: Schema (`modules/[domain]/schemas/`)
 Defines the single source of truth for data shapes and validation using **Zod**.
 - **Role**: Both client-side form validation and server-side payload verification.
 - **Example**: `voucher-packet.ts` validates that a packet has a positive price and a linked product.
 
-### Layer 2: Service (`modules/[domain]/services/`)
-The deepest layer. It interacts directly with the **Prisma ORM** and contains pure business logic.
+### Layer 2: Repository (`modules/[domain]/repositories/`)
+The deepest layer. It interacts directly with the **Prisma ORM** and handles raw data access.
 - **Role**: Execute database queries (`prisma.product.findMany()`).
-- **Rule**: Must never import Next.js utilities like `next/headers` or handle HTTP requests. It only takes inputs and returns data.
+- **Rule**: Must never contain business rules or Next.js imports. It only takes inputs and returns database objects.
+- **Example**: `voucher-packet-repository.ts`
+
+### Layer 3: Service (`modules/[domain]/services/`)
+Orchestrates business logic by calling the Repository.
+- **Role**: Validations, calculations, and coordinating multiple database calls via the Repository.
+- **Rule**: Must never import Next.js utilities like `next/headers` or handle HTTP requests. Does not call Prisma directly.
 - **Example**: `voucher-packet-service.ts`
 
-### Layer 3: Server Action (`modules/[domain]/actions/`)
+### Layer 4: Server Action (`modules/[domain]/actions/`)
 Acts as the controller bridging the client and the Service.
 - **Role**: Receives input from the client, validates it against the Zod Schema, calls the Service, and formats the response (or catches errors).
 - **Rule**: Must contain `"use server"` at the top. Never trust the client.
 - **Example**: `voucher-packet-action.ts` handles the creation action and returns `{ success: true, data }` or `{ error: "Message" }`.
 
-### Layer 4: Hook (`modules/[domain]/hooks/`)
+### Layer 5: Hook (`modules/[domain]/hooks/`)
 Custom React hooks managing client-side form state and submission.
 - **Role**: Wraps `react-hook-form` and `@hookform/resolvers/zod`. Calls the Server Action when the form is submitted. Displays toasts (`sonner`) on success/error.
 - **Example**: `use-voucher-packet.ts` manages the loading state and triggers the `createVoucherPacketAction`.
 
-### Layer 5: Component (`modules/[domain]/components/`)
+### Layer 6: Component (`modules/[domain]/components/`)
 The React component that renders the HTML/UI.
 - **Role**: Renders inputs, buttons, and error messages. Completely "dumb" regarding how data is saved; it just consumes the Hook.
 - **Example**: `voucher-packet-form.tsx` uses `useVoucherPacket` to spread `form.register("price")` onto inputs.

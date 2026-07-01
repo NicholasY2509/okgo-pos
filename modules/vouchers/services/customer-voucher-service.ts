@@ -1,15 +1,10 @@
-import { prisma } from "@/lib/prisma"
+import { CustomerVoucherRepository } from "../repositories/customer-voucher-repository"
 
 export class CustomerVoucherService {
   static async getAll() {
-    return await prisma.customerVoucher.findMany({
-      include: {
-        customer: true,
-        voucherPacket: true
-      },
-      orderBy: { createdAt: "desc" }
-    })
+    return await CustomerVoucherRepository.getAll()
   }
+  
   private static serializeVoucher(voucher: any) {
     if (!voucher) return voucher;
     return {
@@ -29,50 +24,16 @@ export class CustomerVoucherService {
   }
 
   static async getByCustomerId(customerId: string) {
-    const vouchers = await prisma.customerVoucher.findMany({
-      where: {
-        customerId,
-        status: "ACTIVE"
-      },
-      include: {
-        voucherPacket: {
-          include: {
-            product: true
-          }
-        }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+    const vouchers = await CustomerVoucherRepository.getByCustomerId(customerId);
     return vouchers.map(v => this.serializeVoucher(v));
   }
 
   static async getByCode(code: string) {
-    const voucher = await prisma.customerVoucher.findUnique({
-      where: { code },
-      include: {
-        customer: true,
-        voucherPacket: {
-          include: {
-            product: true
-          }
-        }
-      }
-    });
+    const voucher = await CustomerVoucherRepository.getByCode(code);
     return this.serializeVoucher(voucher);
   }
 
   static async getById(id: string) {
-    return await prisma.customerVoucher.findUnique({
-      where: { id },
-      include: {
-        customer: true,
-        voucherPacket: true,
-        redemptions: {
-          include: {
-            transaction: true
-          }
-        }
-      }
-    })
+    return await CustomerVoucherRepository.getById(id)
   }
 }

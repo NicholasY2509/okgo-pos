@@ -1,71 +1,32 @@
-import { prisma } from "@/lib/prisma";
 import { RoomInput } from "../schemas/room-schema";
+import { RoomRepository } from "../repositories/room-repository";
 
 export class RoomService {
   static async getAll() {
-    return await prisma.room.findMany({
-      include: {
-        branch: {
-          select: { id: true, name: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+      return await RoomRepository.getAll();
   }
 
   static async getById(id: string) {
-    return await prisma.room.findUnique({
-      where: { id },
-      include: {
-        branch: {
-          select: { id: true, name: true },
-        },
-      },
-    });
+      return await RoomRepository.getById(id);
   }
 
   static async getByBranchId(branchId: string) {
-    return await prisma.room.findMany({
-      where: { branchId },
-      orderBy: { name: "asc" },
-    });
+      return await RoomRepository.getByBranchId(branchId);
   }
 
   static async getActiveByBranchId(branchId: string) {
-    return await prisma.room.findMany({
-      where: { branchId, isActive: true },
-      orderBy: { name: "asc" },
-    });
+      return await RoomRepository.getActiveByBranchId(branchId);
   }
 
   static async create(data: RoomInput) {
-    return await prisma.room.create({
-      data: {
-        name: data.name,
-        capacity: data.capacity,
-        isActive: data.isActive,
-        isVip: data.isVip,
-        branchId: data.branchId,
-      },
-    });
+      return await RoomRepository.create(data);
   }
 
   static async update(id: string, data: RoomInput) {
-    return await prisma.room.update({
-      where: { id },
-      data: {
-        name: data.name,
-        capacity: data.capacity,
-        isActive: data.isActive,
-        isVip: data.isVip,
-        branchId: data.branchId,
-      },
-    });
+      return await RoomRepository.update(id, data);
   }
 
   static async delete(id: string) {
-    return await prisma.room.delete({
-      where: { id },
-    });
+      return await RoomRepository.delete(id);
   }
 }

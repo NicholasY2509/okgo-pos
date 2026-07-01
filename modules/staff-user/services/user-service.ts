@@ -1,14 +1,7 @@
-import { prisma } from "@/lib/prisma"
+import { UserRepository } from "../repositories/user-repository"
 
 export class UserService {
   static async getAllUsers() {
-    return await prisma.user.findMany({
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      }
-    })
+    return await UserRepository.getAllUsers()
   }
 }

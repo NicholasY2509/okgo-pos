@@ -1,50 +1,28 @@
-import { prisma } from "@/lib/prisma";
 import { PaymentMethodInput } from "../schemas/payment-method-schema";
+import { PaymentMethodRepository } from "../repositories/payment-method-repository";
 
 export class PaymentMethodService {
   static async create(data: PaymentMethodInput) {
-    return await prisma.paymentMethod.create({
-      data: {
-        name: data.name,
-        type: data.type,
-        isActive: data.isActive,
-      },
-    });
+      return await PaymentMethodRepository.create(data);
   }
 
   static async update(id: string, data: PaymentMethodInput) {
-    return await prisma.paymentMethod.update({
-      where: { id },
-      data: {
-        name: data.name,
-        type: data.type,
-        isActive: data.isActive,
-      },
-    });
+      return await PaymentMethodRepository.update(id, data);
   }
 
   static async getAll() {
-    return await prisma.paymentMethod.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+      return await PaymentMethodRepository.getAll();
   }
 
   static async getActive() {
-    return await prisma.paymentMethod.findMany({
-      where: { isActive: true },
-      orderBy: { name: "asc" },
-    });
+      return await PaymentMethodRepository.getActive();
   }
 
   static async getById(id: string) {
-    return await prisma.paymentMethod.findUnique({
-      where: { id },
-    });
+      return await PaymentMethodRepository.getById(id);
   }
 
   static async delete(id: string) {
-    return await prisma.paymentMethod.delete({
-      where: { id },
-    });
+      return await PaymentMethodRepository.delete(id);
   }
 }

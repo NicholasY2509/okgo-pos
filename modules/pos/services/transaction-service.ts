@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { TransactionRepository } from "../repositories/transaction-repository";
 
 export interface TransactionFilterInput {
   branchId: string;
@@ -35,15 +35,8 @@ export class TransactionService {
       ];
     }
 
-    const total = await prisma.transaction.count({ where });
-
-    const aggregate = await prisma.transaction.aggregate({
-      where,
-      _sum: {
-        totalAmount: true,
-        discountTotal: true,
-      }
-    });
+    const total = await TransactionRepository.count(where);
+    const aggregate = await TransactionRepository.aggregateSums(where);
 
     const summary = {
       totalTransactions: total,
@@ -51,30 +44,8 @@ export class TransactionService {
       totalDiscounts: Number(aggregate._sum.discountTotal || 0),
     };
 
-    const transactions = await prisma.transaction.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
-      include: {
-        customer: true,
-        payments: {
-          include: { paymentMethod: true }
-        },
-        items: {
-          include: {
-            serviceSessions: true
-          }
-        },
-        voucherRedemptions: {
-          include: {
-            customerVoucher: {
-              include: { voucherPacket: true }
-            }
-          }
-        }
-      }
-    });
+    const skip = (page - 1) * limit;
+    const transactions = await TransactionRepository.findMany(where, skip, limit);
 
     // Serialize Decimal values for Client Components
     const serializedData = transactions.map(t => ({
@@ -85,17 +56,17 @@ export class TransactionService {
       totalAmount: Number(t.totalAmount),
       paidAmount: Number(t.paidAmount),
       changeAmount: Number(t.changeAmount),
-      items: t.items.map(i => ({
+      items: t.items.map((i: any) => ({
         ...i,
         unitPrice: Number(i.unitPrice),
         discountAmount: Number(i.discountAmount),
         subtotal: Number(i.subtotal),
       })),
-      payments: t.payments.map(p => ({
+      payments: t.payments.map((p: any) => ({
         ...p,
         amount: Number(p.amount),
       })),
-      voucherRedemptions: t.voucherRedemptions.map(vr => ({
+      voucherRedemptions: t.voucherRedemptions.map((vr: any) => ({
         ...vr,
         redeemedAmount: vr.redeemedAmount ? Number(vr.redeemedAmount) : null,
       }))

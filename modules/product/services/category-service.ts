@@ -1,40 +1,24 @@
-import { prisma } from "@/lib/prisma"
 import type { CreateCategoryInput, UpdateCategoryInput } from "../schemas/category-schema"
+import { CategoryRepository } from "../repositories/category-repository"
 
 export class CategoryService {
   static async getAllCategories() {
-    return await prisma.category.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        _count: {
-          select: { products: true }
-        }
-      }
-    })
+    return await CategoryRepository.getAllCategories()
   }
 
   static async getCategoryById(id: string) {
-    return await prisma.category.findUnique({
-      where: { id },
-    })
+    return await CategoryRepository.getCategoryById(id)
   }
 
   static async createCategory(data: CreateCategoryInput) {
-    return await prisma.category.create({
-      data,
-    })
+    return await CategoryRepository.createCategory(data)
   }
 
   static async updateCategory(id: string, data: Omit<UpdateCategoryInput, "id">) {
-    return await prisma.category.update({
-      where: { id },
-      data,
-    })
+    return await CategoryRepository.updateCategory(id, data)
   }
 
   static async deleteCategory(id: string) {
-    return await prisma.category.delete({
-      where: { id },
-    })
+    return await CategoryRepository.deleteCategory(id)
   }
 }

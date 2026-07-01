@@ -1,17 +1,12 @@
-import { prisma } from "@/lib/prisma";
+import { BookingListRepository } from "../repositories/booking-list-repository";
 
 export class BookingListService {
   static async getBookings(branchSlug: string, filters?: { search?: string, from?: Date, to?: Date, isHistory?: boolean }) {
-    const branch = await prisma.branch.findUnique({
-      where: { subdomain: branchSlug },
-      select: { id: true }
-    });
+    const branch = await BookingListRepository.getBranchBySlug(branchSlug);
 
     if (!branch) throw new Error("Cabang tidak ditemukan");
 
-    const rooms = await prisma.room.findMany({
-      where: { branchId: branch.id }
-    });
+    const rooms = await BookingListRepository.getRoomsByBranch(branch.id);
     const roomMap = new Map(rooms.map(r => [r.id, r.name]));
 
     const andConditions: any[] = [{ branchId: branch.id }];
@@ -80,21 +75,7 @@ export class BookingListService {
       });
     }
 
-    const bookings = await prisma.booking.findMany({
-      where: { AND: andConditions },
-      include: {
-        customer: true,
-        items: true,
-        serviceSessions: {
-          include: {
-            staff: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'asc'
-      }
-    });
+    const bookings = await BookingListRepository.getBookings(andConditions);
 
     const mappedBookings = bookings.map(booking => ({
       ...booking,
@@ -138,70 +119,6 @@ export class BookingListService {
   }
 
   static async updateBookingStatus(bookingId: string, status: 'PROCESSED' | 'CANCELLED') {
-    return await prisma.$transaction(async (tx) => {
-      const booking = await tx.booking.update({
-        where: { id: bookingId },
-        data: { status },
-        include: {
-          items: true,
-          serviceSessions: true
-        }
-      });
-
-      if (status === 'CANCELLED') {
-        // Cancel all associated service sessions
-        await tx.serviceSession.updateMany({
-          where: { bookingId },
-          data: { status: 'CANCELLED' }
-        });
-      } else if (status === 'PROCESSED') {
-        // Create Transaction
-        const today = new Date();
-        const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-        const randomStr = Math.floor(1000 + Math.random() * 9000).toString();
-        const transactionNumber = `TX-${dateStr}-${randomStr}`;
-
-        const subtotal = booking.items.reduce((acc, item) => acc + Number(item.subtotal), 0);
-
-        const transaction = await tx.transaction.create({
-          data: {
-            branchId: booking.branchId,
-            customerId: booking.customerId,
-            transactionNumber,
-            subtotal,
-            totalAmount: booking.totalAmount,
-            status: 'PENDING',
-          }
-        });
-
-        // Create TransactionItems and link them
-        for (const item of booking.items) {
-          const txItem = await tx.transactionItem.create({
-            data: {
-              transactionId: transaction.id,
-              type: 'SERVICE',
-              serviceId: item.serviceId,
-              itemNameSnapshot: item.itemNameSnapshot,
-              unitPrice: item.unitPrice,
-              quantity: item.quantity,
-              subtotal: item.subtotal,
-            }
-          });
-
-          // Link the corresponding ServiceSessions
-          for (const session of booking.serviceSessions) {
-            if (session.serviceId === item.serviceId && !(session as any)._linked) {
-              await tx.serviceSession.update({
-                where: { id: session.id },
-                data: { transactionItemId: txItem.id }
-              });
-              (session as any)._linked = true;
-            }
-          }
-        }
-      }
-
-      return booking;
-    });
+    return await BookingListRepository.updateBookingStatus(bookingId, status);
   }
 }

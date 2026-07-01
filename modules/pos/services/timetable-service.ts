@@ -1,50 +1,8 @@
-import { prisma } from "@/lib/prisma";
+import { TimetableRepository } from "../repositories/timetable-repository";
 
 export class TimetableService {
   static async getActiveSessions(branchId: string) {
-    const sessions = await prisma.serviceSession.findMany({
-      where: {
-        branchId,
-        status: {
-          in: ["SCHEDULED", "IN_PROGRESS"]
-        }
-      },
-      include: {
-        transactionItem: {
-          include: {
-            transaction: {
-              select: {
-                id: true,
-                status: true,
-                totalAmount: true,
-                paidAmount: true,
-                subtotal: true,
-                discountTotal: true,
-                customer: {
-                  select: { name: true }
-                }
-              }
-            }
-          }
-        },
-        booking: {
-          include: {
-            items: true,
-            customer: { select: { name: true } }
-          }
-        },
-        staff: {
-          select: {
-            firstName: true,
-            lastName: true
-          }
-        }
-      },
-      orderBy: {
-        startTime: 'asc'
-      }
-    });
-
+    const sessions = await TimetableRepository.getActiveSessions(branchId);
     return sessions.map(TimetableService.mapSessionOutput);
   }
 
@@ -97,70 +55,17 @@ export class TimetableService {
     const targetDate = new Date(dateStr);
     if (isNaN(targetDate.getTime())) throw new Error("Invalid date format");
 
-    // Set to start and end of the specified date (in local time ideally, but let's assume UTC/server time for now or we can just use simple string prefix if it was string, but dates in DB are Date objects. We'll use startOfDay and endOfDay)
     const startOfDay = new Date(targetDate);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(targetDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const sessions = await prisma.serviceSession.findMany({
-      where: {
-        branchId,
-        startTime: {
-          gte: startOfDay,
-          lte: endOfDay
-        }
-      },
-      include: {
-        transactionItem: {
-          include: {
-            transaction: {
-              select: {
-                id: true,
-                status: true,
-                totalAmount: true,
-                paidAmount: true,
-                subtotal: true,
-                discountTotal: true,
-                customer: {
-                  select: { name: true }
-                },
-                items: true
-              }
-            }
-          }
-        },
-        booking: {
-          include: {
-            items: true,
-            customer: { select: { name: true } }
-          }
-        },
-        staff: {
-          select: {
-            firstName: true,
-            lastName: true
-          }
-        }
-      },
-      orderBy: {
-        startTime: 'asc'
-      }
-    });
-
+    const sessions = await TimetableRepository.getSessionsByDateRange(branchId, startOfDay, endOfDay);
     return sessions.map(TimetableService.mapSessionOutput);
   }
 
   static async completeSession(sessionId: string) {
-    const session = await prisma.serviceSession.findUnique({
-      where: { id: sessionId },
-      include: {
-        transactionItem: {
-          include: { transaction: true }
-        },
-        booking: true
-      }
-    });
+    const session = await TimetableRepository.getSessionByIdWithIncludes(sessionId);
 
     if (!session) throw new Error("Session not found");
     if (session.status !== "IN_PROGRESS") throw new Error("Session is not in progress");
@@ -169,16 +74,11 @@ export class TimetableService {
       throw new Error("Sesi tidak dapat diselesaikan karena pembayaran belum lunas.");
     }
 
-    return await prisma.serviceSession.update({
-      where: { id: sessionId },
-      data: { status: "COMPLETED", endTime: new Date() }
-    });
+    return await TimetableRepository.updateSession(sessionId, { status: "COMPLETED", endTime: new Date() });
   }
 
   static async startSession(sessionId: string) {
-    const session = await prisma.serviceSession.findUnique({
-      where: { id: sessionId }
-    });
+    const session = await TimetableRepository.getSessionById(sessionId);
 
     if (!session) throw new Error("Session not found");
     if (session.status !== "SCHEDULED") throw new Error("Sesi tidak dalam status terjadwal");
@@ -187,15 +87,12 @@ export class TimetableService {
     const now = new Date();
     const durationMs = session.endTime && session.startTime
       ? session.endTime.getTime() - session.startTime.getTime()
-      : 60 * 60 * 1000; // Default 1 hour if not set
+      : 60 * 60 * 1000;
 
-    return await prisma.serviceSession.update({
-      where: { id: sessionId },
-      data: {
-        status: "IN_PROGRESS",
-        startTime: now,
-        endTime: new Date(now.getTime() + durationMs)
-      }
+    return await TimetableRepository.updateSession(sessionId, {
+      status: "IN_PROGRESS",
+      startTime: now,
+      endTime: new Date(now.getTime() + durationMs)
     });
   }
 
@@ -208,56 +105,28 @@ export class TimetableService {
       throw new Error("Waktu selesai harus setelah waktu mulai");
     }
 
-    return await prisma.serviceSession.update({
-      where: { id: sessionId },
-      data: {
-        startTime,
-        endTime
-      }
+    return await TimetableRepository.updateSession(sessionId, {
+      startTime,
+      endTime
     });
   }
 
   static async updateSessionStaff(sessionId: string, staffId: string) {
-    const session = await prisma.serviceSession.findUnique({
-      where: { id: sessionId }
-    });
+    const session = await TimetableRepository.getSessionById(sessionId);
 
     if (!session) throw new Error("Session not found");
     if (session.status === "COMPLETED") throw new Error("Sesi sudah selesai");
 
-    // Optional: add validation to ensure staff is active and belongs to the branch
-    const staff = await prisma.staff.findUnique({
-      where: { id: staffId }
-    });
+    const staff = await TimetableRepository.getStaffById(staffId);
     if (!staff || !staff.isActive) throw new Error("Terapis tidak valid atau tidak aktif");
 
-    return await prisma.serviceSession.update({
-      where: { id: sessionId },
-      data: {
-        staffId
-      }
+    return await TimetableRepository.updateSession(sessionId, {
+      staffId
     });
   }
 
   static async getPendingBookings(branchId: string) {
-    const bookings = await prisma.booking.findMany({
-      where: {
-        branchId,
-        status: 'PENDING'
-      },
-      include: {
-        customer: true,
-        items: true,
-        serviceSessions: {
-          include: {
-            staff: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'asc'
-      }
-    });
+    const bookings = await TimetableRepository.getPendingBookings(branchId);
 
     return bookings.map(booking => ({
       ...booking,

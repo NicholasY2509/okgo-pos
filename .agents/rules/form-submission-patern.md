@@ -6,9 +6,9 @@ trigger: always_on
 
 This document outlines the standard pattern for building forms, actions, and services in the Okgo POS application. Following this blueprint ensures that the codebase remains scalable, testable, and maintainable.
 
-## The Pattern: Component ➡️ Hook ➡️ Action ➡️ Service
+## The Pattern: Component ➡️ Hook ➡️ Action ➡️ Service ➡️ Repository
 
-Every data submission flow in a module should be strictly separated into four distinct layers.
+Every data submission flow in a module should be strictly separated into five distinct layers.
 
 ## Naming Conventions
 - **Files & Directories**: Use strictly `kebab-case` for all files (e.g., `login-action.ts`, `use-login.ts`, `auth-service.ts`).
@@ -32,17 +32,16 @@ export type FeatureInput = z.infer<typeof featureSchema>
 
 ---
 
-### 2. The Service (`modules/[name]/services/[feature]-service.ts`)
-The lowest level layer. It interacts with the database (Prisma) and contains pure business logic.
-**Rules:** No Next.js imports (`next/headers`, `next/navigation`). No HTTP logic.
+### 2. The Repository (`modules/[name]/repositories/[feature]-repository.ts`)
+The lowest level layer. It interacts directly with the database (Prisma) and handles all data access queries.
+**Rules:** No Next.js imports. No business rules. Only takes inputs and returns database objects.
 
 ```typescript
 import { prisma } from "@/lib/prisma"
 import { FeatureInput } from "../schemas/[feature]"
 
-export class FeatureService {
-  static async create(data: FeatureInput) {
-    // Pure DB logic and business rules
+export const FeatureRepository = {
+  async create(data: FeatureInput) {
     return await prisma.feature.create({ data })
   }
 }
@@ -50,7 +49,25 @@ export class FeatureService {
 
 ---
 
-### 3. The Action (`modules/[name]/actions/[feature]-action.ts`)
+### 3. The Service (`modules/[name]/services/[feature]-service.ts`)
+The layer responsible for business logic. It orchestrates the process by calling the Repository.
+**Rules:** No Next.js imports (`next/headers`, `next/navigation`). No HTTP logic. Does not call Prisma directly.
+
+```typescript
+import { FeatureRepository } from "../repositories/[feature]-repository"
+import { FeatureInput } from "../schemas/[feature]"
+
+export class FeatureService {
+  static async create(data: FeatureInput) {
+    // Business rules, calculations, or validations go here
+    return await FeatureRepository.create(data)
+  }
+}
+```
+
+---
+
+### 4. The Action (`modules/[name]/actions/[feature]-action.ts`)
 The Server Action acts as a bridge (controller) between the client and the Service.
 **Rules:** Must have `"use server"`. Must handle Zod validation securely. Must handle errors gracefully and return standardized responses (or throw for Next.js Error Boundaries).
 
@@ -81,7 +98,7 @@ export async function createFeatureAction(values: FeatureInput) {
 
 ---
 
-### 4. The Hook (`modules/[name]/hooks/use-[feature].ts`)
+### 5. The Hook (`modules/[name]/hooks/use-[feature].ts`)
 Manages the client-side state of the form, handles submission, and triggers UI feedback (Toasts).
 **Rules:** Wraps `react-hook-form` and `zodResolver`. Calls the Server Action.
 
@@ -125,7 +142,7 @@ export function useFeatureForm() {
 
 ---
 
-### 5. The Component (`modules/[name]/components/[feature]-form.tsx`)
+### 6. The Component (`modules/[name]/components/[feature]-form.tsx`)
 The UI layer. It consumes the custom Hook and renders the HTML elements.
 **Rules:** Must be `"use client"`. Should be as "dumb" as possible. No manual `fetch` calls.
 

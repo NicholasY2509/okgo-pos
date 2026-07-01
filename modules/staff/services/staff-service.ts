@@ -1,70 +1,33 @@
-import { prisma } from "@/lib/prisma"
 import {
   CreateStaffInput,
   UpdateStaffInput,
 } from "../schemas/staff-schema"
+import { StaffRepository } from "../repositories/staff-repository"
 
 export class StaffService {
   // --- Staff ---
 
   static async getAllStaff(branchId?: string) {
-    return await prisma.staff.findMany({
-      where: branchId ? { branchStaffs: { some: { branchId } } } : undefined,
-      orderBy: { createdAt: "desc" },
-      include: {
-        workPosition: true,
-        staffUsers: {
-          include: {
-            user: true,
-          }
-        }
-      },
-    })
+    return await StaffRepository.getAllStaff(branchId)
   }
 
   static async getActiveStaff(branchId: string) {
-    return await prisma.staff.findMany({
-      where: { branchStaffs: { some: { branchId } }, isActive: true },
-      orderBy: { firstName: "asc" },
-    })
+    return await StaffRepository.getActiveStaff(branchId)
   }
 
   static async getStaffById(id: string) {
-    return await prisma.staff.findUnique({
-      where: { id },
-      include: {
-        workPosition: true,
-        branchStaffs: {
-          include: {
-            branch: true,
-            role: true
-          }
-        },
-        staffUsers: {
-          include: {
-            user: true,
-          }
-        }
-      },
-    })
+    return await StaffRepository.getStaffById(id)
   }
 
   static async createStaff(data: CreateStaffInput) {
-    return await prisma.staff.create({
-      data,
-    })
+    return await StaffRepository.createStaff(data)
   }
 
   static async updateStaff(id: string, data: Omit<UpdateStaffInput, "id">) {
-    return await prisma.staff.update({
-      where: { id },
-      data,
-    })
+    return await StaffRepository.updateStaff(id, data)
   }
 
   static async deleteStaff(id: string) {
-    return await prisma.staff.delete({
-      where: { id },
-    })
+    return await StaffRepository.deleteStaff(id)
   }
 }

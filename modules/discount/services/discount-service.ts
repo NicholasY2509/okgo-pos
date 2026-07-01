@@ -1,53 +1,25 @@
-import { prisma } from "@/lib/prisma";
 import { DiscountInput } from "../schemas/discount";
+import { DiscountRepository } from "../repositories/discount-repository";
 
 export class DiscountService {
   static async getDiscounts() {
-    return await prisma.discount.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { branch: true }
-    });
+    return await DiscountRepository.getDiscounts();
   }
 
   static async getDiscount(id: string) {
-    return await prisma.discount.findUnique({
-      where: { id }
-    });
+    return await DiscountRepository.getDiscount(id);
   }
 
   static async createDiscount(data: DiscountInput) {
-    return await prisma.discount.create({
-      data: {
-        name: data.name,
-        dayOfWeek: data.dayOfWeek,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        percentage: data.percentage,
-        isActive: data.isActive,
-        branchId: data.branchId || null
-      }
-    });
+    return await DiscountRepository.createDiscount(data);
   }
 
   static async updateDiscount(id: string, data: DiscountInput) {
-    return await prisma.discount.update({
-      where: { id },
-      data: {
-        name: data.name,
-        dayOfWeek: data.dayOfWeek,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        percentage: data.percentage,
-        isActive: data.isActive,
-        branchId: data.branchId || null
-      }
-    });
+    return await DiscountRepository.updateDiscount(id, data);
   }
 
   static async deleteDiscount(id: string) {
-    return await prisma.discount.delete({
-      where: { id }
-    });
+    return await DiscountRepository.deleteDiscount(id);
   }
 
   static async getApplicableDiscount(branchId: string): Promise<number> {
@@ -59,16 +31,7 @@ export class DiscountService {
     const currentMinute = String(now.getMinutes()).padStart(2, '0');
     const currentTime = `${currentHour}:${currentMinute}`;
 
-    const activeDiscounts = await prisma.discount.findMany({
-      where: {
-        isActive: true,
-        dayOfWeek: currentDay,
-        OR: [
-          { branchId: null },
-          { branchId: branchId }
-        ]
-      }
-    });
+    const activeDiscounts = await DiscountRepository.getActiveDiscountsByDay(branchId, currentDay);
 
     let highestPercentage = 0;
 

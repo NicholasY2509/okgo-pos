@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma"
 import type { CreateProductInput, UpdateProductInput } from "../schemas/product-schema"
+import { ProductRepository } from "../repositories/product-repository"
 
 export interface GetProductsParams {
   page?: number;
@@ -18,16 +18,8 @@ export class ProductService {
     };
 
     const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { name: "asc" },
-        include: {
-          category: true,
-        },
-      }),
-      prisma.product.count({ where }),
+      ProductRepository.findManyWithFilter(where, skip, limit),
+      ProductRepository.count(where),
     ]);
 
     return {
@@ -42,30 +34,18 @@ export class ProductService {
   }
 
   static async getProductById(id: string) {
-    return await prisma.product.findUnique({
-      where: { id },
-      include: {
-        category: true,
-      },
-    })
+    return await ProductRepository.getProductById(id)
   }
 
   static async createProduct(data: CreateProductInput) {
-    return await prisma.product.create({
-      data,
-    })
+    return await ProductRepository.createProduct(data)
   }
 
   static async updateProduct(id: string, data: Omit<UpdateProductInput, "id">) {
-    return await prisma.product.update({
-      where: { id },
-      data,
-    })
+    return await ProductRepository.updateProduct(id, data)
   }
 
   static async deleteProduct(id: string) {
-    return await prisma.product.delete({
-      where: { id },
-    })
+    return await ProductRepository.deleteProduct(id)
   }
 }

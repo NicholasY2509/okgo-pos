@@ -1,11 +1,9 @@
-import { prisma } from "@/lib/prisma";
 import { DiscountService } from "../../discount/services/discount-service";
+import { PosDataRepository } from "../repositories/pos-data-repository";
 
 export class PosDataService {
   static async getInitialData(tenant: string) {
-    const branch = await prisma.branch.findUnique({
-      where: { subdomain: tenant }
-    });
+    const branch = await PosDataRepository.getBranchBySubdomain(tenant);
 
     if (!branch) {
       return null;
@@ -13,35 +11,17 @@ export class PosDataService {
 
     const activeDiscount = await DiscountService.getApplicableDiscount(branch.id);
 
-    const products = await prisma.product.findMany({
-      where: { isActive: true },
-      include: { category: true },
-      orderBy: { name: 'asc' }
-    });
+    const products = await PosDataRepository.getActiveProducts();
 
-    const voucherPackets = await prisma.voucherPacket.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' }
-    });
+    const voucherPackets = await PosDataRepository.getActiveVoucherPackets();
 
-    const staff = await prisma.staff.findMany({
-      where: { isActive: true },
-      orderBy: { firstName: 'asc' }
-    });
+    const staff = await PosDataRepository.getActiveStaff();
 
-    const rooms = await prisma.room.findMany({
-      where: { branchId: branch.id, isActive: true },
-      orderBy: { name: 'asc' }
-    });
+    const rooms = await PosDataRepository.getActiveRooms(branch.id);
 
-    const paymentMethods = await prisma.paymentMethod.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' }
-    });
+    const paymentMethods = await PosDataRepository.getActivePaymentMethods();
 
-    const customers = await prisma.customer.findMany({
-      orderBy: { name: 'asc' }
-    });
+    const customers = await PosDataRepository.getAllCustomers();
 
     // Convert Prisma Decimal objects to primitive numbers for Client Components
     const serializedProducts = products.map(p => ({

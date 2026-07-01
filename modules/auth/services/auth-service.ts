@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { AuthRepository } from "../repositories/auth-repository";
 
 export class AuthService {
   /**
@@ -11,9 +11,7 @@ export class AuthService {
       return null;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await AuthRepository.getUserByEmail(email);
 
     if (!user || !user.password) {
       return null;
@@ -29,26 +27,14 @@ export class AuthService {
 
     // If subdomain is provided, we must check if the user has access to it
     if (subdomain && subdomain !== "admin") {
-      const branch = await prisma.branch.findUnique({
-        where: { subdomain },
-      });
+      const branch = await AuthRepository.getBranchBySubdomain(subdomain);
 
       if (!branch) {
         return null; // Branch doesn't exist
       }
 
       // Check if user is assigned to this branch
-      const assignment = await prisma.branchStaff.findFirst({
-        where: {
-          staff: {
-            staffUsers: { some: { userId: user.id } }
-          },
-          branchId: branch.id,
-        },
-        include: {
-          role: true
-        }
-      });
+      const assignment = await AuthRepository.getBranchStaffAssignment(user.id, branch.id);
 
       if (!assignment) {
         return null; // User not authorized for this branch
@@ -57,19 +43,7 @@ export class AuthService {
       userRole = assignment.role.name;
     } else if (subdomain === "admin") {
       // For admin portal, they must have the "Admin" role somewhere
-      const adminAssignment = await prisma.branchStaff.findFirst({
-        where: {
-          staff: {
-            staffUsers: { some: { userId: user.id } }
-          },
-          role: {
-            name: "Admin"
-          }
-        },
-        include: {
-          role: true
-        }
-      });
+      const adminAssignment = await AuthRepository.getAdminAssignment(user.id);
 
       if (!adminAssignment) {
         return null; // Not an admin
@@ -78,14 +52,7 @@ export class AuthService {
       userRole = "Admin";
     } else {
       // Fallback if no subdomain (e.g. main marketing site), just get their primary role if they have one
-      const primaryAssignment = await prisma.branchStaff.findFirst({
-        where: {
-          staff: {
-            staffUsers: { some: { userId: user.id } }
-          }
-        },
-        include: { role: true }
-      });
+      const primaryAssignment = await AuthRepository.getPrimaryAssignment(user.id);
       if (primaryAssignment) {
         userRole = primaryAssignment.role.name;
       }
