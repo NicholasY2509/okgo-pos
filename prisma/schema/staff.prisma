@@ -44,14 +44,16 @@ model Staff {
   email          String?
   isActive       Boolean @default(true)
   workPositionId String
+  staffIdNumber  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  workPosition    WorkPosition     @relation(fields: [workPositionId], references: [id])
-  staffUsers      StaffUser[]
-  serviceSessions ServiceSession[]
-  branchStaffs    BranchStaff[]
+  workPosition           WorkPosition            @relation(fields: [workPositionId], references: [id])
+  staffUsers             StaffUser[]
+  serviceSessions        ServiceSession[]
+  branchStaffs           BranchStaff[]
+  attendanceWorkingHours AttendanceWorkingHour[]
 }
 
 model StaffUser {

@@ -8,6 +8,11 @@ export const StaffRepository = {
       orderBy: { createdAt: "desc" },
       include: {
         workPosition: true,
+        branchStaffs: {
+          include: {
+            branch: true,
+          }
+        },
         staffUsers: {
           include: {
             user: true,
@@ -60,6 +65,45 @@ export const StaffRepository = {
   async deleteStaff(id: string) {
     return await prisma.staff.delete({
       where: { id },
+    })
+  },
+
+  async findManyWithFilter(where: any, skip: number, limit: number) {
+    return await prisma.staff.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: {
+        workPosition: true,
+        branchStaffs: {
+          include: {
+            branch: true,
+          }
+        },
+        staffUsers: {
+          include: {
+            user: true,
+          }
+        }
+      },
+    })
+  },
+
+  async count(where: any) {
+    return await prisma.staff.count({ where })
+  },
+
+  async getLastStaffIdNumber() {
+    return await prisma.staff.findFirst({
+      where: {
+        staffIdNumber: {
+          not: null,
+          startsWith: "STF-"
+        }
+      },
+      orderBy: { staffIdNumber: "desc" },
+      select: { staffIdNumber: true }
     })
   }
 }

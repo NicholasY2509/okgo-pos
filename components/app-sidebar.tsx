@@ -65,7 +65,7 @@ export function AppSidebar({ portalType = "branch", ...props }: React.ComponentP
   ]
 
   return (
-    <Sidebar variant="floating" collapsible="icon" {...props}>
+    <Sidebar variant="inset" collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={teams} />
       </SidebarHeader>

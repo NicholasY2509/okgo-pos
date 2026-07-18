@@ -1,0 +1,24 @@
+model WorkingHour {
+  id        String   @id @default(cuid())
+  name      String
+  clockIn   String
+  clockOut  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendanceWorkingHours AttendanceWorkingHour[]
+}
+
+model AttendanceWorkingHour {
+  id             String   @id @default(cuid())
+  staffId        String
+  workingHourId  String
+  attendanceDate DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  staff       Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  workingHour WorkingHour @relation(fields: [workingHourId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, attendanceDate])
+}

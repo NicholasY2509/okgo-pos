@@ -6,7 +6,7 @@ import { UserService } from "@/modules/staff-user/services/user-service"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { User, Mail, Phone, MapPin, Briefcase } from "lucide-react"
+import { User, Mail, Phone, MapPin, Briefcase, Hash } from "lucide-react"
 import { AssignUserDialog } from "@/modules/staff-user/components/assign-user-dialog"
 import { UnlinkUserButton } from "@/modules/staff-user/components/unlink-user-button"
 import { StaffDialog } from "@/modules/staff/components/staff-dialog"
@@ -81,6 +81,10 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <span><span className="font-medium">Telepon:</span> {staff.phone || "N/A"}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Hash className="h-4 w-4 text-muted-foreground" />
+                <span><span className="font-medium">ID Staf:</span> {staff.staffIdNumber || "N/A"}</span>
               </div>
             </div>
           </CardContent>

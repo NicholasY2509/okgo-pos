@@ -27,6 +27,7 @@ export function useStaffForm(initialData?: UpdateStaffInput, onSuccess?: () => v
       email: "",
       isActive: true,
       workPositionId: "",
+      staffIdNumber: "",
     },
   })
 

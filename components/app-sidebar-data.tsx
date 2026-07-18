@@ -106,6 +106,26 @@ export const adminNav = [
         icon: (<KeyIcon />),
         roles: ["Admin"],
       },
+      {
+        title: "Kehadiran",
+        url: "/admin/attendance",
+        icon: (<Calendar1 />),
+        roles: ["Admin"],
+        items: [
+          {
+            title: "Data Kehadiran",
+            url: "/admin/attendance/data",
+          },
+          {
+            title: "Master Jam Kerja",
+            url: "/admin/attendance/working-hours",
+          },
+          {
+            title: "Jadwal Shift",
+            url: "/admin/attendance/schedules",
+          }
+        ]
+      },
     ]
   },
   {

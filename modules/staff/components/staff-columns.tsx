@@ -12,6 +12,7 @@ export type StaffData = {
   lastName: string
   email: string | null
   phone: string | null
+  staffIdNumber: string | null
   isActive: boolean
   createdAt: Date
   workPosition: {
@@ -35,6 +36,11 @@ export const staffColumns: ColumnDef<StaffData>[] = [
     accessorKey: "name",
     header: "Nama",
     cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
+  },
+  {
+    accessorKey: "staffIdNumber",
+    header: "ID Staf",
+    cell: ({ row }) => row.original.staffIdNumber || <span className="text-muted-foreground">-</span>,
   },
   {
     accessorKey: "workPosition.name",

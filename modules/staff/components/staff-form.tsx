@@ -121,6 +121,18 @@ export function StaffForm({ workPositions, initialData, onSuccess }: StaffFormPr
         )}
       </div>
 
+      <div className="space-y-2 flex flex-col">
+        <label className="text-sm font-medium">Nomor ID Staf</label>
+        <Input
+          placeholder={isEditing ? "STF-001" : "Dibuat otomatis"}
+          disabled={!isEditing}
+          {...form.register("staffIdNumber")}
+        />
+        {form.formState.errors.staffIdNumber && (
+          <p className="text-sm text-destructive">{form.formState.errors.staffIdNumber.message}</p>
+        )}
+      </div>
+
 
 
       {error && (
