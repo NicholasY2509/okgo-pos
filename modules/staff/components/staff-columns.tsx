@@ -35,12 +35,12 @@ export const staffColumns: ColumnDef<StaffData>[] = [
   {
     accessorKey: "name",
     header: "Nama",
-    cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
-  },
-  {
-    accessorKey: "staffIdNumber",
-    header: "ID Staf",
-    cell: ({ row }) => row.original.staffIdNumber || <span className="text-muted-foreground">-</span>,
+    cell: ({ row }) => (
+      <div className="flex flex-col ">
+        <span>{row.original.firstName} {row.original.lastName}</span>
+        <span className="text-xs text-muted-foreground">{row.original.staffIdNumber}</span>
+      </div>
+    ),
   },
   {
     accessorKey: "workPosition.name",

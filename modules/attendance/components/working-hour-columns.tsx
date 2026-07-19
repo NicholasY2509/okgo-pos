@@ -16,12 +16,17 @@ import { WorkingHourDialog } from "./working-hour-dialog"
 
 export type WorkingHourData = {
   id: string
+  code: string
   name: string
   clockIn: string
   clockOut: string
 }
 
 export const workingHourColumns: ColumnDef<WorkingHourData>[] = [
+  {
+    accessorKey: "code",
+    header: "Code",
+  },
   {
     accessorKey: "name",
     header: "Shift Name",

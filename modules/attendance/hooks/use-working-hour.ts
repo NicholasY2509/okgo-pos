@@ -11,7 +11,7 @@ export function useWorkingHour(initialData?: WorkingHourInput & { id?: string },
 
   const form = useForm<WorkingHourInput>({
     resolver: zodResolver(workingHourSchema),
-    defaultValues: initialData || { name: "", clockIn: "08:00", clockOut: "17:00" },
+    defaultValues: initialData || { code: "", name: "", clockIn: "08:00", clockOut: "17:00" },
   });
 
   async function onSubmit(values: WorkingHourInput) {

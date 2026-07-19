@@ -15,8 +15,11 @@ export async function createWorkingHourAction(values: WorkingHourInput) {
     revalidatePath("/admin/attendance");
     revalidatePath("/[tenant]/hris/attendance", "page");
     return { success: true, data: result };
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+    if (error?.code === "P2002") {
+      return { error: "A shift with this code already exists. Please use a unique code." };
+    }
     return { error: "An unexpected error occurred while creating working hour." };
   }
 }
@@ -31,8 +34,11 @@ export async function updateWorkingHourAction(id: string, values: WorkingHourInp
     const result = await WorkingHourService.update(id, validatedFields.data);
     revalidatePath("/admin/attendance/working-hours");
     return { success: true, data: result };
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+    if (error?.code === "P2002") {
+      return { error: "A shift with this code already exists. Please use a unique code." };
+    }
     return { error: "An unexpected error occurred while updating working hour." };
   }
 }

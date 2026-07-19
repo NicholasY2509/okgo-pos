@@ -16,12 +16,21 @@ export function WorkingHourForm({ initialData, onSuccess }: WorkingHourFormProps
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div className="space-y-2 flex flex-col">
-        <label className="text-sm font-medium">Shift Name</label>
-        <Input placeholder="Morning Shift" {...form.register("name")} />
-        {form.formState.errors.name && (
-          <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
-        )}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2 flex flex-col">
+          <label className="text-sm font-medium">Shift Code</label>
+          <Input placeholder="M" {...form.register("code")} />
+          {form.formState.errors.code && (
+            <p className="text-sm text-destructive">{form.formState.errors.code.message}</p>
+          )}
+        </div>
+        <div className="space-y-2 flex flex-col">
+          <label className="text-sm font-medium">Shift Name</label>
+          <Input placeholder="Morning Shift" {...form.register("name")} />
+          {form.formState.errors.name && (
+            <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

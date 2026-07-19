@@ -2,6 +2,7 @@ import { AttendanceWorkingHourService } from "@/modules/attendance/services/atte
 import { AttendanceWorkingHourTable } from "@/modules/attendance/components/attendance-working-hour-table";
 import { PageHeader } from "@/components/page-header";
 import { AttendanceWorkingHourDialog } from "@/modules/attendance/components/attendance-working-hour-dialog";
+import { AttendanceScheduleImportDialog } from "@/modules/attendance/components/attendance-schedule-import-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
 interface AttendanceSchedulesPageProps {
@@ -22,7 +23,10 @@ export default async function AttendanceSchedulesPage({ searchParams }: Attendan
         title="Jadwal Kehadiran (Schedules)"
         description="Tetapkan jadwal shift (jam kerja) untuk karyawan."
       >
-        <AttendanceWorkingHourDialog />
+        <div className="flex items-center gap-2">
+          <AttendanceScheduleImportDialog />
+          <AttendanceWorkingHourDialog />
+        </div>
       </PageHeader>
 
       <div className="w-full space-y-6">
