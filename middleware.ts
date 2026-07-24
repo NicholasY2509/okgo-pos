@@ -35,12 +35,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // If the subdomain is something else and not 'nyenyak.com' (root domain) or 'www'
   if (
     currentHost !== 'nyenyak.com' &&
     currentHost !== 'www' &&
     currentHost !== 'localhost:3000' &&
-    currentHost !== '192.168.1.76:3000'
+    currentHost !== 'localhost' &&
+    currentHost !== '192.168.1.76:3000' &&
+    currentHost !== '192.168.1.76'
   ) {
     // We rewrite to /[tenant]/pathname
     url.pathname = `/${currentHost}${url.pathname}`;
