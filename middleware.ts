@@ -47,8 +47,8 @@ export default NextAuth(authConfig).auth((req) => {
   if (subdomain === "admin") {
     // Protect admin routes
     if (!isAuth && !url.pathname.startsWith("/login")) {
-      const loginUrl = req.nextUrl.clone()
-      loginUrl.pathname = "/login"
+      const protocol = req.headers.get("x-forwarded-proto") || "http"
+      const loginUrl = new URL("/login", `${protocol}://${hostname}`)
       return NextResponse.redirect(loginUrl)
     }
 
@@ -68,8 +68,8 @@ export default NextAuth(authConfig).auth((req) => {
 
   // Protect tenant routes
   if (!isAuth && !url.pathname.startsWith("/login")) {
-    const loginUrl = req.nextUrl.clone()
-    loginUrl.pathname = "/login"
+    const protocol = req.headers.get("x-forwarded-proto") || "http"
+    const loginUrl = new URL("/login", `${protocol}://${hostname}`)
     return NextResponse.redirect(loginUrl)
   }
 
