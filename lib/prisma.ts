@@ -2,7 +2,8 @@ import "dotenv/config";
 import { PrismaClient } from "./generated/prisma";
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
-const adapter = new PrismaMariaDb(process.env.DATABASE_URL as string);
+const connectionString = process.env.DATABASE_URL || "mysql://dummy:dummy@localhost:3306/dummy";
+const adapter = new PrismaMariaDb(connectionString);
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
