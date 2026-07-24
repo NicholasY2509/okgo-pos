@@ -57,8 +57,8 @@ ENV HOSTNAME="0.0.0.0"
 # Create a startup script that runs migrations then starts the server
 COPY --chown=nextjs:nodejs <<'EOF' /app/start.sh
 #!/bin/sh
-echo "Running Prisma migrations..."
-npx prisma migrate deploy
+echo "Syncing Prisma schema to database..."
+npx prisma db push --accept-data-loss
 echo "Starting Next.js server..."
 exec node server.js
 EOF
