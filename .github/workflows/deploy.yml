@@ -78,4 +78,4 @@ jobs:
             # Restart the app service
             docker compose up -d app
             # Run Prisma migrations against the production database
-            docker compose exec -T app npx prisma migrate deploy
+            docker compose exec -T app npx --yes prisma migrate deploy
