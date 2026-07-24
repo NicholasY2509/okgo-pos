@@ -12,7 +12,7 @@ export default async function TenantAttendancePage({ params }: TenantAttendanceP
   // For tenant page, we would normally filter staff by branch. 
   // We look up the branch by slug (tenant)
   const branch = await prisma.branch.findUnique({
-    where: { slug: tenant },
+    where: { subdomain: tenant },
   });
 
   if (!branch) {
