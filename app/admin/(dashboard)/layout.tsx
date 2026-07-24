@@ -1,3 +1,4 @@
+import { auth } from "@/modules/auth/auth"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -14,10 +15,12 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth()
+  
   return (
     <SidebarProvider>
-      <AppSidebar portalType="admin" />
+      <AppSidebar portalType="admin" session={session} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">

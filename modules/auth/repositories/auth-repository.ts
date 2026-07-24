@@ -34,7 +34,7 @@ export const AuthRepository = {
           staffUsers: { some: { userId } }
         },
         role: {
-          name: "Admin"
+          name: "Admin Pusat"
         }
       },
       include: {

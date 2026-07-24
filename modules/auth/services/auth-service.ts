@@ -42,14 +42,14 @@ export class AuthService {
 
       userRole = assignment.role.name;
     } else if (subdomain === "admin") {
-      // For admin portal, they must have the "Admin" role somewhere
+      // For admin portal, they must have the "Admin Pusat" role somewhere
       const adminAssignment = await AuthRepository.getAdminAssignment(user.id);
 
       if (!adminAssignment) {
         return null; // Not an admin
       }
 
-      userRole = "Admin";
+      userRole = "Admin Pusat";
     } else {
       // Fallback if no subdomain (e.g. main marketing site), just get their primary role if they have one
       const primaryAssignment = await AuthRepository.getPrimaryAssignment(user.id);

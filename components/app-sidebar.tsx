@@ -2,12 +2,10 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
-import { useSession } from "next-auth/react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -15,33 +13,17 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { BuildingIcon } from "lucide-react"
 
 import { adminNav } from "./app-sidebar-data"
 
-export function AppSidebar({ portalType = "branch", ...props }: React.ComponentProps<typeof Sidebar> & { portalType?: "admin" | "branch" }) {
+export function AppSidebar({ portalType = "branch", session, ...props }: React.ComponentProps<typeof Sidebar> & { portalType?: "admin" | "branch", session: any }) {
   const pathname = usePathname()
-
-  // NOTE: If you haven't wrapped your app in <SessionProvider>, useSession will throw an error.
-  // Make sure your root layout or admin layout has a SessionProvider!
-  const { data: session } = useSession()
 
   // 1. Determine portal based on prop
   const isAdminPortal = portalType === "admin"
 
-  // 2. Extract user role (Default to Guest if no session)
-  // Note: Adjust the role extraction based on how you attached role to the Auth.js session object
-  const userRole = (session?.user as any)?.role?.name || "Admin" // Temporarily defaulting to Admin for testing if session isn't fully configured
-
-  // 3. Select and filter the menu
-  const activeMenu = adminNav
-  const permittedGroups = activeMenu.map(group => ({
-    ...group,
-    items: group.items.filter((item) => item.roles.includes(userRole))
-  })).filter(group => group.items.length > 0)
-
-  // 4. Transform to match NavMain expected structure
-  const navMainGroups = permittedGroups.map(group => ({
+  // 3. Transform to match NavMain expected structure (No role filtering needed)
+  const navMainGroups = adminNav.map(group => ({
     ...group,
     items: group.items.map(link => ({
       ...link,
@@ -55,19 +37,19 @@ export function AppSidebar({ portalType = "branch", ...props }: React.ComponentP
     avatar: session?.user?.image || "",
   }
 
-  // Placeholder for branch switching or tenant info
-  const teams = [
-    {
-      name: isAdminPortal ? "Global Admin" : "Branch View",
-      logo: (<BuildingIcon />),
-      plan: userRole,
-    }
-  ]
-
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={teams} />
+        {/* TeamSwitcher removed as requested */}
+        <div className="flex items-center gap-2 px-2 py-3 mt-1">
+          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground shadow-sm">
+            N
+          </div>
+          <div className="flex flex-col gap-0.5 leading-none">
+            <span className="font-semibold text-sm">NYENYAK</span>
+            <span className="text-xs text-muted-foreground">{isAdminPortal ? "Admin Pusat" : "Cabang"}</span>
+          </div>
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <NavMain groups={navMainGroups} />

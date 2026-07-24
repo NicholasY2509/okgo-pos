@@ -10,7 +10,7 @@ export function LoginForm() {
   const { form, onSubmit, isSubmitting, errorMessage } = useLogin()
 
   return (
-    <Card className="w-full max-w-sm shadow-xl border-t-4 border-t-primary">
+    <Card className="shadow-xl">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold tracking-tight">Masuk</CardTitle>
         <CardDescription>

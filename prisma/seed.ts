@@ -31,6 +31,7 @@ async function main() {
 
   // Seed Roles
   const roles = [
+    { name: 'Admin Pusat', description: 'Super Administrator Pusat' },
     { name: 'Admin', description: 'Super Administrator' },
     { name: 'Manager', description: 'Branch Manager' },
     { name: 'Cashier', description: 'Branch Cashier' },
@@ -59,6 +60,51 @@ async function main() {
   } else {
     createdBranches.push(...await prisma.branch.findMany())
     console.log('ℹ️ Branches already exist, using existing ones')
+  }
+
+  // Ensure Admin Pusat staff and link exists
+  const wpAdmin = await prisma.workPosition.upsert({
+    where: { id: 'admin-pusat-wp' },
+    update: {},
+    create: { id: 'admin-pusat-wp', name: 'Admin Pusat', description: 'Admin Pusat Position' }
+  })
+
+  let adminStaff = await prisma.staff.findFirst({
+    where: { staffUsers: { some: { userId: adminUser.id } } }
+  })
+
+  if (!adminStaff) {
+    adminStaff = await prisma.staff.create({
+      data: {
+        firstName: 'Admin',
+        lastName: 'Pusat',
+        email: email,
+        workPositionId: wpAdmin.id,
+      }
+    })
+    await prisma.staffUser.create({
+      data: {
+        staffId: adminStaff.id,
+        userId: adminUser.id
+      }
+    })
+  }
+
+  const adminBranchStaff = await prisma.branchStaff.findUnique({
+    where: {
+      staffId_branchId: { staffId: adminStaff.id, branchId: createdBranches[0].id }
+    }
+  })
+
+  if (!adminBranchStaff) {
+    await prisma.branchStaff.create({
+      data: {
+        staffId: adminStaff.id,
+        branchId: createdBranches[0].id,
+        roleId: createdRoles['Admin Pusat']
+      }
+    })
+    console.log('✅ Admin Pusat user successfully linked to Staff and BranchStaff')
   }
 
   // Seed WorkPositions & Staff if empty

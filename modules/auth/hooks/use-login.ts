@@ -17,7 +17,7 @@ export function useLogin() {
       return (parts.length > 1 && parts[0] !== "localhost") ? parts[0] : ""
     }
     const parts = hostname.split(".")
-    return (parts.length > 2 && parts[0] !== "www" && parts[0] !== "admin") ? parts[0] : ""
+    return (parts.length > 2 && parts[0] !== "www") ? parts[0] : ""
   }
 
   const form = useForm<LoginInput>({

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import NextAuth from "next-auth"
+import { authConfig } from "@/modules/auth/auth.config"
 
 export const config = {
   matcher: [
@@ -14,15 +15,12 @@ export const config = {
   ],
 }
 
-export function proxy(req: NextRequest) {
+export default NextAuth(authConfig).auth((req) => {
   const url = req.nextUrl
 
   // Get hostname of request (e.g. downtown.okgo.com, localhost:3000)
   const hostname = req.headers.get("host") || ""
 
-  // We only care about subdomains if it's not the main domain (e.g. okgo.com or admin.okgo.com)
-  // For local development, we extract the part before localhost
-  // Note: Adjust this logic based on your production root domain
   let subdomain = ""
 
   if (hostname.includes("localhost")) {
@@ -33,7 +31,6 @@ export function proxy(req: NextRequest) {
   } else {
     // Production domain parsing
     const parts = hostname.split(".")
-    // Assuming root domain is okgo.com (2 parts)
     if (parts.length > 2 && parts[0] !== "www") {
       subdomain = parts[0]
     }
@@ -42,22 +39,43 @@ export function proxy(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams.toString()
   const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""}`
 
+  // Check auth session
+  const session = req.auth
+  const isAuth = !!session
+
   // Handle the "admin" subdomain explicitly
   if (subdomain === "admin") {
-    // If the path already starts with /admin, don't rewrite it again (prevents /admin/admin/...)
+    // Protect admin routes
+    if (!isAuth && !url.pathname.startsWith("/login")) {
+      const loginUrl = req.nextUrl.clone()
+      loginUrl.pathname = "/login"
+      return NextResponse.redirect(loginUrl)
+    }
+
     if (url.pathname.startsWith("/admin")) {
       return NextResponse.next()
     }
     // Rewrite admin.localhost:3000/ to /admin/
-    return NextResponse.rewrite(new URL(`/admin${path}`, req.url))
+    const rewriteUrl = req.nextUrl.clone()
+    rewriteUrl.pathname = `/admin${path}`
+    return NextResponse.rewrite(rewriteUrl)
   }
 
-  // If there is no subdomain (or it's www), route normally
+  // If there is no subdomain (or it's www), route normally (marketing site - public)
   if (!subdomain || subdomain === "www") {
     return NextResponse.next()
   }
 
+  // Protect tenant routes
+  if (!isAuth && !url.pathname.startsWith("/login")) {
+    const loginUrl = req.nextUrl.clone()
+    loginUrl.pathname = "/login"
+    return NextResponse.redirect(loginUrl)
+  }
+
   // Rewrite to the branch app directory, passing the subdomain
-  // e.g., downtown.localhost:3000/login -> /downtown/login
-  return NextResponse.rewrite(new URL(`/${subdomain}${path}`, req.url))
-}
+  // e.g., downtown.localhost:3000/login -> /[tenant]/login
+  const rewriteUrl = req.nextUrl.clone()
+  rewriteUrl.pathname = `/${subdomain}${path}`
+  return NextResponse.rewrite(rewriteUrl)
+})

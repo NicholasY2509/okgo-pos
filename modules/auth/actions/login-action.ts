@@ -18,7 +18,7 @@ export async function loginAction(values: LoginInput) {
       email,
       password,
       subdomain,
-      redirectTo: "/",
+      redirectTo: subdomain === "admin" ? "/" : "/pos",
     })
   } catch (error) {
     if (error instanceof AuthError) {

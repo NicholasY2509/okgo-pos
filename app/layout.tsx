@@ -32,8 +32,7 @@ const fontDisplay = Cormorant_Garamond({
 })
 
 export const metadata = {
-  title: "Okgo POS",
-  description: "Okgo Point of Sale System",
+  title: "Nyenyak",
 };
 
 export const viewport = {
