@@ -37,6 +37,9 @@ RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
@@ -51,4 +54,14 @@ ENV PORT=3000
 # set hostname to localhost
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# Create a startup script that runs migrations then starts the server
+COPY --chown=nextjs:nodejs <<'EOF' /app/start.sh
+#!/bin/sh
+echo "Running Prisma migrations..."
+npx prisma migrate deploy
+echo "Starting Next.js server..."
+exec node server.js
+EOF
+RUN chmod +x /app/start.sh
+
+CMD ["/bin/sh", "/app/start.sh"]
