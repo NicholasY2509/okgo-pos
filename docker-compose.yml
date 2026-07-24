@@ -25,6 +25,8 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE:-okgo}
       - MYSQL_USER=${MYSQL_USER:-okgo_user}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-okgo_password}
+    ports:
+      - "127.0.0.1:3306:3306"
     volumes:
       - dbdata:/var/lib/mysql
     networks:
