@@ -19,17 +19,7 @@ export default async function TenantAttendancePage({ params }: TenantAttendanceP
     return <div className="p-6">Branch not found</div>;
   }
 
-  const workingHours = await prisma.workingHour.findMany({
-    orderBy: { name: "asc" },
-  });
 
-  // Fetch staff that belong to this branch only
-  const branchStaffList = await prisma.branchStaff.findMany({
-    where: { branchId: branch.id },
-    include: { staff: true },
-  });
-
-  const staffList = branchStaffList.map(bs => bs.staff).filter(s => s.isActive);
 
   return (
     <div className="p-6 space-y-6">
@@ -47,10 +37,7 @@ export default async function TenantAttendancePage({ params }: TenantAttendanceP
             <CardDescription>Select staff members and assign their shifts.</CardDescription>
           </CardHeader>
           <CardContent>
-            <AttendanceWorkingHourForm 
-              workingHours={workingHours} 
-              staffList={staffList} 
-            />
+            <AttendanceWorkingHourForm />
           </CardContent>
         </Card>
       </div>
