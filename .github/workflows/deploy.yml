@@ -71,6 +71,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /var/www/nyenyak.com
+            # Log into GitHub Container Registry to pull the image
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             # Pull the latest image
             docker compose pull app
             # Restart the app service

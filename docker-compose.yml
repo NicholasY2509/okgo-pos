@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/username/okgo-pos:latest # We'll replace this with the real image name in GitHub Actions
+    image: ghcr.io/nicholasy2509/okgo-pos:latest
     container_name: okgo_app
     restart: always
     environment:
