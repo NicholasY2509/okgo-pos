@@ -9,6 +9,7 @@ export default async function TenantRootLayout({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant } = await params;
+  console.log("Tenant layout received tenant:", tenant);
 
   // Validate that the subdomain actually exists in the database
   const branch = await prisma.branch.findUnique({
