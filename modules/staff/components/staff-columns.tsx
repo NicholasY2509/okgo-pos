@@ -62,9 +62,12 @@ export const staffColumns: ColumnDef<StaffData>[] = [
       const users = row.original.staffUsers
       if (!users || users.length === 0) return <span className="text-muted-foreground">-</span>
       return (
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-2">
           {users.map(su => (
-            <span key={su.user.email} className="text-sm">{su.user.name || su.user.email}</span>
+            <div key={su.user.email} className="flex flex-col">
+              {su.user.name && <span className="text-sm font-medium">{su.user.name}</span>}
+              {su.user.email && <span className="text-xs text-muted-foreground">{su.user.email}</span>}
+            </div>
           ))}
         </div>
       )

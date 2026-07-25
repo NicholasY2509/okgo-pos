@@ -5,13 +5,18 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { MapPin, Phone, Users, ExternalLink } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-
 import { PageHeader } from "@/components/page-header"
+import { headers } from "next/headers"
 
 export const dynamic = "force-dynamic"
 
 export default async function BranchesPage() {
   const branches = await BranchService.getAllBranches()
+
+  const headersList = await headers();
+  const host = headersList.get("host") || "localhost:3000";
+  const baseDomain = host.replace("admin.", "");
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,7 +60,7 @@ export default async function BranchesPage() {
             <CardFooter className="border-t flex justify-between gap-2">
               <BranchDialog initialData={branch} />
               <div className="flex gap-2">
-                <Link href={`http://${branch.subdomain}.localhost:3000/pos`} target="_blank">
+                <Link href={`${protocol}://${branch.subdomain}.${baseDomain}/pos`} target="_blank">
                   <Button variant="outline" size="sm" className="h-8 shadow-sm">
                     <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                     Kunjungi

@@ -36,9 +36,6 @@ export default NextAuth(authConfig).auth((req) => {
     }
   }
 
-  const searchParams = req.nextUrl.searchParams.toString()
-  const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""}`
-
   // Check auth session
   const session = req.auth
   const isAuth = !!session
@@ -57,7 +54,7 @@ export default NextAuth(authConfig).auth((req) => {
     }
     // Rewrite admin.localhost:3000/ to /admin/
     const rewriteUrl = req.nextUrl.clone()
-    rewriteUrl.pathname = `/admin${path}`
+    rewriteUrl.pathname = `/admin${url.pathname}`
     return NextResponse.rewrite(rewriteUrl)
   }
 
@@ -76,6 +73,6 @@ export default NextAuth(authConfig).auth((req) => {
   // Rewrite to the branch app directory, passing the subdomain
   // e.g., downtown.localhost:3000/login -> /[tenant]/login
   const rewriteUrl = req.nextUrl.clone()
-  rewriteUrl.pathname = `/${subdomain}${path}`
+  rewriteUrl.pathname = `/${subdomain}${url.pathname}`
   return NextResponse.rewrite(rewriteUrl)
 })

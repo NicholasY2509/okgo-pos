@@ -7,6 +7,8 @@ import { StaffDialog } from "@/modules/staff/components/staff-dialog"
 import { StaffFilters } from "@/modules/staff/components/staff-filters"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { PageHeader } from "@/components/page-header"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export const dynamic = "force-dynamic"
 
@@ -38,9 +40,14 @@ export default async function StaffPage({ searchParams }: StaffPageProps) {
         title="Manajemen Staf"
         description="Kelola anggota staf Anda secara global."
       >
-        <StaffDialog
-          workPositions={workPositions.map(wp => ({ id: wp.id, name: wp.name }))}
-        />
+        <div className="flex gap-2">
+          <StaffDialog
+            workPositions={workPositions.map(wp => ({ id: wp.id, name: wp.name }))}
+          />
+          <Button asChild>
+            <Link href="/admin/staff/onboard">Onboard Staff</Link>
+          </Button>
+        </div>
       </PageHeader>
 
       <div className="w-full space-y-6">

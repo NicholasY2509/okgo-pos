@@ -38,7 +38,7 @@ export function AppSidebar({ portalType = "branch", session, ...props }: React.C
   }
 
   return (
-    <Sidebar variant="inset" collapsible="icon" {...props}>
+    <Sidebar variant="floating" collapsible="icon" {...props}>
       <SidebarHeader>
         {/* TeamSwitcher removed as requested */}
         <div className="flex items-center gap-2 px-2 py-3 mt-1">
