@@ -4,7 +4,7 @@ import { DateRange } from "react-day-picker";
 import { getBranchTransactionsAction } from "../actions/transaction-action";
 
 interface UseTransactionsProps {
-  branchId: string;
+  branchId?: string;
 }
 
 export function useTransactions({ branchId }: UseTransactionsProps) {
@@ -14,7 +14,7 @@ export function useTransactions({ branchId }: UseTransactionsProps) {
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  
+
   // Pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -24,7 +24,7 @@ export function useTransactions({ branchId }: UseTransactionsProps) {
   const fetchTransactions = async () => {
     setLoading(true);
     const filters: any = { branchId, page, limit };
-    
+
     if (searchTerm) filters.search = searchTerm;
     if (dateRange?.from) filters.startDate = dateRange.from;
     if (dateRange?.to) {

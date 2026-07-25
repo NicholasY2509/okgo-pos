@@ -15,9 +15,8 @@ const typeConfig: Record<string, { label: string, Icon: any }> = {
   EXPENSE: { label: "Beban", Icon: ShoppingCart },
 }
 
-export default async function CoaPage({ params }: { params: Promise<{ tenant: string }> }) {
-  const { tenant } = await params
-  const result = await getLedgerAccountsWithBalancesAction(tenant)
+export default async function AdminCoaPage() {
+  const result = await getLedgerAccountsWithBalancesAction()
   const accounts = result.data || []
 
   const accountTypes = ["ALL", "ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]
@@ -26,10 +25,10 @@ export default async function CoaPage({ params }: { params: Promise<{ tenant: st
   const renderCardGrid = (typeAccounts: any[]) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {typeAccounts.map((acc: any) => (
-        <Link key={acc.id} href={`/${tenant}/accounting/coa/${acc.id}`} className="block group">
+        <Link key={acc.id} href={`/admin/accounting/coa/${acc.id}`} className="block group">
           <div className="relative flex items-center justify-between p-4 rounded-xl border bg-card hover:border-primary/50 transition-colors shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="bg-muted text-muted-foreground font-mono text-xs font-semibold px-2 py-1 rounded-md">
+              <div className="bg-muted text-muted-foreground text-xs font-semibold px-2 py-1 rounded-md">
                 {acc.code}
               </div>
               <div className="font-semibold text-sm flex items-center gap-2 text-foreground group-hover:text-primary transition-colors">
@@ -37,7 +36,7 @@ export default async function CoaPage({ params }: { params: Promise<{ tenant: st
                 {acc.isLocked && <Lock className="w-3.5 h-3.5 text-primary/60" />}
               </div>
             </div>
-            <div className="font-bold text-sm font-mono">
+            <div className="font-bold text-sm">
               Rp {(acc.balance || 0).toLocaleString('id-ID')}
             </div>
           </div>
@@ -50,9 +49,9 @@ export default async function CoaPage({ params }: { params: Promise<{ tenant: st
     <div className="flex flex-col gap-6 p-6">
       <PageHeader
         title="Bagan Akun (COA)"
-        description="Kelola akun buku besar untuk cabang ini."
+        description="Kelola akun buku besar secara global untuk semua cabang."
       >
-        <CoaFormDialog branchId={tenant} />
+        <CoaFormDialog branchId="" />
       </PageHeader>
 
       <Tabs defaultValue="ALL" className="w-full">
@@ -60,9 +59,9 @@ export default async function CoaPage({ params }: { params: Promise<{ tenant: st
           {accountTypes.map(type => {
             const { label, Icon } = typeConfig[type]
             return (
-              <TabsTrigger
-                key={type}
-                value={type}
+              <TabsTrigger 
+                key={type} 
+                value={type} 
                 className="px-4 py-2 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary"
               >
                 {Icon && <Icon className="w-4 h-4 mr-2" />}

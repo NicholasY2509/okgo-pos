@@ -2,8 +2,8 @@ import React from "react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "./ui/card"
 
 interface PageHeaderProps {
-  title: string
-  description?: string
+  title: React.ReactNode
+  description?: React.ReactNode
   children?: React.ReactNode
 }
 

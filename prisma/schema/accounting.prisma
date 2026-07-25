@@ -15,6 +15,7 @@ model LedgerAccount {
   name        String
   type        AccountType
   description String?
+  isLocked    Boolean     @default(false)
 
   journalLines JournalLine[]
 

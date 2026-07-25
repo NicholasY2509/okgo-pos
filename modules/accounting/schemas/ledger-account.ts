@@ -6,6 +6,7 @@ export const ledgerAccountSchema = z.object({
   type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]),
   description: z.string().optional(),
   branchId: z.string().optional(),
+  isLocked: z.boolean().optional(),
 })
 
 export type LedgerAccountInput = z.infer<typeof ledgerAccountSchema>

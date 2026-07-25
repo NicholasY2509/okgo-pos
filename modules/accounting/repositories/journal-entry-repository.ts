@@ -30,9 +30,9 @@ export const JournalEntryRepository = {
 
   async findAll(branchId?: string, tenantId?: string) {
     return await prisma.journalEntry.findMany({
-      where: { 
+      where: {
         ...(branchId ? { branchId } : {}),
-        tenantId 
+        tenantId
       },
       include: {
         lines: {
@@ -63,4 +63,52 @@ export const JournalEntryRepository = {
       where: { id },
     })
   },
+
+  async findByAccountId(accountId: string, branchId?: string, tenantId?: string) {
+    // Finds all journal entries that contain a line for this account
+    return await prisma.journalEntry.findMany({
+      where: {
+        ...(branchId ? { branchId } : {}),
+        ...(tenantId ? { tenantId } : {}),
+        lines: {
+          some: {
+            ledgerAccountId: accountId
+          }
+        }
+      },
+      include: {
+        lines: {
+          include: {
+            ledgerAccount: true
+          }
+        }
+      },
+      orderBy: { date: "desc" }
+    });
+  },
+
+  async findExpenseEntries(branchId?: string, tenantId?: string) {
+    // Finds all journal entries that contain a line mapped to an EXPENSE account
+    return await prisma.journalEntry.findMany({
+      where: {
+        ...(branchId ? { branchId } : {}),
+        ...(tenantId ? { tenantId } : {}),
+        lines: {
+          some: {
+            ledgerAccount: {
+              type: 'EXPENSE'
+            }
+          }
+        }
+      },
+      include: {
+        lines: {
+          include: {
+            ledgerAccount: true
+          }
+        }
+      },
+      orderBy: { date: "desc" }
+    });
+  }
 }

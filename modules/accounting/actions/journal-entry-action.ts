@@ -14,7 +14,7 @@ export async function createJournalEntryAction(values: JournalEntryInput) {
 
     const result = await JournalEntryService.create(validatedFields.data, undefined)
     revalidatePath("/[tenant]/(main)/accounting/journal", "page")
-    
+
     return { success: true, data: result }
   } catch (error: any) {
     return { error: error.message || "An unexpected error occurred." }
@@ -29,3 +29,33 @@ export async function getJournalEntriesAction(branchId?: string) {
     return { error: error.message || "An unexpected error occurred." }
   }
 }
+
+export async function getJournalEntryByIdAction(id: string) {
+  try {
+    const entry = await JournalEntryService.getById(id)
+    if (!entry) return { error: "Journal entry not found" }
+    return { success: true, data: entry }
+  } catch (error: any) {
+    return { error: error.message || "An unexpected error occurred." }
+  }
+}
+
+export async function getJournalEntriesByAccountAction(accountId: string, branchId?: string) {
+  try {
+    const entries = await JournalEntryService.getByAccountId(accountId, branchId, undefined)
+    return { success: true, data: entries }
+  } catch (error: any) {
+    return { error: error.message || "An unexpected error occurred." }
+  }
+}
+
+export async function getExpenseEntriesAction(branchId?: string) {
+  try {
+    const entries = await JournalEntryService.getExpenseEntries(branchId, undefined)
+    return { success: true, data: entries }
+  } catch (error: any) {
+    return { error: error.message || "An unexpected error occurred." }
+  }
+}
+
+

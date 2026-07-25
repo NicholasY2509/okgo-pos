@@ -1,18 +1,15 @@
 import { getJournalEntriesAction } from "@/modules/accounting/actions/journal-entry-action"
 import { getLedgerAccountsAction } from "@/modules/accounting/actions/ledger-account-action"
-import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-
+import { format } from "date-fns"
 import { PageHeader } from "@/components/page-header"
 import { JournalTable } from "@/modules/accounting/components/journal-table"
 
-export default async function JournalPage({ params }: { params: Promise<{ tenant: string }> }) {
-  const { tenant } = await params
-
+export default async function AdminJournalPage() {
   const [entriesResult, accountsResult] = await Promise.all([
-    getJournalEntriesAction(tenant),
-    getLedgerAccountsAction(tenant)
+    getJournalEntriesAction(),
+    getLedgerAccountsAction()
   ])
 
   const entries = entriesResult.data || []
@@ -21,18 +18,18 @@ export default async function JournalPage({ params }: { params: Promise<{ tenant
   return (
     <div className="flex flex-col gap-6 p-6">
       <PageHeader
-        title="Journal Entries"
-        description="View and post manual double-entry journals."
+        title="Journal Entries (Admin)"
+        description="View and post manual double-entry journals across all branches."
       >
         <Button asChild>
-          <Link href={`/${tenant}/accounting/journal/create`}>
+          <Link href="/admin/accounting/journal/create">
             Tambah Jurnal
           </Link>
         </Button>
       </PageHeader>
 
       <div className="grid grid-cols-1 gap-6">
-        <JournalTable entries={entries} branchId={tenant} />
+        <JournalTable entries={entries} isAdmin={true} />
       </div>
     </div>
   )

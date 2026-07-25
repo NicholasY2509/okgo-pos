@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/pagination";
 
 interface TransactionHistoryClientProps {
-  branchId: string;
+  branchId?: string;
 }
 
 export function TransactionHistoryClient({ branchId }: TransactionHistoryClientProps) {
