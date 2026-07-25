@@ -1,0 +1,58 @@
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+model LedgerAccount {
+  id        String  @id @default(cuid())
+  tenantId  String?
+  branchId  String? // Nullable if COA is global per tenant
+
+  code        String      @unique
+  name        String
+  type        AccountType
+  description String?
+
+  journalLines JournalLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+}
+
+model JournalEntry {
+  id       String  @id @default(cuid())
+  tenantId String?
+  branchId String
+
+  date        DateTime @default(now())
+  description String
+  reference   String? // Can link to a Transaction ID
+
+  lines JournalLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+  @@index([date])
+}
+
+model JournalLine {
+  id             String @id @default(cuid())
+  journalEntryId String
+  ledgerAccountId      String
+
+  debit  Decimal @default(0)
+  credit Decimal @default(0)
+
+  journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  ledgerAccount      LedgerAccount      @relation(fields: [ledgerAccountId], references: [id])
+
+  @@index([journalEntryId])
+  @@index([ledgerAccountId])
+}
