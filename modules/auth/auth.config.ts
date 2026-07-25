@@ -19,6 +19,18 @@ export const authConfig = {
         (session.user as any).role = token.role;
       }
       return session;
+    },
+    redirect({ url, baseUrl }) {
+      // If relative URL, preserve it so it resolves on the current subdomain
+      if (url.startsWith("/")) return url;
+      // If absolute, allow if it matches our domains
+      try {
+        const redirectUrl = new URL(url);
+        if (redirectUrl.hostname.endsWith('nyenyak.com') || redirectUrl.hostname.includes('localhost')) {
+          return url;
+        }
+      } catch (e) { }
+      return baseUrl;
     }
   },
   trustHost: true,
