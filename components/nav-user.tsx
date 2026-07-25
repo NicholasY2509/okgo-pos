@@ -74,9 +74,11 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
-              <LogOutIcon
-              />
+            <DropdownMenuItem onClick={async () => {
+              await signOut({ redirect: false });
+              window.location.href = "/login";
+            }}>
+              <LogOutIcon />
               Keluar
             </DropdownMenuItem>
           </DropdownMenuContent>
