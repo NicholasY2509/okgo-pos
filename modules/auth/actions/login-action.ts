@@ -22,6 +22,9 @@ export async function loginAction(values: LoginInput) {
     })
   } catch (error) {
     if (error instanceof AuthError) {
+      if ((error.type as string) === "Anda tidak mempunyai akses ke sistem ini") {
+        return error.type;
+      }
       switch (error.type) {
         case "CredentialsSignin":
           return "Kredensial tidak valid."

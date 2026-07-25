@@ -52,5 +52,13 @@ export const AuthRepository = {
       },
       include: { role: true }
     });
+  },
+
+  async getGlobalRole(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+    return user?.role;
   }
 };

@@ -24,37 +24,50 @@ export class AuthService {
     }
 
     let userRole = "Guest";
+    const globalRole = await AuthRepository.getGlobalRole(user.id);
 
     // If subdomain is provided, we must check if the user has access to it
     if (subdomain && subdomain !== "admin") {
       const branch = await AuthRepository.getBranchBySubdomain(subdomain);
 
       if (!branch) {
-        return null; // Branch doesn't exist
+        throw new Error("Anda tidak mempunyai akses ke sistem ini");
       }
 
-      // Check if user is assigned to this branch
-      const assignment = await AuthRepository.getBranchStaffAssignment(user.id, branch.id);
+      if (globalRole && (globalRole.name === "Super Admin" || globalRole.name === "Admin Pusat")) {
+        userRole = globalRole.name;
+      } else {
+        // Check if user is assigned to this branch
+        const assignment = await AuthRepository.getBranchStaffAssignment(user.id, branch.id);
 
-      if (!assignment) {
-        return null; // User not authorized for this branch
+        if (!assignment) {
+          throw new Error("Anda tidak mempunyai akses ke sistem ini");
+        }
+
+        userRole = assignment.role.name;
       }
-
-      userRole = assignment.role.name;
     } else if (subdomain === "admin") {
-      // For admin portal, they must have the "Admin Pusat" role somewhere
-      const adminAssignment = await AuthRepository.getAdminAssignment(user.id);
+      // For admin portal, they must have the "Admin Pusat" or "Super Admin" role
+      if (globalRole && (globalRole.name === "Admin Pusat" || globalRole.name === "Super Admin")) {
+        userRole = globalRole.name;
+      } else {
+        const adminAssignment = await AuthRepository.getAdminAssignment(user.id);
 
-      if (!adminAssignment) {
-        return null; // Not an admin
+        if (!adminAssignment) {
+          throw new Error("Anda tidak mempunyai akses ke sistem ini");
+        }
+
+        userRole = "Admin Pusat";
       }
-
-      userRole = "Admin Pusat";
     } else {
       // Fallback if no subdomain (e.g. main marketing site), just get their primary role if they have one
-      const primaryAssignment = await AuthRepository.getPrimaryAssignment(user.id);
-      if (primaryAssignment) {
-        userRole = primaryAssignment.role.name;
+      if (globalRole) {
+        userRole = globalRole.name;
+      } else {
+        const primaryAssignment = await AuthRepository.getPrimaryAssignment(user.id);
+        if (primaryAssignment) {
+          userRole = primaryAssignment.role.name;
+        }
       }
     }
 

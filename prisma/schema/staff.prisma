@@ -5,6 +5,7 @@ model Role {
 
   permissions  RolePermission[]
   branchStaffs BranchStaff[]
+  users        User[]
 }
 
 model Permission {

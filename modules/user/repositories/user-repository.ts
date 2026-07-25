@@ -31,6 +31,7 @@ export let UserRepository = {
             name: data.name,
             email: data.email,
             password: hashedPassword,
+            roleId: data.roleId || null,
           },
         })
         },
@@ -38,6 +39,7 @@ export let UserRepository = {
         const updateData: any = {
           name: data.name,
           email: data.email,
+          roleId: data.roleId || null,
         }
 
         if (data.password && data.password.length > 0) {

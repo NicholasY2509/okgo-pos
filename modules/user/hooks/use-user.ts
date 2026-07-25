@@ -1,19 +1,35 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { createUserAction, updateUserAction } from "../actions/user-action"
+import { getRolesAction } from "@/modules/role/actions/role-action"
 import { createUserSchema, updateUserSchema, type CreateUserInput, type UpdateUserInput } from "../schemas/user-schema"
-import { User } from "@/lib/generated/prisma"
+import { User, Role } from "@/lib/generated/prisma"
 
 interface UseUserProps {
-  initialData?: User | null;
+  initialData?: User & { roleId?: string | null } | null;
   onSuccess?: () => void;
 }
 
 export function useUserForm({ initialData, onSuccess }: UseUserProps) {
   const [error, setError] = useState<string | null>(null)
+  const [roles, setRoles] = useState<Role[]>([])
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true)
   const isEditing = !!initialData;
+
+  useEffect(() => {
+    async function fetchRoles() {
+      const result = await getRolesAction()
+      if (result.success && result.data) {
+        setRoles(result.data as Role[])
+      } else {
+        toast.error("Gagal memuat daftar role")
+      }
+      setIsLoadingRoles(false)
+    }
+    fetchRoles()
+  }, [])
 
   const form = useForm<UpdateUserInput | CreateUserInput>({
     resolver: zodResolver(isEditing ? updateUserSchema : createUserSchema),
@@ -22,19 +38,27 @@ export function useUserForm({ initialData, onSuccess }: UseUserProps) {
       name: initialData.name || "",
       email: initialData.email || "",
       password: "",
+      roleId: initialData.roleId || "",
     } : {
       name: "",
       email: "",
       password: "",
+      roleId: "",
     },
   })
 
   async function onSubmit(values: UpdateUserInput | CreateUserInput) {
     setError(null)
     
+    // Convert empty string or "none" roleId to undefined
+    const submitValues = { ...values }
+    if (!submitValues.roleId || submitValues.roleId === "none") {
+      submitValues.roleId = undefined;
+    }
+
     const result = isEditing 
-      ? await updateUserAction(values as UpdateUserInput)
-      : await createUserAction(values as CreateUserInput)
+      ? await updateUserAction(submitValues as UpdateUserInput)
+      : await createUserAction(submitValues as CreateUserInput)
 
     if (result.error) {
       setError(result.error)
@@ -56,5 +80,7 @@ export function useUserForm({ initialData, onSuccess }: UseUserProps) {
     isSubmitting: form.formState.isSubmitting,
     error,
     isEditing,
+    roles,
+    isLoadingRoles,
   }
 }

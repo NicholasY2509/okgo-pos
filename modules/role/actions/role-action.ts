@@ -9,6 +9,15 @@ import {
   type UpdateRoleInput,
 } from "../schemas/role-schema"
 
+export async function getRolesAction() {
+  try {
+    const roles = await RoleService.getAllRoles()
+    return { success: true, data: roles }
+  } catch (error) {
+    return { error: "Gagal mengambil role." }
+  }
+}
+
 export async function createRoleAction(values: CreateRoleInput) {
   try {
     const validatedFields = createRoleSchema.safeParse(values)

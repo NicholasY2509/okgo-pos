@@ -32,9 +32,12 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  roleId        String?
+
   accounts      Account[]
   sessions      Session[]
   staffUsers    StaffUser[]
+  role          Role?       @relation(fields: [roleId], references: [id])
 }
 
 model VerificationToken {
