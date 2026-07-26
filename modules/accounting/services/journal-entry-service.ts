@@ -4,10 +4,10 @@ import { JournalEntryInput } from "../schemas/journal-entry"
 export class JournalEntryService {
   static async create(data: JournalEntryInput, tenantId?: string) {
     let reference = data.reference;
-    if (!reference || reference.trim() === "") {
-      const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
-      const randomPart = Math.floor(1000 + Math.random() * 9000);
-      reference = `JRN-${dateStr}-${randomPart}`;
+    
+    // Ensure empty string is converted to undefined so Prisma doesn't save empty strings
+    if (reference && reference.trim() === "") {
+      reference = undefined;
     }
 
     return await JournalEntryRepository.create({ ...data, reference, tenantId })

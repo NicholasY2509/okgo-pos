@@ -215,14 +215,10 @@ async function main() {
     // ASSETS
     { code: '101', name: 'Kas Tunai (Laci)', type: 'ASSET', isLocked: true },
     { code: '111', name: 'Bank (QRIS/EDC)', type: 'ASSET', isLocked: true },
-    { code: '112', name: 'Bank BNI', type: 'ASSET', isLocked: false },
-    { code: '113', name: 'Bank Mandiri', type: 'ASSET', isLocked: false },
-    { code: '131', name: 'Persediaan Bahan Baku', type: 'ASSET', isLocked: true },
 
     // LIABILITY
     { code: '211', name: 'Hutang Pajak Layanan (PB1)', type: 'LIABILITY', isLocked: true },
     { code: '212', name: 'Hutang Service Charge', type: 'LIABILITY', isLocked: true },
-    { code: '213', name: 'Hutang Dagang (Vendor)', type: 'LIABILITY', isLocked: true },
     { code: '214', name: 'Kewajiban Voucher (Unearned Revenue)', type: 'LIABILITY', isLocked: true },
 
     // EQUITY
@@ -230,13 +226,13 @@ async function main() {
 
     // REVENUE
     { code: '411', name: 'Pendapatan Penjualan', type: 'REVENUE', isLocked: true },
-    { code: '499', name: 'Laba Selisih Stok (Adjustment Gain)', type: 'REVENUE', isLocked: true },
+    { code: '412', name: 'Pendapatan Voucher Kedaluwarsa', type: 'REVENUE', isLocked: true },
 
     // EXPENSES
     { code: '511', name: 'Beban Bahan Baku (COGS)', type: 'EXPENSE', isLocked: true },
     { code: '611', name: 'Beban Gaji Karyawan', type: 'EXPENSE', isLocked: false },
     { code: '612', name: 'Beban Listrik, Air & Gas', type: 'EXPENSE', isLocked: false },
-    { code: '613', name: 'Beban Kerusakan/Basi (Adjustment Loss)', type: 'EXPENSE', isLocked: true },
+    { code: '613', name: 'Beban Kerusakan', type: 'EXPENSE', isLocked: true },
     { code: '699', name: 'Beban Operasional Lain-lain', type: 'EXPENSE', isLocked: false },
   ]
 

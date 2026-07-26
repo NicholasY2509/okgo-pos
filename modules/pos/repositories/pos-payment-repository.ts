@@ -22,7 +22,7 @@ export const PosPaymentRepository = {
 
       const totalAmount = Number(transaction.totalAmount);
       let paidAmount = 0;
-      
+
       const visitVoucherUsage: Record<string, number> = {};
 
       for (const payment of input.payments) {
@@ -81,7 +81,7 @@ export const PosPaymentRepository = {
               data: {
                 customerVoucherId: customerVoucher.id,
                 transactionId: transaction.id,
-                transactionItemId: matchedItem.id, 
+                transactionItemId: matchedItem.id,
                 redeemedAmount: paymentAmount
               }
             });
@@ -130,7 +130,7 @@ export const PosPaymentRepository = {
       const changeAmount = Math.max(0, newPaidAmount - totalAmount);
       const isCompleted = newPaidAmount >= totalAmount;
 
-      return await tx.transaction.update({
+      const updatedTransaction = await tx.transaction.update({
         where: { id: transaction.id },
         data: {
           paidAmount: newPaidAmount,
@@ -138,6 +138,13 @@ export const PosPaymentRepository = {
           status: isCompleted ? "COMPLETED" : "PENDING"
         }
       });
+
+      if (isCompleted) {
+        const { JournalEntryAutomation } = require("../../accounting/services/journal-entry-automation");
+        await JournalEntryAutomation.handleTransactionCompleted(tx, updatedTransaction);
+      }
+
+      return updatedTransaction;
     });
   }
 };
