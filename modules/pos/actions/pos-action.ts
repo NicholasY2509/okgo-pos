@@ -23,15 +23,6 @@ export async function createPosTransactionAction(values: PosCheckoutInput) {
   }
 }
 
-export async function createDirectRedemptionAction(values: any) {
-  try {
-    const result = await PosService.directRedeem(values);
-    return { success: true, transactionId: result.id };
-  } catch (error: any) {
-    console.error("POS Direct Redeem Error:", error);
-    return { error: error.message || "An unexpected error occurred." };
-  }
-}
 
 export async function payExistingTransactionAction(values: {
   transactionId: string;

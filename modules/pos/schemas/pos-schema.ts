@@ -48,10 +48,3 @@ export type PosItemServiceInput = z.infer<typeof posItemServiceSchema>;
 export type PosItemVoucherPacketInput = z.infer<typeof posItemVoucherPacketSchema>;
 export type PosPaymentInput = z.infer<typeof posPaymentSchema>;
 
-export const posDirectRedemptionSchema = z.object({
-  branchId: z.string().min(1, "Branch ID is required"),
-  customerVoucherId: z.string().min(1, "Customer Voucher ID is required"),
-  roomId: z.string().min(1, "Room ID is required"),
-  staffId: z.string().min(1, "Staff ID is required"),
-});
-export type PosDirectRedemptionInput = z.infer<typeof posDirectRedemptionSchema>;

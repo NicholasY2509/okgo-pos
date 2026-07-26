@@ -23,3 +23,16 @@ model AttendanceWorkingHour {
 
   @@unique([staffId, attendanceDate])
 }
+
+model AttendanceMachineLog {
+  id              String    @id @default(cuid())
+  machineUserId   String?
+  cardName        String?
+  attendanceState Int       @default(0)
+  punchType       String?
+  deviceSn        String?
+  similarity      Int?
+  utcTime         DateTime?
+  rawPayload      String?
+  createdAt       DateTime  @default(now())
+}

@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { usePosStoreActions, usePosStoreSelector } from "../stores/pos-store";
 
-import { createDirectRedemptionAction } from "../actions/pos-action";
-
 interface UsePosClientProps {
   staff: any[];
   rooms: any[];
@@ -59,19 +57,23 @@ export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosC
     const unitPrice = Number(selectedProduct.price);
 
     if (selectedVoucherRedemption) {
-      // Direct redemption
-      const res = await createDirectRedemptionAction({
-        branchId,
+      // Add voucher redemption to cart
+      addItem({
+        type: "SERVICE",
+        serviceId: selectedProduct.id,
+        quantity: 1, // Force to 1 as recommended
+        staffId: staffId,
+        roomId: roomId,
+        discountAmount: unitPrice, // Fully discounted via voucher
+        name: selectedProduct.name,
+        unitPrice: unitPrice,
+        staffName: staffMember?.firstName + " " + (staffMember?.lastName || ""),
+        roomName: room?.name,
+        isVoucherRedemption: true,
         customerVoucherId: selectedVoucherRedemption.id,
-        roomId,
-        staffId
+        voucherCode: selectedVoucherRedemption.code,
       });
-
-      if (res.error) {
-        toast.error(res.error);
-      } else {
-        toast.success("Voucher berhasil ditukarkan dan sesi dimulai!");
-      }
+      toast.success("Voucher ditambahkan ke keranjang!");
       setSelectedVoucherRedemption(null);
     } else {
       const discountAmount = activeDiscount > 0 ? (unitPrice * activeDiscount) / 100 : 0;

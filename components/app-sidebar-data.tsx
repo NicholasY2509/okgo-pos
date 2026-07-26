@@ -123,6 +123,10 @@ export const adminNav = [
           {
             title: "Jadwal Shift",
             url: "/admin/attendance/schedules",
+          },
+          {
+            title: "Log Mesin Absensi",
+            url: "/admin/attendance-log",
           }
         ]
       },
