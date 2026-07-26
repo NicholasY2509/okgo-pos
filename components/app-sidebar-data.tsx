@@ -117,6 +117,10 @@ export const adminNav = [
             url: "/admin/attendance/data",
           },
           {
+            title: "Master Status",
+            url: "/admin/attendance/statuses",
+          },
+          {
             title: "Master Jam Kerja",
             url: "/admin/attendance/working-hours",
           },
@@ -127,6 +131,10 @@ export const adminNav = [
           {
             title: "Log Mesin Absensi",
             url: "/admin/attendance-log",
+          },
+          {
+            title: "Mesin Absensi",
+            url: "/admin/attendance/machines",
           }
         ]
       },

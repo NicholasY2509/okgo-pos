@@ -20,6 +20,74 @@ model AttendanceWorkingHour {
 
   staff       Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
   workingHour WorkingHour @relation(fields: [workingHourId], references: [id], onDelete: Cascade)
+  attendance  Attendance?
+
+  @@unique([staffId, attendanceDate])
+}
+
+model AttendanceMachine {
+  id        String   @id @default(cuid())
+  sn        String   @unique
+  name      String
+  branchId  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch              Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staffMachines       StaffMachine[]
+  clockInAttendances  Attendance[]   @relation("ClockInMachine")
+  clockOutAttendances Attendance[]   @relation("ClockOutMachine")
+}
+
+model StaffMachine {
+  id            String   @id @default(cuid())
+  staffId       String
+  machineId     String
+  machineUserId String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  staff   Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  machine AttendanceMachine @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, machineId])
+  @@unique([machineId, machineUserId])
+}
+
+model AttendanceStatus {
+  id          String   @id @default(cuid())
+  code        String   @unique // Misal: PRESENT, LATE, ABSENT, SICK
+  name        String // Misal: Hadir, Terlambat, Mangkir, Sakit
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendances Attendance[]
+}
+
+model Attendance {
+  id                String    @id @default(cuid())
+  staffId           String
+  attendanceDate    DateTime
+  clockIn           DateTime?
+  clockOut          DateTime?
+  statusId          String?
+  notes             String?
+  clockInMachineId  String?
+  clockOutMachineId String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  staff  Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  status AttendanceStatus? @relation(fields: [statusId], references: [id], onDelete: SetNull)
+
+  // Relasi 1-to-1 ke jadwal jam kerja (AttendanceWorkingHour) di tanggal tersebut
+  attendanceWorkingHourId String?                @unique
+  attendanceWorkingHour   AttendanceWorkingHour? @relation(fields: [attendanceWorkingHourId], references: [id], onDelete: SetNull)
+
+  clockInMachine  AttendanceMachine? @relation("ClockInMachine", fields: [clockInMachineId], references: [id], onDelete: SetNull)
+  clockOutMachine AttendanceMachine? @relation("ClockOutMachine", fields: [clockOutMachineId], references: [id], onDelete: SetNull)
 
   @@unique([staffId, attendanceDate])
 }
@@ -31,8 +99,13 @@ model AttendanceMachineLog {
   attendanceState Int       @default(0)
   punchType       String?
   deviceSn        String?
+  branchId        String?
+  staffId         String?
   similarity      Int?
   utcTime         DateTime?
   rawPayload      String?   @db.Text
   createdAt       DateTime  @default(now())
+
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  staff  Staff?  @relation(fields: [staffId], references: [id], onDelete: SetNull)
 }

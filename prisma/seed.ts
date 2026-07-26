@@ -253,6 +253,27 @@ async function main() {
     accountsCreated++
   }
   console.log(`✅ Default Chart of Accounts (${accountsCreated} accounts) created`)
+
+  // Seed Attendance Statuses
+  const attendanceStatuses = [
+    { code: 'H', name: 'Hadir' },
+    { code: 'T', name: 'Terlambat' },
+    { code: 'I', name: 'Izin' },
+    { code: 'C', name: 'Cuti' },
+    { code: 'O', name: 'Off' },
+    { code: 'A', name: 'Absen' },
+    { code: 'S', name: 'Sakit' },
+    { code: 'TAP', name: 'Tidak Absen Pulang' },
+  ]
+
+  for (const status of attendanceStatuses) {
+    await prisma.attendanceStatus.upsert({
+      where: { code: status.code },
+      update: {},
+      create: status,
+    })
+  }
+  console.log(`✅ Default Attendance Statuses created`)
 }
 
 main()

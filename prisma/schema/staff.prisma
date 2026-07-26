@@ -55,6 +55,9 @@ model Staff {
   serviceSessions        ServiceSession[]
   branchStaffs           BranchStaff[]
   attendanceWorkingHours AttendanceWorkingHour[]
+  staffMachines          StaffMachine[]
+  attendanceMachineLogs  AttendanceMachineLog[]
+  attendances            Attendance[]
 }
 
 model StaffUser {

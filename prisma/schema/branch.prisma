@@ -11,6 +11,8 @@ model Branch {
   branchStaffs BranchStaff[]
   rooms        Room[]
   discounts    Discount[]
+  attendanceMachines AttendanceMachine[]
+  attendanceMachineLogs AttendanceMachineLog[]
 }
 
 model BranchStaff {

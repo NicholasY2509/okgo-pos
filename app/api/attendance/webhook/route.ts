@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { AttendanceService } from "@/modules/attendance/services/attendance-service";
 
 const ATTENDANCE_STATES: Record<number, string> = {
-  0: "Masuk",
-  1: "Pulang",
-  2: "Selesai Istirahat",
-  3: "Mulai Istirahat",
-  4: "Mulai Lembur",
-  5: "Selesai Lembur"
+  0: "Tidak Dikenal",
+  1: "Masuk",
+  2: "Mulai Istirahat",
+  3: "Selesai Istirahat",
+  4: "Pulang",
+  5: "Mulai Lembur",
+  6: "Selesai Lembur"
 };
 
 export async function POST(req: NextRequest) {
@@ -40,8 +42,6 @@ export async function POST(req: NextRequest) {
         } catch (error) {
           console.error("Gagal melakukan parse JSON dari multipart:", error);
         }
-      } else {
-         console.log("JSON block tidak ditemukan dalam payload multipart.");
       }
     } else {
       // Payload JSON murni (seperti event DoorStatus)
@@ -53,13 +53,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log("=========================================");
-    console.log("FINGERPRINT MACHINE ATTENDANCE PAYLOAD RECEIVED");
-    console.log("=========================================");
-    console.log("Timestamp:", new Date().toISOString());
-    console.log("Method: POST");
-    console.log("Type:", isMultipart ? "Multipart (With Image)" : "JSON");
-    
     if (parsedData) {
       // Jika ini adalah event akses masuk (AccessControl)
       if (parsedData.Events && parsedData.Events.length > 0) {
@@ -67,41 +60,68 @@ export async function POST(req: NextRequest) {
         const attendanceState = eventData.AttendanceState || 0;
         const punchType = ATTENDANCE_STATES[attendanceState] || `Tidak Diketahui (${attendanceState})`;
 
-        console.log(`👤 NAMA      : ${eventData.CardName || "Tidak Diketahui"}`);
-        console.log(`🆔 USER ID   : ${eventData.UserID || "-"}`);
-        console.log(`⏱️ WAKTU     : ${eventData.UTCTime || "-"}`);
-        console.log(`✅ KECOCOKAN : ${eventData.Similarity || "-"}%`);
-        console.log(`📋 STATUS    : ${punchType}`);
-
         // Simpan ke database
         try {
           // Konversi string UTCTime (2026-07-26 13:57:56) ke Date Object
           const parsedTime = eventData.UTCTime ? new Date(eventData.UTCTime.replace(" ", "T") + "Z") : null;
-          
+
+          const deviceSn = eventData.SN || "";
+          const machineUserId = String(eventData.UserID || "");
+          let branchId = null;
+          let staffId = null;
+
+          if (deviceSn) {
+            const machine = await prisma.attendanceMachine.findUnique({
+              where: { sn: deviceSn }
+            });
+            if (machine) {
+              branchId = machine.branchId;
+
+              if (machineUserId) {
+                const staffMachine = await prisma.staffMachine.findUnique({
+                  where: {
+                    machineId_machineUserId: {
+                      machineId: machine.id,
+                      machineUserId: machineUserId
+                    }
+                  }
+                });
+                if (staffMachine) {
+                  staffId = staffMachine.staffId;
+                }
+              }
+            }
+          }
+
           await prisma.attendanceMachineLog.create({
             data: {
-              machineUserId: String(eventData.UserID || ""),
+              machineUserId: machineUserId,
               cardName: eventData.CardName || "Unknown",
               attendanceState: attendanceState,
               punchType: punchType,
-              deviceSn: eventData.SN || "",
+              deviceSn: deviceSn,
+              branchId: branchId,
+              staffId: staffId,
               similarity: eventData.Similarity ? Number(eventData.Similarity) : null,
               utcTime: parsedTime,
               rawPayload: JSON.stringify(parsedData)
             }
           });
-          console.log("💾 BERHASIL DISIMPAN KE DATABASE!");
+
+          if (staffId && parsedTime) {
+            // Find machine id for processing punch
+            const machine = await prisma.attendanceMachine.findUnique({
+              where: { sn: deviceSn }
+            });
+            if (machine) {
+              await AttendanceService.processPunch(staffId, parsedTime, String(attendanceState), machine.id);
+            }
+          }
         } catch (dbError) {
           console.error("❌ GAGAL MENYIMPAN KE DATABASE:", dbError);
         }
-      } else {
-        // Event lain seperti DoorStatus
-        console.log("Detail Event:", JSON.stringify(parsedData, null, 2));
       }
-    } else {
-      console.log("Body tidak dapat dibaca.");
     }
-    console.log("=========================================");
 
     return NextResponse.json({ success: true, message: "Attendance data received" });
   } catch (error) {
@@ -117,15 +137,6 @@ export async function GET(req: NextRequest) {
   try {
     const headers = Object.fromEntries(req.headers);
     const searchParams = Object.fromEntries(req.nextUrl.searchParams);
-
-    console.log("=========================================");
-    console.log("FINGERPRINT MACHINE ATTENDANCE PAYLOAD RECEIVED (GET)");
-    console.log("=========================================");
-    console.log("Timestamp:", new Date().toISOString());
-    console.log("Method: GET");
-    console.log("Headers:", JSON.stringify(headers, null, 2));
-    console.log("Query Params:", JSON.stringify(searchParams, null, 2));
-    console.log("=========================================");
 
     return NextResponse.json({ success: true, message: "Attendance data received" });
   } catch (error) {
