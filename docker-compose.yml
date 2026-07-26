@@ -9,6 +9,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - AUTH_SECRET=${AUTH_SECRET}
       - AUTH_URL=${AUTH_URL}
+      - CRON_SECRET=${CRON_SECRET:-okgo-secret-cron-key-123}
     ports:
       - "3000:3000"
     depends_on:
@@ -55,6 +56,19 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  cron:
+    image: alpine:latest
+    container_name: okgo_cron
+    restart: always
+    depends_on:
+      - app
+    networks:
+      - app-network
+    command: >
+      /bin/sh -c "apk add --no-cache curl && echo '0 0 * * * curl -sS -X GET \"http://app:3000/api/cron/expire-vouchers?secret=$${CRON_SECRET}\" >> /var/log/cron.log 2>&1' > /etc/crontabs/root && crond -f -d 8"
+    environment:
+      - CRON_SECRET=${CRON_SECRET:-okgo-secret-cron-key-123}
 
 networks:
   app-network:

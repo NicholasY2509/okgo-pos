@@ -92,6 +92,8 @@ export const PosRedemptionRepository = {
           redeemedAmount: null
         }
       });
+      const { JournalEntryAutomation } = require("../../accounting/services/journal-entry-automation");
+      await JournalEntryAutomation.handleTransactionCompleted(tx, transaction);
 
       return transaction;
     });

@@ -144,14 +144,20 @@ export const adminNav = [
         roles: ["Admin"],
       },
       {
+        title: "Pengeluaran",
+        url: "/accounting/expenses",
+        icon: (<FileText />), // Assuming FileText for expenses, could also be receipt or something
+        roles: ["Admin"],
+      },
+      {
         title: "Riwayat Transaksi",
-        url: "/accounting/transactions",
+        url: "/transactions",
         icon: (<FileText />),
         roles: ["Admin"],
       },
       {
         title: "Laporan",
-        url: "/accounting/report",
+        url: "/accounting/reports",
         icon: (<FileText />),
         roles: ["Admin"],
       },

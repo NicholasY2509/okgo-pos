@@ -209,6 +209,50 @@ async function main() {
   } else {
     console.log('ℹ️ Products already exist, skipping product seed')
   }
+
+  // Seed Chart of Accounts
+  const accounts = [
+    // ASSETS
+    { code: '101', name: 'Kas Tunai (Laci)', type: 'ASSET', isLocked: true },
+    { code: '111', name: 'Bank (QRIS/EDC)', type: 'ASSET', isLocked: true },
+
+    // LIABILITY
+    { code: '211', name: 'Hutang Pajak Layanan (PB1)', type: 'LIABILITY', isLocked: true },
+    { code: '212', name: 'Hutang Service Charge', type: 'LIABILITY', isLocked: true },
+    { code: '214', name: 'Kewajiban Voucher (Unearned Revenue)', type: 'LIABILITY', isLocked: true },
+
+    // EQUITY
+    { code: '311', name: 'Modal Pemilik', type: 'EQUITY', isLocked: true },
+
+    // REVENUE
+    { code: '411', name: 'Pendapatan Penjualan', type: 'REVENUE', isLocked: true },
+    { code: '412', name: 'Pendapatan Voucher Kedaluwarsa', type: 'REVENUE', isLocked: true },
+
+    // EXPENSES
+    { code: '511', name: 'Beban Bahan Baku (COGS)', type: 'EXPENSE', isLocked: true },
+    { code: '611', name: 'Beban Gaji Karyawan', type: 'EXPENSE', isLocked: false },
+    { code: '612', name: 'Beban Listrik, Air & Gas', type: 'EXPENSE', isLocked: false },
+    { code: '613', name: 'Beban Kerusakan', type: 'EXPENSE', isLocked: true },
+    { code: '699', name: 'Beban Operasional Lain-lain', type: 'EXPENSE', isLocked: false },
+  ]
+
+  let accountsCreated = 0
+  for (const acc of accounts) {
+    await prisma.ledgerAccount.upsert({
+      where: { code: acc.code },
+      update: {
+        isLocked: acc.isLocked
+      },
+      create: {
+        code: acc.code,
+        name: acc.name,
+        type: acc.type as any,
+        isLocked: acc.isLocked
+      }
+    })
+    accountsCreated++
+  }
+  console.log(`✅ Default Chart of Accounts (${accountsCreated} accounts) created`)
 }
 
 main()
