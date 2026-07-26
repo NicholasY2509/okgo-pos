@@ -18,17 +18,19 @@ export type AttendanceLog = {
 function getPunchTypeBadge(state: number) {
   switch (state) {
     case 0:
-      return <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">Masuk</Badge>
+      return <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">Masuk ({state})</Badge>
     case 1:
-      return <Badge variant="secondary">Mulai Istirahat</Badge>
+      return <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">Masuk ({state})</Badge>
     case 2:
-      return <Badge variant="outline" className="text-orange-500 border-orange-500">Mulai Lembur</Badge>
+      return <Badge variant="secondary">Mulai Istirahat ({state})</Badge>
     case 3:
-      return <Badge variant="secondary">Selesai Istirahat</Badge>
+      return <Badge variant="secondary">Selesai Istirahat ({state})</Badge>
     case 4:
-      return <Badge variant="destructive">Pulang</Badge>
+      return <Badge variant="destructive">Pulang ({state})</Badge>
     case 5:
-      return <Badge variant="outline" className="text-purple-500 border-purple-500">Selesai Lembur</Badge>
+      return <Badge variant="outline" className="text-orange-500 border-orange-500">Mulai Lembur ({state})</Badge>
+    case 6:
+      return <Badge variant="outline" className="text-purple-500 border-purple-500">Selesai Lembur ({state})</Badge>
     default:
       return <Badge variant="outline">Unknown ({state})</Badge>
   }
