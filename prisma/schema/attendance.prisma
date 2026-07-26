@@ -33,6 +33,6 @@ model AttendanceMachineLog {
   deviceSn        String?
   similarity      Int?
   utcTime         DateTime?
-  rawPayload      String?
+  rawPayload      String?   @db.Text
   createdAt       DateTime  @default(now())
 }
