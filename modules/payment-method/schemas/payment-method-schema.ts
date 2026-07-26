@@ -5,6 +5,7 @@ export const paymentMethodSchema = z.object({
   name: z.string().min(1, "Name is required"),
   type: z.enum(["CASH", "EDC", "QRIS", "TRANSFER", "VOUCHER"]),
   isActive: z.boolean(),
+  ledgerAccountId: z.string().optional().nullable(),
 });
 
 export type PaymentMethodInput = z.infer<typeof paymentMethodSchema>;

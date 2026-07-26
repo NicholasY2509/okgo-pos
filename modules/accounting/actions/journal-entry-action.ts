@@ -21,10 +21,18 @@ export async function createJournalEntryAction(values: JournalEntryInput) {
   }
 }
 
-export async function getJournalEntriesAction(branchId?: string) {
+interface JournalFilterOptions {
+  branchId?: string
+  page?: number
+  limit?: number
+  startDate?: Date
+  endDate?: Date
+}
+
+export async function getJournalEntriesAction(options: JournalFilterOptions = {}) {
   try {
-    const entries = await JournalEntryService.getAllByBranch(branchId, undefined)
-    return { success: true, data: entries }
+    const entries = await JournalEntryService.getAllByBranch({ ...options, tenantId: undefined })
+    return { success: true, data: entries.data, metadata: entries.metadata }
   } catch (error: any) {
     return { error: error.message || "An unexpected error occurred." }
   }
@@ -49,10 +57,10 @@ export async function getJournalEntriesByAccountAction(accountId: string, branch
   }
 }
 
-export async function getExpenseEntriesAction(branchId?: string) {
+export async function getExpenseEntriesAction(options: JournalFilterOptions = {}) {
   try {
-    const entries = await JournalEntryService.getExpenseEntries(branchId, undefined)
-    return { success: true, data: entries }
+    const entries = await JournalEntryService.getExpenseEntries({ ...options, tenantId: undefined })
+    return { success: true, data: entries.data, metadata: entries.metadata }
   } catch (error: any) {
     return { error: error.message || "An unexpected error occurred." }
   }

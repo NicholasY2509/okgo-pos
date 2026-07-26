@@ -44,6 +44,10 @@ export default async function TenantJournalDetailPage({ params }: { params: Prom
           <div className="p-4 border-b bg-muted/50 font-medium">Informasi Jurnal</div>
           <div className="p-6 grid grid-cols-2 gap-4">
             <div>
+              <div className="text-sm font-medium text-muted-foreground">Nomor Jurnal</div>
+              <div className="font-mono font-semibold mt-1">{entry.journalNumber || "-"}</div>
+            </div>
+            <div>
               <div className="text-sm font-medium text-muted-foreground">Nomor Referensi</div>
               <div className="font-mono mt-1">{entry.reference || "-"}</div>
             </div>

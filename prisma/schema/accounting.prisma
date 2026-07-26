@@ -7,9 +7,9 @@ enum AccountType {
 }
 
 model LedgerAccount {
-  id        String  @id @default(cuid())
-  tenantId  String?
-  branchId  String? // Nullable if COA is global per tenant
+  id       String  @id @default(cuid())
+  tenantId String?
+  branchId String? // Nullable if COA is global per tenant
 
   code        String      @unique
   name        String
@@ -17,7 +17,8 @@ model LedgerAccount {
   description String?
   isLocked    Boolean     @default(false)
 
-  journalLines JournalLine[]
+  journalLines   JournalLine[]
+  paymentMethods PaymentMethod[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -26,9 +27,10 @@ model LedgerAccount {
 }
 
 model JournalEntry {
-  id       String  @id @default(cuid())
-  tenantId String?
-  branchId String
+  id            String  @id @default(cuid())
+  journalNumber String? @unique
+  tenantId      String?
+  branchId      String
 
   date        DateTime @default(now())
   description String
@@ -44,15 +46,15 @@ model JournalEntry {
 }
 
 model JournalLine {
-  id             String @id @default(cuid())
-  journalEntryId String
-  ledgerAccountId      String
+  id              String @id @default(cuid())
+  journalEntryId  String
+  ledgerAccountId String
 
   debit  Decimal @default(0)
   credit Decimal @default(0)
 
-  journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
-  ledgerAccount      LedgerAccount      @relation(fields: [ledgerAccountId], references: [id])
+  journalEntry  JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  ledgerAccount LedgerAccount @relation(fields: [ledgerAccountId], references: [id])
 
   @@index([journalEntryId])
   @@index([ledgerAccountId])

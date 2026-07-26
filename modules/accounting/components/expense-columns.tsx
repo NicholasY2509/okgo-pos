@@ -7,7 +7,7 @@ import Link from "next/link"
 import { format } from "date-fns"
 import { formatIDR } from "@/lib/utils"
 
-export const getJournalColumns = (isAdmin: boolean, branchId?: string): ColumnDef<any>[] => [
+export const getExpenseColumns = (isAdmin: boolean, branchId?: string): ColumnDef<any>[] => [
   {
     accessorKey: "date",
     header: "Tanggal",
@@ -40,27 +40,40 @@ export const getJournalColumns = (isAdmin: boolean, branchId?: string): ColumnDe
     }
   },
   {
-    id: "totalDebit",
-    header: () => <div className="text-right">Total Debit</div>,
+    id: "expenseAccount",
+    header: "Akun Beban",
     cell: ({ row }) => {
       const entry = row.original
-      const totalDebit = entry.lines.reduce((acc: number, line: any) => acc + Number(line.debit), 0)
+      const expenseLine = entry.lines.find((l: any) => l.ledgerAccount.type === 'EXPENSE')
       return (
-        <div className="text-right font-medium">
-          {formatIDR(Number(totalDebit))}
+        <div className="text-sm font-medium">
+          {expenseLine ? expenseLine.ledgerAccount.name : "-"}
         </div>
       )
     }
   },
   {
-    id: "totalCredit",
-    header: () => <div className="text-right">Total Kredit</div>,
+    id: "paymentAccount",
+    header: "Dibayar Dari",
     cell: ({ row }) => {
       const entry = row.original
-      const totalCredit = entry.lines.reduce((acc: number, line: any) => acc + Number(line.credit), 0)
+      const paymentLine = entry.lines.find((l: any) => l.ledgerAccount.type !== 'EXPENSE')
+      return (
+        <div className="text-sm text-muted-foreground">
+          {paymentLine ? paymentLine.ledgerAccount.name : "-"}
+        </div>
+      )
+    }
+  },
+  {
+    id: "amount",
+    header: () => <div className="text-right">Jumlah</div>,
+    cell: ({ row }) => {
+      const entry = row.original
+      const expenseLine = entry.lines.find((l: any) => l.ledgerAccount.type === 'EXPENSE')
       return (
         <div className="text-right font-medium">
-          {formatIDR(Number(totalCredit))}
+          {formatIDR(Number(expenseLine?.debit || 0))}
         </div>
       )
     }

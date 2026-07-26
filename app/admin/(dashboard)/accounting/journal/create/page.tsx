@@ -9,9 +9,9 @@ export default async function AdminCreateJournalPage() {
   // Actually JournalEntry schema requires a branchId: z.string().min(1, "Branch ID is required").
   // Admin shouldn't just be able to create a journal without a branch.
   // We'll pass "admin" as branchId for now, but ideally it should have a branch selector if admin creates it.
-  
+
   return (
-    <div className="p-6 min-h-screen flex flex-col bg-slate-50/50">
+    <div className="min-h-screen flex flex-col">
       <JournalCreateForm branchId="admin" accounts={accounts} />
     </div>
   )

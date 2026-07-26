@@ -4,7 +4,7 @@ export class JournalEntryAutomation {
   static async handleTransactionCompleted(tx: any, transaction: any) {
     if (transaction.status !== "COMPLETED") return;
 
-    // We expect transaction to have payments, otherwise we fetch it
+    // We expect transaction to have payments and items, otherwise we fetch them
     let payments = transaction.payments;
     if (!payments) {
       payments = await tx.transactionPayment.findMany({
@@ -13,35 +13,47 @@ export class JournalEntryAutomation {
       });
     }
 
+    let items = transaction.items;
+    if (!items) {
+      items = await tx.transactionItem.findMany({
+        where: { transactionId: transaction.id }
+      });
+    }
+
     // Look up the required Ledger Accounts by code
     const accounts = await tx.ledgerAccount.findMany({
       where: {
-        code: { in: ['101', '111', '411', '211', '212'] }
+        code: { in: ['101', '111', '211', '214', '411'] }
       }
     });
 
     const getAccount = (code: string) => accounts.find((a: any) => a.code === code);
-    
+
     const cashAcc = getAccount('101');
     const bankAcc = getAccount('111');
-    const revenueAcc = getAccount('411');
     const taxAcc = getAccount('211');
-    const serviceAcc = getAccount('212');
+    const voucherLiabilityAcc = getAccount('214');
+    const revenueAcc = getAccount('411');
 
-    if (!revenueAcc) {
-      console.warn("Accounting accounts not fully seeded. Cannot generate journal entry.");
+    if (!revenueAcc || !voucherLiabilityAcc) {
+      console.warn("Accounting accounts not fully seeded (missing 411 or 214). Cannot generate journal entry.");
       return;
     }
 
     const journalLines: any[] = [];
 
-    // 1. DEBIT: Payment Methods (Cash / Bank)
+    // 1. DEBIT: Payment Methods (Cash / Bank / Voucher Redemption)
     for (const payment of payments) {
-      // Safely check if paymentMethod exists (if fetched properly)
       const type = payment.paymentMethod?.type || 'CASH';
-      
-      // Default CASH to Kas Tunai (101), others to Bank (111)
-      const targetAcc = (type === 'CASH') ? cashAcc : bankAcc;
+
+      let targetAcc = null;
+      if (type === 'VOUCHER') {
+        targetAcc = voucherLiabilityAcc; // Redeeming reduces liability
+      } else if (type === 'CASH') {
+        targetAcc = cashAcc; // Cash increase
+      } else {
+        targetAcc = bankAcc; // Bank increase (QRIS, TRANSFER, EDC)
+      }
 
       if (targetAcc) {
         journalLines.push({
@@ -52,14 +64,32 @@ export class JournalEntryAutomation {
       }
     }
 
-    // 2. CREDIT: Sales Revenue (411)
-    // The revenue is the subtotal (minus discount if applicable)
-    const taxableRevenue = Number(transaction.subtotal) - Number(transaction.discountTotal);
-    if (taxableRevenue > 0) {
+    // 2. CREDIT: Revenue Recognition (Service vs Voucher Packet)
+    // item.subtotal already has item-level and prorated discount applied
+    let serviceRevenue = 0;
+    let unearnedVoucherRevenue = 0;
+
+    for (const item of items) {
+      if (item.type === 'VOUCHER_PACKET') {
+        unearnedVoucherRevenue += Number(item.subtotal);
+      } else {
+        serviceRevenue += Number(item.subtotal);
+      }
+    }
+
+    if (serviceRevenue > 0) {
       journalLines.push({
         ledgerAccountId: revenueAcc.id,
         debit: 0,
-        credit: taxableRevenue
+        credit: serviceRevenue
+      });
+    }
+
+    if (unearnedVoucherRevenue > 0) {
+      journalLines.push({
+        ledgerAccountId: voucherLiabilityAcc.id,
+        debit: 0,
+        credit: unearnedVoucherRevenue
       });
     }
 

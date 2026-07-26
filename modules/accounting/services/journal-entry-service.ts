@@ -13,12 +13,8 @@ export class JournalEntryService {
     return await JournalEntryRepository.create({ ...data, reference, tenantId })
   }
 
-  static async getAllByBranch(branchId?: string, tenantId?: string) {
-    if (branchId) {
-      return await JournalEntryRepository.findAll(branchId, tenantId)
-    }
-    // If no branch, fetch all for tenant
-    return await JournalEntryRepository.findAll(undefined, tenantId)
+  static async getAllByBranch(options: { branchId?: string, tenantId?: string, page?: number, limit?: number, startDate?: Date, endDate?: Date }) {
+    return await JournalEntryRepository.findAll(options)
   }
 
   static async getById(id: string) {
@@ -34,7 +30,7 @@ export class JournalEntryService {
     return await JournalEntryRepository.findByAccountId(accountId, branchId, tenantId)
   }
 
-  static async getExpenseEntries(branchId?: string, tenantId?: string) {
-    return await JournalEntryRepository.findExpenseEntries(branchId, tenantId)
+  static async getExpenseEntries(options: { branchId?: string, tenantId?: string, page?: number, limit?: number, startDate?: Date, endDate?: Date }) {
+    return await JournalEntryRepository.findExpenseEntries(options)
   }
 }

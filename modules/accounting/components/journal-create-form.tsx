@@ -4,13 +4,17 @@ import { useJournalEntryForm } from "../hooks/use-journal-entry"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, ArrowLeft, Info } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { NumericFormat } from "react-number-format"
 
 import { PageHeader } from "@/components/page-header"
+import { DatePicker } from "@/components/ui/date-picker"
+import { Textarea } from "@/components/ui/textarea"
+import { CoaCombobox } from "@/modules/accounting/components/coa-combobox"
 
 export function JournalCreateForm({ branchId, accounts }: { branchId: string, accounts: any[] }) {
   const router = useRouter()
@@ -27,7 +31,7 @@ export function JournalCreateForm({ branchId, accounts }: { branchId: string, ac
   const difference = Math.abs(totalDebit - totalCredit)
 
   return (
-    <div className="flex flex-col max-w-[1200px] mx-auto w-full gap-6 p-6">
+    <div className="flex flex-col w-full gap-6">
       <PageHeader
         title={
           <div className="flex items-center gap-2">
@@ -46,7 +50,7 @@ export function JournalCreateForm({ branchId, accounts }: { branchId: string, ac
         <form onSubmit={onSubmit} className="flex flex-col gap-6 relative pb-40">
 
           <Card className="shadow-sm">
-            <CardContent className="p-6">
+            <CardContent>
               <div className="grid grid-cols-2 gap-8">
                 <FormField
                   control={form.control as any}
@@ -55,10 +59,9 @@ export function JournalCreateForm({ branchId, accounts }: { branchId: string, ac
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tanggal Transaksi</FormLabel>
                       <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                        <DatePicker
+                          date={field.value}
+                          setDate={field.onChange}
                           className="bg-muted/30"
                         />
                       </FormControl>
@@ -74,7 +77,7 @@ export function JournalCreateForm({ branchId, accounts }: { branchId: string, ac
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Deskripsi / Keterangan</FormLabel>
                       <FormControl>
-                        <Input placeholder="Contoh: Saldo Awal, Koreksi Persediaan..." {...field} className="bg-muted/30" />
+                        <Textarea placeholder="Contoh: Saldo Awal, Koreksi Persediaan..." {...field} className="bg-muted/30 resize-none h-10" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -85,7 +88,7 @@ export function JournalCreateForm({ branchId, accounts }: { branchId: string, ac
           </Card>
 
           <Card className="shadow-sm">
-            <div className="px-6 py-4 border-b flex justify-between items-center bg-muted/10">
+            <CardHeader className="flex flex-row justify-between items-center">
               <div className="flex items-center gap-2 font-semibold">
                 <span className="text-primary">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
@@ -102,7 +105,7 @@ export function JournalCreateForm({ branchId, accounts }: { branchId: string, ac
                 <Plus className="w-3.5 h-3.5 mr-1.5" />
                 Tambah Baris
               </Button>
-            </div>
+            </CardHeader>
 
             <CardContent className="p-0">
               <div className="grid grid-cols-[1fr_150px_200px_40px] gap-4 px-6 py-3 border-b bg-muted/5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -120,58 +123,57 @@ export function JournalCreateForm({ branchId, accounts }: { branchId: string, ac
                       name={`lines.${index}.ledgerAccountId`}
                       render={({ field }) => (
                         <FormItem className="space-y-0">
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="h-9">
-                                <SelectValue placeholder="Pilih Akun" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {accounts.map(acc => (
-                                <SelectItem key={acc.id} value={acc.id}>
-                                  {acc.code} - {acc.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <CoaCombobox
+                              accounts={accounts}
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Pilih Akun"
+                            />
+                          </FormControl>
                           <FormMessage className="text-xs absolute" />
                         </FormItem>
                       )}
                     />
+                    <div className="col-span-1 w-full">
+                      <FormField
+                        control={form.control as any}
+                        name={`lines.${index}.type`}
+                        render={({ field }) => (
+                          <FormItem className="space-y-0 w-full">
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="DEBIT">DEBIT</SelectItem>
+                                <SelectItem value="CREDIT">KREDIT</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                    <FormField
-                      control={form.control as any}
-                      name={`lines.${index}.type`}
-                      render={({ field }) => (
-                        <FormItem className="space-y-0">
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="h-9">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="DEBIT">DEBIT</SelectItem>
-                              <SelectItem value="CREDIT">KREDIT</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
+
 
                     <FormField
                       control={form.control as any}
                       name={`lines.${index}.amount`}
                       render={({ field }) => (
                         <FormItem className="space-y-0 relative">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rp</div>
                           <FormControl>
-                            <Input
-                              type="number"
-                              className="h-9 pl-8 text-right font-mono"
-                              placeholder="0"
-                              {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
+                            <NumericFormat
+                              customInput={Input}
+                              thousandSeparator="."
+                              decimalSeparator=","
+                              prefix="Rp "
+                              className="h-9 text-right font-mono"
+                              placeholder="Rp 0"
+                              onValueChange={(values) => field.onChange(values.floatValue || 0)}
+                              value={field.value === 0 ? "" : field.value}
                             />
                           </FormControl>
                           <FormMessage className="text-xs absolute" />

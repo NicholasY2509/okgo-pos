@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma"
 import { JournalEntryInput } from "../schemas/journal-entry"
+import { AccountingUtils } from "../services/accounting-utils"
 
 export const JournalEntryRepository = {
   async create(data: JournalEntryInput & { tenantId?: string }) {
     return await prisma.journalEntry.create({
       data: {
+        journalNumber: AccountingUtils.generateJournalNumber(),
         date: data.date,
         description: data.description,
         reference: data.reference,
@@ -28,21 +30,58 @@ export const JournalEntryRepository = {
     })
   },
 
-  async findAll(branchId?: string, tenantId?: string) {
-    return await prisma.journalEntry.findMany({
-      where: {
-        ...(branchId ? { branchId } : {}),
-        tenantId
-      },
-      include: {
-        lines: {
-          include: {
-            ledgerAccount: true,
+  async findAll({
+    branchId,
+    tenantId,
+    page = 1,
+    limit = 10,
+    startDate,
+    endDate
+  }: {
+    branchId?: string,
+    tenantId?: string,
+    page?: number,
+    limit?: number,
+    startDate?: Date,
+    endDate?: Date
+  } = {}) {
+    const where = {
+      ...(branchId ? { branchId } : {}),
+      ...(tenantId ? { tenantId } : {}),
+      ...(startDate || endDate ? {
+        date: {
+          ...(startDate ? { gte: startDate } : {}),
+          ...(endDate ? { lte: endDate } : {})
+        }
+      } : {})
+    };
+
+    const [total, data] = await Promise.all([
+      prisma.journalEntry.count({ where }),
+      prisma.journalEntry.findMany({
+        where,
+        include: {
+          lines: {
+            include: {
+              ledgerAccount: true,
+            },
           },
         },
-      },
-      orderBy: { date: "desc" },
-    })
+        orderBy: { date: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      })
+    ]);
+
+    return {
+      data,
+      metadata: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   },
 
   async findById(id: string) {
@@ -87,28 +126,65 @@ export const JournalEntryRepository = {
     });
   },
 
-  async findExpenseEntries(branchId?: string, tenantId?: string) {
+  async findExpenseEntries({
+    branchId,
+    tenantId,
+    page = 1,
+    limit = 10,
+    startDate,
+    endDate
+  }: {
+    branchId?: string,
+    tenantId?: string,
+    page?: number,
+    limit?: number,
+    startDate?: Date,
+    endDate?: Date
+  } = {}) {
     // Finds all journal entries that contain a line mapped to an EXPENSE account
-    return await prisma.journalEntry.findMany({
-      where: {
-        ...(branchId ? { branchId } : {}),
-        ...(tenantId ? { tenantId } : {}),
-        lines: {
-          some: {
-            ledgerAccount: {
-              type: 'EXPENSE'
+    const where = {
+      ...(branchId ? { branchId } : {}),
+      ...(tenantId ? { tenantId } : {}),
+      ...(startDate || endDate ? {
+        date: {
+          ...(startDate ? { gte: startDate } : {}),
+          ...(endDate ? { lte: endDate } : {})
+        }
+      } : {}),
+      lines: {
+        some: {
+          ledgerAccount: {
+            type: 'EXPENSE' as const
+          }
+        }
+      }
+    };
+
+    const [total, data] = await Promise.all([
+      prisma.journalEntry.count({ where }),
+      prisma.journalEntry.findMany({
+        where,
+        include: {
+          lines: {
+            include: {
+              ledgerAccount: true
             }
           }
-        }
-      },
-      include: {
-        lines: {
-          include: {
-            ledgerAccount: true
-          }
-        }
-      },
-      orderBy: { date: "desc" }
-    });
+        },
+        orderBy: { date: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      })
+    ]);
+
+    return {
+      data,
+      metadata: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 }

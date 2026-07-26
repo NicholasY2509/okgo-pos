@@ -46,7 +46,7 @@ export default async function AdminCoaPage() {
   )
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title="Bagan Akun (COA)"
         description="Kelola akun buku besar secara global untuk semua cabang."
@@ -59,9 +59,9 @@ export default async function AdminCoaPage() {
           {accountTypes.map(type => {
             const { label, Icon } = typeConfig[type]
             return (
-              <TabsTrigger 
-                key={type} 
-                value={type} 
+              <TabsTrigger
+                key={type}
+                value={type}
                 className="px-4 py-2 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary"
               >
                 {Icon && <Icon className="w-4 h-4 mr-2" />}

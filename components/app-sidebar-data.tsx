@@ -157,7 +157,7 @@ export const adminNav = [
       },
       {
         title: "Laporan",
-        url: "/accounting/report",
+        url: "/accounting/reports",
         icon: (<FileText />),
         roles: ["Admin"],
       },

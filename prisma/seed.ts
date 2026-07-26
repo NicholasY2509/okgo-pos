@@ -223,6 +223,7 @@ async function main() {
     { code: '211', name: 'Hutang Pajak Layanan (PB1)', type: 'LIABILITY', isLocked: true },
     { code: '212', name: 'Hutang Service Charge', type: 'LIABILITY', isLocked: true },
     { code: '213', name: 'Hutang Dagang (Vendor)', type: 'LIABILITY', isLocked: true },
+    { code: '214', name: 'Kewajiban Voucher (Unearned Revenue)', type: 'LIABILITY', isLocked: true },
 
     // EQUITY
     { code: '311', name: 'Modal Pemilik', type: 'EQUITY', isLocked: true },

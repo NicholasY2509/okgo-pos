@@ -26,18 +26,18 @@ model Session {
 }
 
 model User {
-  id            String      @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String?     @unique
+  email         String?   @unique
   emailVerified DateTime?
   image         String?
   password      String?
   roleId        String?
 
-  accounts      Account[]
-  sessions      Session[]
-  staffUsers    StaffUser[]
-  role          Role?       @relation(fields: [roleId], references: [id])
+  accounts   Account[]
+  sessions   Session[]
+  staffUsers StaffUser[]
+  role       Role?       @relation(fields: [roleId], references: [id])
 }
 
 model VerificationToken {

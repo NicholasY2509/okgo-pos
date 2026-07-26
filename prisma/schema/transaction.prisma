@@ -89,14 +89,18 @@ model TransactionPayment {
 model PaymentMethod {
   id String @id @default(cuid())
 
-  name     String
-  type     String // Enum mapped as String for SQLite compatibility: CASH, EDC, QRIS, TRANSFER, VOUCHER
-  isActive Boolean @default(true)
+  name            String
+  type            String // Enum mapped as String for SQLite compatibility: CASH, EDC, QRIS, TRANSFER, VOUCHER
+  isActive        Boolean @default(true)
+  ledgerAccountId String?
 
-  payments TransactionPayment[]
+  payments      TransactionPayment[]
+  ledgerAccount LedgerAccount?       @relation(fields: [ledgerAccountId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([ledgerAccountId])
 }
 
 model TransactionItem {

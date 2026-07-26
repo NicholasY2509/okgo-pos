@@ -19,7 +19,7 @@ export default async function AdminJournalDetailPage({ params }: { params: Promi
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.001
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title={
           <div className="flex items-center gap-2">
@@ -28,7 +28,7 @@ export default async function AdminJournalDetailPage({ params }: { params: Promi
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
-            <span>Detail Jurnal (Admin)</span>
+            <span>Detail Jurnal</span>
           </div>
         }
         description={`Melihat rincian jurnal ${entry.reference || ''}`}
@@ -38,6 +38,10 @@ export default async function AdminJournalDetailPage({ params }: { params: Promi
         <div className="col-span-1 md:col-span-2 rounded-md border bg-card">
           <div className="p-4 border-b bg-muted/50 font-medium">Informasi Jurnal</div>
           <div className="p-6 grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Nomor Jurnal</div>
+              <div className="font-mono font-semibold mt-1">{entry.journalNumber || "-"}</div>
+            </div>
             <div>
               <div className="text-sm font-medium text-muted-foreground">Nomor Referensi</div>
               <div className="font-mono mt-1">{entry.reference || "-"}</div>
