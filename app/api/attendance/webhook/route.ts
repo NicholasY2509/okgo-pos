@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const ATTENDANCE_STATES: Record<number, string> = {
-  1: "Masuk",
-  2: "Mulai Istirahat",
-  3: "Selesai Istirahat",
-  4: "Pulang",
-  5: "Mulai Lembur",
-  6: "Selesai Lembur"
+  0: "Masuk",
+  1: "Pulang",
+  2: "Selesai Istirahat",
+  3: "Mulai Istirahat",
+  4: "Mulai Lembur",
+  5: "Selesai Lembur"
 };
 
 export async function POST(req: NextRequest) {
