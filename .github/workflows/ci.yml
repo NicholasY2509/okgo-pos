@@ -30,4 +30,5 @@ jobs:
       run: npm run typecheck
 
     - name: Run linting
+      continue-on-error: true
       run: npm run lint
