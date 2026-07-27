@@ -30,11 +30,7 @@ export default async function AttendanceStatusesPage() {
         </AttendanceStatusDialog>
       </PageHeader>
 
-      <Card>
-        <CardContent className="pt-6">
-          <AttendanceStatusTable data={statuses} />
-        </CardContent>
-      </Card>
+      <AttendanceStatusTable data={statuses} />
     </div>
   )
 }

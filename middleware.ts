@@ -49,6 +49,12 @@ export default NextAuth(authConfig).auth((req) => {
       return NextResponse.redirect(loginUrl)
     }
 
+    if (isAuth && url.pathname.startsWith("/login")) {
+      const protocol = req.headers.get("x-forwarded-proto") || "http"
+      const homeUrl = new URL("/", `${protocol}://${hostname}`)
+      return NextResponse.redirect(homeUrl)
+    }
+
     if (url.pathname.startsWith("/admin")) {
       return NextResponse.next()
     }
@@ -68,6 +74,12 @@ export default NextAuth(authConfig).auth((req) => {
     const protocol = req.headers.get("x-forwarded-proto") || "http"
     const loginUrl = new URL("/login", `${protocol}://${hostname}`)
     return NextResponse.redirect(loginUrl)
+  }
+
+  if (isAuth && url.pathname.startsWith("/login")) {
+    const protocol = req.headers.get("x-forwarded-proto") || "http"
+    const homeUrl = new URL("/pos", `${protocol}://${hostname}`)
+    return NextResponse.redirect(homeUrl)
   }
 
   // Rewrite to the branch app directory, passing the subdomain

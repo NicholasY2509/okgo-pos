@@ -66,7 +66,7 @@ services:
     networks:
       - app-network
     command: >
-      /bin/sh -c "apk add --no-cache curl && echo '0 0 * * * curl -sS -X GET \"http://app:3000/api/cron/expire-vouchers?secret=$${CRON_SECRET}\" >> /var/log/cron.log 2>&1' > /etc/crontabs/root && crond -f -d 8"
+      /bin/sh -c "apk add --no-cache curl && echo '0 0 * * * curl -sS -X GET \"http://app:3000/api/cron/expire-vouchers?secret=$${CRON_SECRET}\" >> /var/log/cron.log 2>&1' > /etc/crontabs/root && echo '55 23 * * * curl -sS -X GET \"http://app:3000/api/cron/evaluate-attendance\" -H \"Authorization: Bearer $${CRON_SECRET}\" >> /var/log/cron.log 2>&1' >> /etc/crontabs/root && crond -f -d 8"
     environment:
       - CRON_SECRET=${CRON_SECRET:-okgo-secret-cron-key-123}
 
