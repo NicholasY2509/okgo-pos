@@ -10,7 +10,7 @@ import { SessionCard } from "./timetable/session-card";
 import { SessionInfoDialog } from "./timetable/session-info-dialog";
 import { ExistingTransactionPaymentModal } from "./existing-payment-modal";
 import { TimetableSidebar } from "./timetable/timetable-sidebar";
-import { calculateSessionLanes, BUSINESS_HOURS_START, TOTAL_HOURS } from "./timetable/timetable-utils";
+import { calculateSessionLanes } from "./timetable/timetable-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminBookingForm } from "../../booking/components/admin-booking-form";
@@ -22,9 +22,10 @@ interface TimetableClientProps {
   rooms: any[];
   paymentMethods: any[];
   staff: any[];
+  brandSetting?: any;
 }
 
-export function TimetableClient({ branchId, rooms, paymentMethods, staff }: TimetableClientProps) {
+export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandSetting }: TimetableClientProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const {
@@ -41,10 +42,12 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff }: Time
     selectedSessionForInfo,
     setSelectedSessionForInfo,
     setSelectedTransactionForPayment,
+    businessHoursStart,
+    totalHours,
   } = useTimetableStore();
 
   useEffect(() => {
-    setInitialData({ branchId, rooms, paymentMethods, staff });
+    setInitialData({ branchId, rooms, paymentMethods, staff, brandSetting });
     fetchSessions();
     fetchPendingBookings();
 
@@ -53,9 +56,9 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff }: Time
       fetchPendingBookings();
     }, 60000);
     return () => clearInterval(interval);
-  }, [branchId, rooms, paymentMethods, staff, fetchSessions, fetchPendingBookings, setInitialData]);
+  }, [branchId, rooms, paymentMethods, staff, brandSetting, fetchSessions, fetchPendingBookings, setInitialData]);
 
-  const hoursArray = Array.from({ length: TOTAL_HOURS }, (_, i) => i + BUSINESS_HOURS_START);
+  const hoursArray = Array.from({ length: totalHours }, (_, i) => i + businessHoursStart);
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] bg-background rounded-2xl border border-border shadow-sm overflow-hidden">

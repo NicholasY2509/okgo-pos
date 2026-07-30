@@ -15,6 +15,13 @@ export const ProductRepository = {
     })
   },
 
+  async findFeaturedProducts() {
+    return await prisma.product.findMany({
+      where: { showOnMarketing: true, isActive: true },
+      orderBy: { name: "asc" },
+    })
+  },
+
   async count(where: Prisma.ProductWhereInput) {
     return await prisma.product.count({ where })
   },
@@ -44,6 +51,13 @@ export const ProductRepository = {
   async deleteProduct(id: string) {
     return await prisma.product.delete({
       where: { id },
+    })
+  },
+
+  async toggleMarketingStatus(id: string, showOnMarketing: boolean) {
+    return await prisma.product.update({
+      where: { id },
+      data: { showOnMarketing }
     })
   }
 }

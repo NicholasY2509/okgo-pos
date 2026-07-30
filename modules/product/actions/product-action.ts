@@ -56,3 +56,29 @@ export async function deleteProductAction(id: string) {
     return { error: "Gagal menghapus produk." }
   }
 }
+
+export async function toggleProductMarketingAction(id: string, showOnMarketing: boolean) {
+  try {
+    await ProductService.toggleMarketingStatus(id, showOnMarketing)
+    revalidatePath("/admin/marketing")
+    revalidatePath("/")
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to toggle marketing status:", error)
+    return { error: "Gagal memperbarui status pemasaran." }
+  }
+}
+
+export async function getFeaturedProductsAction() {
+  try {
+    const products = await ProductService.findFeaturedProducts()
+    const serialized = products.map(p => ({
+      ...p,
+      price: Number(p.price),
+    }))
+    return { success: true, data: serialized }
+  } catch (error) {
+    console.error("Failed to fetch featured products:", error)
+    return { error: "Gagal memuat layanan unggulan." }
+  }
+}

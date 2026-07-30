@@ -76,6 +76,18 @@ export const adminNav = [
         icon: (<Calendar1 />),
         roles: ["Admin", "Manager"],
       },
+      {
+        title: "Marketing",
+        url: "/marketing",
+        icon: (<PercentCircle />),
+        roles: ["Admin"],
+      },
+      {
+        title: "Pengaturan Brand",
+        url: "/brand-settings",
+        icon: (<Settings2Icon />),
+        roles: ["Admin"],
+      }
     ]
   },
   {

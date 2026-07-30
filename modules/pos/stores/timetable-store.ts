@@ -23,8 +23,11 @@ interface TimetableState {
   rooms: any[];
   paymentMethods: any[];
   staff: any[];
+  brandSetting: any | null;
+  businessHoursStart: number;
+  totalHours: number;
 
-  setInitialData: (data: { branchId: string; rooms: any[]; paymentMethods: any[]; staff: any[] }) => void;
+  setInitialData: (data: { branchId: string; rooms: any[]; paymentMethods: any[]; staff: any[]; brandSetting?: any }) => void;
   setBranchId: (branchId: string) => void;
   setDate: (date: Date) => void;
   setIsBookingModalOpen: (isOpen: boolean) => void;
@@ -53,8 +56,27 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   rooms: [],
   paymentMethods: [],
   staff: [],
+  brandSetting: null,
+  businessHoursStart: 8,
+  totalHours: 14,
 
-  setInitialData: ({ branchId, rooms, paymentMethods, staff }) => set({ branchId, rooms, paymentMethods, staff }),
+  setInitialData: ({ branchId, rooms, paymentMethods, staff, brandSetting }) => {
+    let businessHoursStart = 8;
+    let businessHoursEnd = 22;
+
+    if (brandSetting) {
+      if (brandSetting.businessStartTime) {
+        businessHoursStart = parseInt(brandSetting.businessStartTime.split(':')[0], 10);
+      }
+      if (brandSetting.businessEndTime) {
+        businessHoursEnd = parseInt(brandSetting.businessEndTime.split(':')[0], 10);
+      }
+    }
+
+    const totalHours = businessHoursEnd - businessHoursStart;
+
+    set({ branchId, rooms, paymentMethods, staff, brandSetting, businessHoursStart, totalHours });
+  },
   setBranchId: (branchId) => set({ branchId }),
   setDate: (date) => {
     set({ date });

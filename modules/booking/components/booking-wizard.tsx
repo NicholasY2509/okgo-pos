@@ -24,7 +24,8 @@ export function BookingWizard() {
     dailySchedule,
     loading,
     loadingBranches,
-    canProceed
+    canProceed,
+    brandSetting
   } = useBookingWizard();
 
   if (isSuccess) {
@@ -67,7 +68,7 @@ export function BookingWizard() {
         {step === 1 && <StepIdentity form={form} branches={branches} loadingBranches={loadingBranches} />}
 
         {/* STEP 2: Date & Time */}
-        {step === 2 && <StepTime form={form} dailySchedule={dailySchedule} loading={loading} />}
+        {step === 2 && <StepTime form={form} dailySchedule={dailySchedule} brandSetting={brandSetting} loading={loading} />}
 
         {/* STEP 3: Cart (Services & Staff) */}
         {step === 3 && <StepCart form={form} services={services} staffList={staffList} dailySchedule={dailySchedule} loading={loading} />}

@@ -6,10 +6,11 @@ import { addMinutes, startOfDay, isBefore, addHours } from "date-fns";
 interface StepTimeProps {
   form: UseFormReturn<BookingInput>;
   dailySchedule: any;
+  brandSetting?: any;
   loading: boolean;
 }
 
-export function StepTime({ form, dailySchedule, loading }: StepTimeProps) {
+export function StepTime({ form, dailySchedule, brandSetting, loading }: StepTimeProps) {
   const selectedTime = form.watch("startTime");
   const selectedDate = form.watch("date");
 
@@ -34,14 +35,31 @@ export function StepTime({ form, dailySchedule, loading }: StepTimeProps) {
   const timeSlots = useMemo(() => {
     if (!selectedDate || !dailySchedule) return [];
     const date = new Date(selectedDate);
-    const businessStart = 8;
-    const businessEnd = 22;
+    
+    // Parse business hours from settings or use defaults
+    let businessStart = 8;
+    let businessEnd = 22;
+    
+    if (brandSetting) {
+      if (brandSetting.businessStartTime) {
+        businessStart = parseInt(brandSetting.businessStartTime.split(':')[0], 10);
+      }
+      if (brandSetting.businessEndTime) {
+        businessEnd = parseInt(brandSetting.businessEndTime.split(':')[0], 10);
+      }
+    }
+
     const slots = [];
     const now = new Date();
     const minTime = addHours(now, 2);
 
-    for (let hour = businessStart; hour < businessEnd; hour++) {
+    for (let hour = businessStart; hour <= businessEnd; hour++) {
       for (let min of [0]) {
+        // Skip 22:00 if it's the exact end time and we don't want bookings at the exact closing minute
+        // Actually, let's keep it strictly < businessEnd if we want the last slot to be before closing
+        // If businessEnd is 21:00, last slot is 20:00 (if we do hour < businessEnd). Let's stick to the previous logic hour < businessEnd.
+        // Wait, if businessEnd is 22, it was hour < 22, so last was 21:00. Let's do hour < businessEnd.
+        if (hour === businessEnd) continue;
         const slotStart = new Date(date);
         slotStart.setHours(hour, min, 0, 0);
 
@@ -71,7 +89,7 @@ export function StepTime({ form, dailySchedule, loading }: StepTimeProps) {
       }
     }
     return slots;
-  }, [selectedDate, dailySchedule]);
+  }, [selectedDate, dailySchedule, brandSetting]);
 
   return (
     <div className="space-y-10 animate-in slide-in-from-right-8 fade-in duration-300">

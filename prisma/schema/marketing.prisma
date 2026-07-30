@@ -1,0 +1,16 @@
+model MarketingOffer {
+  id String @id @default(cuid())
+
+  title       String
+  description String?
+  features    String? // Newline-separated string for features/benefits
+
+  normalPrice   Decimal?
+  discountPrice Decimal
+
+  isActive Boolean @default(true)
+  order    Int     @default(0) // For controlling the display order in the carousel
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { BUSINESS_HOURS_START, BUSINESS_HOURS_END, TOTAL_HOURS } from "./timetable-utils";
+import { useTimetableStore } from "../../stores/timetable-store";
 
 export function CurrentTimeLine({ date }: { date: Date }) {
   const [now, setNow] = useState<Date | null>(null);
+  const { businessHoursStart, totalHours } = useTimetableStore();
+  const businessHoursEnd = businessHoursStart + totalHours;
 
   useEffect(() => {
     setNow(new Date());
@@ -16,11 +18,11 @@ export function CurrentTimeLine({ date }: { date: Date }) {
   const isToday = date.toDateString() === now.toDateString();
   const currentHour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
   
-  if (!isToday || currentHour < BUSINESS_HOURS_START || currentHour > BUSINESS_HOURS_END) {
+  if (!isToday || currentHour < businessHoursStart || currentHour > businessHoursEnd) {
     return null;
   }
 
-  const currentTimeLeft = ((currentHour - BUSINESS_HOURS_START) / TOTAL_HOURS) * 100;
+  const currentTimeLeft = ((currentHour - businessHoursStart) / totalHours) * 100;
 
   return (
     <div className="absolute top-0 bottom-0 right-0 left-48 z-40 pointer-events-none">

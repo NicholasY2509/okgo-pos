@@ -48,4 +48,12 @@ export class ProductService {
   static async deleteProduct(id: string) {
     return await ProductRepository.deleteProduct(id)
   }
+
+  static async findFeaturedProducts() {
+    return await ProductRepository.findFeaturedProducts()
+  }
+
+  static async toggleMarketingStatus(id: string, showOnMarketing: boolean) {
+    return await ProductRepository.toggleMarketingStatus(id, showOnMarketing)
+  }
 }

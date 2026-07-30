@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getDiffString, BUSINESS_HOURS_START, BUSINESS_HOURS_END, TOTAL_HOURS } from "../components/timetable/timetable-utils";
+import { getDiffString } from "../components/timetable/timetable-utils";
 import { useTimetableStore } from "../stores/timetable-store";
 
 interface UseSessionCardProps {
@@ -8,7 +8,8 @@ interface UseSessionCardProps {
 }
 
 export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
-  const { setSelectedSessionForInfo } = useTimetableStore();
+  const { setSelectedSessionForInfo, businessHoursStart, totalHours } = useTimetableStore();
+  const businessHoursEnd = businessHoursStart + totalHours;
   const [now, setNow] = useState(new Date());
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -44,13 +45,13 @@ export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
   const endHour = localEnd.getHours() + localEnd.getMinutes() / 60;
 
   // Clamp to business hours for display
-  const clampedStart = Math.max(BUSINESS_HOURS_START, Math.min(startHour, BUSINESS_HOURS_END));
-  const clampedEnd = Math.max(BUSINESS_HOURS_START, Math.min(endHour, BUSINESS_HOURS_END));
+  const clampedStart = Math.max(businessHoursStart, Math.min(startHour, businessHoursEnd));
+  const clampedEnd = Math.max(businessHoursStart, Math.min(endHour, businessHoursEnd));
 
-  const isOutsideBusinessHours = clampedStart >= BUSINESS_HOURS_END || clampedEnd <= BUSINESS_HOURS_START;
+  const isOutsideBusinessHours = clampedStart >= businessHoursEnd || clampedEnd <= businessHoursStart;
 
-  const left = ((clampedStart - BUSINESS_HOURS_START) / TOTAL_HOURS) * 100;
-  const width = ((clampedEnd - clampedStart) / TOTAL_HOURS) * 100;
+  const left = ((clampedStart - businessHoursStart) / totalHours) * 100;
+  const width = ((clampedEnd - clampedStart) / totalHours) * 100;
 
   // Calculate timer (Elapsed time instead of remaining)
   let timerText = "";
@@ -76,7 +77,7 @@ export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
     if (!cardRef.current?.parentElement) return 0;
     const parentWidth = cardRef.current.parentElement.offsetWidth;
     const deltaX = clientX - startX;
-    const msPerPixel = (TOTAL_HOURS * 60 * 60 * 1000) / parentWidth;
+    const msPerPixel = (totalHours * 60 * 60 * 1000) / parentWidth;
     return deltaX * msPerPixel;
   };
 

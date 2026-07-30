@@ -8,6 +8,18 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
+import { getActiveOffersAction } from "@/modules/marketing/actions/marketing-offer-action";
+import { toast } from "sonner";
+import Autoplay from "embla-carousel-autoplay";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { MarketingOfferInput } from "@/modules/marketing/schemas/marketing-offer";
+import { getFeaturedProductsAction } from "@/modules/product/actions/product-action";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -17,9 +29,33 @@ export default function MarketingPage() {
   const container = useRef<HTMLDivElement>(null);
   const { setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [offers, setOffers] = useState<(MarketingOfferInput & { id: string })[]>([]);
+  const [featuredServices, setFeaturedServices] = useState<any[]>([]);
 
   useEffect(() => {
     // setTheme("light");
+    const fetchData = async () => {
+      const [offersResult, servicesResult] = await Promise.all([
+        getActiveOffersAction(),
+        getFeaturedProductsAction()
+      ]);
+      
+      if (offersResult.success && offersResult.data) {
+        setOffers(offersResult.data);
+      }
+      
+      if (servicesResult.success && servicesResult.data) {
+        const mapped = servicesResult.data.map((p: any) => ({
+          title: p.name,
+          desc: p.description || "Layanan premium Okgo.",
+          time: p.duration ? `${p.duration} Menit` : "Fleksibel",
+          price: `Rp ${Number(p.price).toLocaleString('id-ID')}`,
+          img: p.image || "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=600&q=80"
+        }));
+        setFeaturedServices(mapped);
+      }
+    };
+    fetchData();
 
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
@@ -70,27 +106,9 @@ export default function MarketingPage() {
   }, { scope: container });
 
   const orderVoucher = () => {
-    const text = encodeURIComponent(
-      "Halo Admin Nyenyak, saya tertarik untuk membeli *Paket Voucher Hemat (10 Lembar)* seharga Rp 1.125.000.\n\nBagaimana prosedur pembayarannya?"
-    );
-    window.open(`https://wa.me/${WA_NUMBER}?text=${text}`, "_blank");
-  };
-
-  const handleBooking = (e: React.FormEvent) => {
-    e.preventDefault();
-    const templatePesan =
-      `*RESERVASI BARU - NYENYAK SPA*
-------------------------------------
-👤 *Nama:* ${formData.nama}
-📅 *Tanggal:* ${formData.tanggal}
-⏰ *Jam Sesi:* ${formData.jam} WIB
-💆 *Layanan:* ${formData.layanan}
-🙌 *Terapis:* ${formData.terapis}
-------------------------------------
-Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
-
-    const urlWA = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(templatePesan)}`;
-    window.open(urlWA, "_blank");
+    toast.success("Segera Hadir", {
+      description: "Integrasi sistem pembayaran sedang dalam tahap pengembangan."
+    });
   };
 
   const scrollTo = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>, id: string) => {
@@ -186,9 +204,9 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
           <motion.div variants={itemVariants} className="inline-flex items-center gap-2 text-muted-foreground text-xs font-medium uppercase tracking-[0.3em] mb-10">
             Deep Relaxation & Sleep Therapy
           </motion.div>
-          <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl font-display font-light leading-[1.1] tracking-tight mb-8 text-foreground">
-            Lepas Lelah,<br />
-            Tidur Lebih <span className="text-primary italic font-light">Nyenyak</span>.
+          <motion.h1 variants={itemVariants} className="text-4xl md:text-8xl font-display font-light leading-[1.1] tracking-tight mb-8 text-foreground">
+            Lepas Lelah<br />
+            Tidur Lebih <span className="text-primary italic font-light">Nyenyak</span>
           </motion.h1>
           <motion.p variants={itemVariants} className="text-muted-foreground text-lg md:text-xl font-light max-w-2xl mx-auto mb-14 leading-relaxed">
             Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.
@@ -222,37 +240,70 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
             <h2 className="text-5xl font-display font-light text-foreground mb-4">Penawaran Eksklusif</h2>
             <p className="text-muted-foreground max-w-md mx-auto font-light text-lg">Hadiahkan relaksasi premium untuk diri sendiri atau orang terkasih.</p>
           </div>
-          <div className="bg-background rounded-[2rem] p-1 shadow-sm border border-border/50 max-w-4xl mx-auto flex flex-col md:flex-row">
-            <div className="p-12 md:w-3/5 flex flex-col justify-center">
-              <h3 className="text-5xl font-display font-light text-foreground mb-6">10 Sesi Massage</h3>
-              <p className="text-muted-foreground leading-relaxed font-light mb-10">
-                Nikmati 10x sesi Full Body Massage (60 Menit). Berlaku selama 6 bulan, fleksibel, dan dapat dipindahtangankan.
+          {offers.length === 0 ? (
+            <div className="bg-background rounded-[2rem] p-12 shadow-sm border border-border/50 max-w-4xl mx-auto text-center">
+              <p className="text-muted-foreground leading-relaxed font-light text-lg">
+                Tidak ada penawaran sekarang, terus pantau website Nyenyak untuk penawaran menarik!
               </p>
-              <ul className="space-y-4 text-sm text-foreground/80 font-light">
-                {['Bebas pilih jadwal (Weekday & Weekend)', 'Bebas pilih spesialis Terapis', 'Termasuk Essential Sleep-Oil & Wedang Jahe'].map((item, i) => (
-                  <li key={i} className="flex items-start">
-                    <CheckCircle2 className="w-5 h-5 text-primary/60 mr-4 shrink-0 stroke-1" /> {item}
-                  </li>
-                ))}
-              </ul>
             </div>
-
-            <div className="p-12 md:w-2/5 flex flex-col justify-center items-center text-center bg-muted/20 rounded-[1.8rem] m-2">
-              <p className="text-muted-foreground text-xs tracking-[0.2em] mb-2 uppercase">Harga Normal</p>
-              <p className="text-muted-foreground line-through mb-8">Rp 1.500.000</p>
-              <p className="text-5xl font-light text-foreground font-display mb-4">Rp 1.125.000</p>
-              <p className="text-xs text-muted-foreground mb-12">Hanya Rp 112.500 per kedatangan</p>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={orderVoucher}
-                className="w-full bg-foreground text-background font-medium tracking-wide py-4 px-6 rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer"
+          ) : (
+            <div className="max-w-4xl mx-auto relative group">
+              <Carousel
+                opts={{ align: "center", loop: true }}
+                plugins={[
+                  Autoplay({
+                    delay: 5000,
+                  }),
+                ]}
+                className="w-full"
               >
-                Beli via WhatsApp
-              </motion.button>
+                <CarouselContent>
+                  {offers.map((offer) => (
+                    <CarouselItem key={offer.id}>
+                      <div className="bg-background rounded-[2rem] p-1 shadow-sm border border-border/50 flex flex-col md:flex-row mx-2 h-full">
+                        <div className="p-12 md:w-3/5 flex flex-col justify-center">
+                          <h3 className="text-5xl font-display font-light text-foreground mb-6">{offer.title}</h3>
+                          {offer.description && (
+                            <p className="text-muted-foreground leading-relaxed font-light mb-10 whitespace-pre-wrap">
+                              {offer.description}
+                            </p>
+                          )}
+                          <ul className="space-y-4 text-sm text-foreground/80 font-light">
+                            {offer.features?.split('\n').filter(Boolean).map((item, i) => (
+                              <li key={i} className="flex items-start">
+                                <CheckCircle2 className="w-5 h-5 text-primary/60 mr-4 shrink-0 stroke-1" /> {item.trim()}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="p-12 md:w-2/5 flex flex-col justify-center items-center text-center bg-muted/20 rounded-[1.8rem] m-2">
+                          <p className="text-muted-foreground text-xs tracking-[0.2em] mb-2 uppercase">Harga Spesial</p>
+                          {offer.normalPrice && (
+                            <p className="text-muted-foreground line-through mb-8">Rp {Number(offer.normalPrice).toLocaleString('id-ID')}</p>
+                          )}
+                          <p className="text-5xl font-light text-foreground font-display mb-4">Rp {Number(offer.discountPrice).toLocaleString('id-ID')}</p>
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={orderVoucher}
+                            className="w-full bg-foreground text-background font-medium tracking-wide py-4 px-6 rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer mt-8"
+                          >
+                            Beli Sekarang
+                          </motion.button>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                {offers.length > 1 && (
+                  <div className="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <CarouselPrevious className="-left-6 md:-left-12 border-border/50 text-foreground/70 hover:text-foreground hover:bg-background/80 bg-background/50 backdrop-blur-md" />
+                    <CarouselNext className="-right-6 md:-right-12 border-border/50 text-foreground/70 hover:text-foreground hover:bg-background/80 bg-background/50 backdrop-blur-md" />
+                  </div>
+                )}
+              </Carousel>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -265,32 +316,34 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
           </div>
 
           <div className="grid md:grid-cols-3 gap-12">
-            {[
-              { title: "Deep Sleep Massage", desc: "Pijat seluruh tubuh berfokus meredakan ketegangan saraf untuk memicu tidur lebih lelap.", time: "60 Menit", price: "Rp 150.000", icon: Moon, img: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=600&q=80" },
-              { title: "Refleksologi Nyenyak", desc: "Titik tekan akupresur pada area kaki untuk merelaksasi organ dalam dan otot kaku.", time: "45 Menit", price: "Rp 100.000", icon: Leaf, img: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=600&q=80" },
-              { title: "Aromaterapi Lavender", desc: "Pijatan lembut dipadukan dengan minyak esensial lavender murni untuk ketenangan maksimal.", time: "90 Menit", price: "Rp 220.000", icon: Flower2, img: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=600&q=80" }
-            ].map((service, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ y: -5 }}
-                className="group flex flex-col"
-              >
-                <div className="aspect-4/5 relative overflow-hidden rounded-2xl mb-8 bg-muted">
-                  <div className="absolute inset-0 bg-foreground/10 group-hover:bg-transparent transition-colors duration-700 z-10" />
-                  <img src={service.img} alt={service.title} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out" />
-                </div>
-                <div>
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-2xl font-display font-light text-foreground">{service.title}</h3>
+            {featuredServices.length === 0 ? (
+              <div className="col-span-full text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border/50">
+                <p className="text-muted-foreground font-light">Belum ada layanan yang ditambahkan.</p>
+              </div>
+            ) : (
+              featuredServices.map((service, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ y: -5 }}
+                  className="group flex flex-col"
+                >
+                  <div className="aspect-4/5 relative overflow-hidden rounded-2xl mb-8 bg-muted">
+                    <div className="absolute inset-0 bg-foreground/10 group-hover:bg-transparent transition-colors duration-700 z-10" />
+                    <img src={service.img} alt={service.title} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out" />
                   </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-6 font-light">{service.desc}</p>
-                  <div className="flex justify-between items-center pt-6 border-t border-border/50">
-                    <span className="text-muted-foreground text-xs uppercase tracking-widest">{service.time}</span>
-                    <span className="font-medium text-foreground">{service.price}</span>
+                  <div>
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-2xl font-display font-light text-foreground">{service.title}</h3>
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-6 font-light">{service.desc}</p>
+                    <div className="flex justify-between items-center pt-6 border-t border-border/50">
+                      <span className="text-muted-foreground text-xs uppercase tracking-widest">{service.time}</span>
+                      <span className="font-medium text-foreground">{service.price}</span>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -323,11 +376,11 @@ Mohon konfirmasi ketersediaan slotnya ya Min. Terima kasih!`;
         <div className="max-w-4xl mx-auto flex flex-col items-center">
           <p className="font-display text-2xl font-light text-foreground mb-8 tracking-[0.2em]">NYENYAK</p>
           <div className="flex flex-col md:flex-row gap-8 md:gap-16 text-xs uppercase tracking-widest text-muted-foreground mb-16">
-            <span className="flex items-center justify-center gap-3"><MapPin className="w-4 h-4 stroke-1" /> Jakarta, Indonesia</span>
+            <span className="flex items-center justify-center gap-3"><MapPin className="w-4 h-4 stroke-1" /> Medan, Indonesia</span>
             <span className="flex items-center justify-center gap-3"><Clock className="w-4 h-4 stroke-1" /> 10.00 - 22.00</span>
             <span className="flex items-center justify-center gap-3"><Phone className="w-4 h-4 stroke-1" /> +62 812 3456 7890</span>
           </div>
-          <p className="text-muted-foreground/60 text-xs font-light">&copy; {new Date().getFullYear()} Nyenyak Wellness. All Rights Reserved.</p>
+          <p className="text-muted-foreground/60 text-xs font-light">&copy; {new Date().getFullYear()} Nyenyak. All Rights Reserved.</p>
         </div>
       </footer>
     </div>

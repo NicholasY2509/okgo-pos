@@ -14,9 +14,10 @@ model Product {
   description String?
   price       Decimal  @default(0)
   duration    Int? // Duration in minutes
-  isVip       Boolean  @default(false)
-  isActive    Boolean  @default(true)
-  image       String?
+  isVip           Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  showOnMarketing Boolean  @default(false)
+  image           String?
   categoryId  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

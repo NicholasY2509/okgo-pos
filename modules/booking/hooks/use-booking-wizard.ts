@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { getBranchesAction, getServicesAction, getStaffStatusAction, getDailyScheduleAction } from "../actions/booking-actions";
+import { getBrandSettingAction } from "@/modules/brand-setting/actions/brand-setting-action";
 import { useBooking } from "./use-booking";
 
 export function useBookingWizard() {
   const booking = useBooking();
   const { form, step } = booking;
-  
+
   const [branches, setBranches] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [staffList, setStaffList] = useState<any[]>([]);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [dailySchedule, setDailySchedule] = useState<any>(null);
+  const [brandSetting, setBrandSetting] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [loadingBranches, setLoadingBranches] = useState(true);
 
@@ -33,8 +35,12 @@ export function useBookingWizard() {
   }
 
   useEffect(() => {
-    getBranchesAction().then((res) => {
-      if (res.success && res.data) setBranches(res.data);
+    Promise.all([
+      getBranchesAction(),
+      getBrandSettingAction()
+    ]).then(([branchesRes, settingsRes]) => {
+      if (branchesRes.success && branchesRes.data) setBranches(branchesRes.data);
+      if (settingsRes.success && settingsRes.data) setBrandSetting(settingsRes.data);
       setLoadingBranches(false);
     });
   }, []);
@@ -75,6 +81,7 @@ export function useBookingWizard() {
     dailySchedule,
     loading,
     loadingBranches,
-    canProceed
+    canProceed,
+    brandSetting
   };
 }

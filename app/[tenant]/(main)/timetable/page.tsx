@@ -4,6 +4,7 @@ import { BranchService } from "@/modules/branch/services/branch-service";
 import { RoomService } from "@/modules/room/services/room-service";
 import { PaymentMethodService } from "@/modules/payment-method/services/payment-method-service";
 import { StaffService } from "@/modules/staff/services/staff-service";
+import { BrandSettingService } from "@/modules/brand-setting/services/brand-setting-service";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export default async function TimetablePage({ params }: { params: Promise<{ tena
   const rooms = await RoomService.getActiveByBranchId(branch.id);
   const paymentMethods = await PaymentMethodService.getActive();
   const staff = await StaffService.getActiveStaff(branch.id);
+  const brandSetting = await BrandSettingService.get();
 
   return (
     <TimetableClient
@@ -26,6 +28,7 @@ export default async function TimetablePage({ params }: { params: Promise<{ tena
       rooms={rooms}
       paymentMethods={paymentMethods}
       staff={staff}
+      brandSetting={brandSetting}
     />
   );
 }
