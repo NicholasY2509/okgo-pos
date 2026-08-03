@@ -28,13 +28,23 @@ export function SidebarBookingCard({ booking, onProcessBooking }: SidebarBooking
               booking.customerName ||
               "Tanpa Nama"}
           </div>
-          <div className="text-muted-foreground">
-            {booking.items.length} Layanan •{" "}
-            {new Intl.NumberFormat("id-ID", {
-              style: "currency",
-              currency: "IDR",
-              maximumFractionDigits: 0,
-            }).format(booking.totalAmount)}
+          <div className="text-muted-foreground flex flex-col gap-1 mt-1">
+            <div className="flex items-center gap-1.5">
+              {!booking.isAssignedToTimetable ? (
+                <span className="text-destructive font-medium bg-destructive/10 px-1.5 py-0.5 rounded text-[10px]">
+                  Belum Pilih Layanan ({booking.guestCount || 1} pax)
+                </span>
+              ) : (
+                <span>{booking.items?.length || 0} Layanan</span>
+              )}
+            </div>
+            <span>
+              {new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                maximumFractionDigits: 0,
+              }).format(booking.totalAmount)}
+            </span>
           </div>
         </div>
         <Button

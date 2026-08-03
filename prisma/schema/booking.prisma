@@ -13,6 +13,11 @@ model Booking {
 
   status BookingStatus @default(PENDING)
 
+  scheduledStartTime    DateTime?
+  estimatedDuration     Int       @default(60)
+  guestCount            Int       @default(1)
+  isAssignedToTimetable Boolean   @default(false)
+
   customer        Customer?        @relation(fields: [customerId], references: [id])
   items           BookingItem[]
   serviceSessions ServiceSession[]

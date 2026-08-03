@@ -39,7 +39,7 @@ export async function getDailyScheduleAction(branchId: string, dateStr: string) 
   }
 }
 
-export async function getAvailableSlotsAction(branchId: string, dateStr: string, selections: {serviceId: string, staffId?: string}[]) {
+export async function getAvailableSlotsAction(branchId: string, dateStr: string, selections: {serviceId?: string, staffId?: string}[]) {
   try {
     const slots = await BookingService.getAvailableSlots(branchId, dateStr, selections);
     return { success: true, data: slots };
@@ -59,5 +59,14 @@ export async function createBookingAction(values: BookingInput) {
     return { success: true, data: result };
   } catch (error: any) {
     return { error: error.message || "Gagal membuat booking" };
+  }
+}
+
+export async function assignBookingToTimetableAction(bookingId: string, selections: { serviceId: string; staffId?: string }[]) {
+  try {
+    const result = await BookingService.assignBookingToTimetable(bookingId, selections);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { error: error.message || "Gagal menugaskan booking ke jadwal" };
   }
 }

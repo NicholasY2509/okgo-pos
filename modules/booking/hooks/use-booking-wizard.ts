@@ -29,7 +29,7 @@ export function useBookingWizard() {
   } else if (step === 2) {
     canProceed = !!(selectedDate && selectedTime);
   } else if (step === 3) {
-    canProceed = selections && selections.length > 0 && selections.every((s: any) => !!s.serviceId);
+    canProceed = true;
   } else if (step === 4) {
     canProceed = true;
   }

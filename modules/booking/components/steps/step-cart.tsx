@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useFieldArray, UseFormReturn } from "react-hook-form";
 import { BookingInput } from "../../schemas/booking";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Scissors, User, ChevronDown, ChevronUp, X, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Scissors, User, ChevronDown, ChevronUp, X, AlertTriangle, Info } from "lucide-react";
 import { addMinutes } from "date-fns";
 
 interface StepCartProps {
@@ -47,12 +47,12 @@ export function StepCart({ form, services, staffList, dailySchedule, loading }: 
     if (!dailySchedule) return false;
     const staffSched = dailySchedule.staffSchedules.find((s: any) => s.id === staffId);
     if (!staffSched) return false;
-    
+
     for (const session of staffSched.sessions) {
       const sStart = new Date(session.startTime);
       const sEnd = new Date(session.endTime);
       if (start < sEnd && end > sStart) {
-        return `Sibuk ${sStart.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} - ${sEnd.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+        return `Sibuk ${sStart.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - ${sEnd.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
       }
     }
     return false;
@@ -63,7 +63,6 @@ export function StepCart({ form, services, staffList, dailySchedule, loading }: 
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-1 text-left">
           <h2 className="text-3xl font-display font-light tracking-tight">Pilih Layanan</h2>
-          <p className="text-muted-foreground font-light text-sm">Pilih treatment dan terapis untuk Anda (dan teman Anda).</p>
         </div>
         <Button
           type="button"
@@ -74,6 +73,14 @@ export function StepCart({ form, services, staffList, dailySchedule, loading }: 
         >
           <Plus className="w-4 h-4 mr-1" /> Tambah
         </Button>
+      </div>
+
+      <div className="bg-primary/5 border border-primary/20 text-primary-foreground rounded-2xl p-4 flex gap-3 text-sm leading-relaxed animate-in fade-in">
+        <Info className="w-5 h-5 shrink-0 text-primary mt-0.5" />
+        <div className="text-foreground/80">
+          Pilih treatment dan terapis untuk Anda. <br />
+          <span className="font-medium text-foreground">Tips:</span> Anda dapat melewati pemilihan layanan ini dan langsung klik <b>Lanjut</b> jika ingin berkonsultasi di lokasi. Untuk menambah jumlah pengunjung (booking grup), silakan klik tombol <b>Tambah</b> di atas.
+        </div>
       </div>
 
       {isOverCapacity && (
@@ -149,7 +156,7 @@ export function StepCart({ form, services, staffList, dailySchedule, loading }: 
                             <div
                               key={service.id}
                               className={`p-4 cursor-pointer transition-all rounded-2xl border flex flex-col justify-center ${selectedServiceId === service.id ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 bg-muted/10 hover:bg-muted/30'}`}
-                              onClick={() => form.setValue(`selections.${index}.serviceId`, service.id, { shouldValidate: true })}
+                              onClick={() => form.setValue(`selections.${index}.serviceId`, selectedServiceId === service.id ? "" : service.id, { shouldValidate: true })}
                             >
                               <div className="font-medium text-foreground text-base mb-1">{service.name}</div>
                               <div className="text-[10px] text-muted-foreground font-light flex justify-between uppercase tracking-widest">
@@ -182,7 +189,7 @@ export function StepCart({ form, services, staffList, dailySchedule, loading }: 
                             {staffList.map(staff => {
                               const busyReason = checkStaffBusy(staff.id, itemStartTime, itemEndTime);
                               const isBusy = !!busyReason;
-                              
+
                               return (
                                 <div
                                   key={staff.id}

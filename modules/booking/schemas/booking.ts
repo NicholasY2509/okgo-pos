@@ -6,9 +6,9 @@ export const bookingSchema = z.object({
   customerName: z.string().optional(),
   customerPhone: z.string().optional(),
   selections: z.array(z.object({
-    serviceId: z.string().min(1, "Layanan wajib dipilih"),
+    serviceId: z.string().optional().or(z.literal("")),
     staffId: z.string().optional(),
-  })).min(1, "Minimal pilih 1 layanan"),
+  })).optional(),
   date: z.string().min(1, "Tanggal wajib dipilih"),
   startTime: z.string().min(1, "Waktu wajib dipilih"),
 });

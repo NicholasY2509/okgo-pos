@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { BookingInput } from "../schemas/booking";
-import { startOfDay, endOfDay, addMinutes, isBefore, addHours } from "date-fns";
+import { startOfDay, endOfDay, addMinutes, isBefore, addHours, format } from "date-fns";
 
 export const BookingRepository = {
   async getBranches() {
@@ -95,19 +95,22 @@ export const BookingRepository = {
     return { staffSchedules, roomSessions, totalCapacity, rooms };
   },
 
-  async getAvailableSlots(branchId: string, dateStr: string, selections: { serviceId: string, staffId?: string }[]) {
+  async getAvailableSlots(branchId: string, dateStr: string, selections: { serviceId?: string, staffId?: string }[]) {
     const date = new Date(dateStr);
     const start = startOfDay(date);
     const end = endOfDay(date);
 
     let maxDuration = 60;
-    const serviceIds = selections.map(s => s.serviceId);
-    const services = await prisma.product.findMany({
-      where: { id: { in: serviceIds } }
-    });
-    for (const service of services) {
-      if (service.duration && service.duration > maxDuration) {
-        maxDuration = service.duration;
+    const serviceIds = selections.map(s => s.serviceId).filter(id => id) as string[];
+    let services: any[] = [];
+    if (serviceIds.length > 0) {
+      services = await prisma.product.findMany({
+        where: { id: { in: serviceIds } }
+      });
+      for (const service of services) {
+        if (service.duration && service.duration > maxDuration) {
+          maxDuration = service.duration;
+        }
       }
     }
 
@@ -121,6 +124,15 @@ export const BookingRepository = {
         branchId,
         status: { in: ["SCHEDULED", "IN_PROGRESS"] },
         startTime: { gte: start, lte: end }
+      }
+    });
+
+    const unassignedBookings = await prisma.booking.findMany({
+      where: {
+        branchId,
+        isAssignedToTimetable: false,
+        status: { in: ["PENDING"] },
+        scheduledStartTime: { gte: start, lte: end }
       }
     });
 
@@ -158,6 +170,17 @@ export const BookingRepository = {
         }
       }
 
+      let unassignedCountInSlot = 0;
+      for (const bkg of unassignedBookings) {
+        if (!bkg.scheduledStartTime) continue;
+        const bkgStart = bkg.scheduledStartTime;
+        const bkgEnd = addMinutes(bkgStart, bkg.estimatedDuration);
+        if (slotStart < bkgEnd && slotEnd > bkgStart) {
+          const assignedCount = existingSessions.filter(s => s.bookingId === bkg.id && s.startTime && slotStart < (s.endTime || addMinutes(s.startTime, 60)) && slotEnd > s.startTime).length;
+          unassignedCountInSlot += Math.max(0, (bkg.guestCount || 1) - assignedCount);
+        }
+      }
+
       const availableRooms = [];
       for (const r of rooms) {
         const count = roomSessionCounts.get(r.id) || 0;
@@ -165,6 +188,16 @@ export const BookingRepository = {
         const remaining = Math.max(0, capacity - count);
         for (let i = 0; i < remaining; i++) {
           availableRooms.push(r);
+        }
+      }
+
+      // Deduct unassigned bookings from available standard rooms (or any room)
+      for (let i = 0; i < unassignedCountInSlot; i++) {
+        const stdIndex = availableRooms.findIndex(r => !r.isVip);
+        if (stdIndex !== -1) {
+          availableRooms.splice(stdIndex, 1);
+        } else if (availableRooms.length > 0) {
+          availableRooms.splice(0, 1);
         }
       }
 
@@ -176,6 +209,14 @@ export const BookingRepository = {
       const availableVipRooms = availableRooms.filter(r => r.isVip).length;
       const availableStandardRooms = availableRooms.filter(r => !r.isVip).length;
 
+      // If selections is empty, we just need at least 1 room available
+      if (selections.length === 0) {
+        if (availableRooms.length < 1) continue;
+        slots.push(slotStart.toISOString());
+        continue;
+      }
+
+      if (availableRooms.length < selections.length) continue;
       if (availableVipRooms < vipServicesCount || availableStandardRooms < standardServicesCount) continue;
 
       let canFulfillAll = true;
@@ -230,14 +271,18 @@ export const BookingRepository = {
         throw new Error("Pelanggan wajib diisi.");
       }
 
-      const serviceIds = data.selections.map(s => s.serviceId);
-      const services = await tx.product.findMany({
-        where: { id: { in: serviceIds } }
-      });
-
+      const serviceIds = (data.selections?.map(s => s.serviceId).filter(id => id) as string[]) || [];
+      let services: any[] = [];
       let maxDuration = 60;
-      for (const s of services) {
-        if (s.duration && s.duration > maxDuration) maxDuration = s.duration;
+
+      if (serviceIds.length > 0) {
+        services = await tx.product.findMany({
+          where: { id: { in: serviceIds } }
+        });
+
+        for (const s of services) {
+          if (s.duration && s.duration > maxDuration) maxDuration = s.duration;
+        }
       }
 
       const slotStart = new Date(data.startTime);
@@ -273,6 +318,28 @@ export const BookingRepository = {
         }
       }
 
+      const unassignedBookings = await tx.booking.findMany({
+        where: {
+          branchId: data.branchId,
+          isAssignedToTimetable: false,
+          status: { in: ["PENDING"] },
+          scheduledStartTime: {
+            gte: startOfDay(slotStart),
+            lte: endOfDay(slotStart)
+          }
+        }
+      });
+      let unassignedCountInSlot = 0;
+      for (const bkg of unassignedBookings) {
+        if (!bkg.scheduledStartTime) continue;
+        const bkgStart = bkg.scheduledStartTime;
+        const bkgEnd = addMinutes(bkgStart, bkg.estimatedDuration);
+        if (slotStart < bkgEnd && slotEnd > bkgStart) {
+          const assignedCount = existingSessions.filter(s => s.bookingId === bkg.id && s.startTime && slotStart < (s.endTime || addMinutes(s.startTime, 60)) && slotEnd > s.startTime).length;
+          unassignedCountInSlot += Math.max(0, (bkg.guestCount || 1) - assignedCount);
+        }
+      }
+
       const availableRooms = [];
       for (const r of rooms) {
         const count = roomSessionCounts.get(r.id) || 0;
@@ -280,6 +347,15 @@ export const BookingRepository = {
         const remaining = Math.max(0, capacity - count);
         for (let i = 0; i < remaining; i++) {
           availableRooms.push(r);
+        }
+      }
+
+      for (let i = 0; i < unassignedCountInSlot; i++) {
+        const stdIndex = availableRooms.findIndex(r => !r.isVip);
+        if (stdIndex !== -1) {
+          availableRooms.splice(stdIndex, 1);
+        } else if (availableRooms.length > 0) {
+          availableRooms.splice(0, 1);
         }
       }
 
@@ -291,14 +367,24 @@ export const BookingRepository = {
       const availableVipRooms = availableRooms.filter(r => r.isVip).length;
       const availableStandardRooms = availableRooms.filter(r => !r.isVip).length;
 
-      if (availableVipRooms < vipServicesCount || availableStandardRooms < standardServicesCount || availableStaff.length < data.selections.length) {
-        throw new Error("Kapasitas ruangan/terapis tidak mencukupi untuk waktu ini.");
+      const activeSelections = (data.selections || []).filter(s => s.serviceId);
+      const hasAssignedServices = activeSelections.length > 0;
+
+      if (availableRooms.length < (data.selections || []).length) {
+        throw new Error("Kapasitas ruangan tidak mencukupi untuk waktu ini.");
+      }
+
+      if (hasAssignedServices) {
+        if (availableVipRooms < vipServicesCount || availableStandardRooms < standardServicesCount || availableStaff.length < activeSelections.length) {
+          throw new Error("Kapasitas ruangan/terapis tidak mencukupi untuk waktu ini.");
+        }
       }
 
       let subtotal = 0;
       const transactionItems = [];
 
-      for (const sel of data.selections) {
+      for (const sel of (data.selections || [])) {
+        if (!sel.serviceId) continue;
         const service = services.find(s => s.id === sel.serviceId);
         if (!service) throw new Error("Service not found");
 
@@ -344,13 +430,17 @@ export const BookingRepository = {
       const booking = await tx.booking.create({
         data: {
           branchId: data.branchId,
-          customerId: customer.id,
+          customer: { connect: { id: customer.id } },
           bookingNumber,
           customerName: customer.name,
           customerPhone: customer.phone,
           totalAmount: subtotal,
           status: "PENDING",
-          items: {
+          scheduledStartTime: slotStart,
+          estimatedDuration: maxDuration,
+          guestCount: (data.selections || []).length > 0 ? data.selections!.length : 1,
+          isAssignedToTimetable: transactionItems.length === (data.selections || []).length && (data.selections || []).length > 0,
+          items: transactionItems.length > 0 ? {
             create: transactionItems.map(item => ({
               serviceId: item.serviceId,
               itemNameSnapshot: item.itemNameSnapshot,
@@ -358,7 +448,7 @@ export const BookingRepository = {
               subtotal: item.subtotal,
               quantity: item.quantity
             }))
-          }
+          } : undefined
         },
         include: { items: true }
       });
@@ -386,6 +476,252 @@ export const BookingRepository = {
       }
 
       return { booking, serviceSessions: createdSessions };
+    });
+  },
+
+  async assignBookingToTimetable(bookingId: string, selections: { serviceId: string; staffId?: string }[]) {
+    return await prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.findUnique({
+        where: { id: bookingId },
+        include: { items: true, serviceSessions: true }
+      });
+
+      if (!booking) throw new Error("Booking tidak ditemukan");
+      if (booking.isAssignedToTimetable) throw new Error("Booking sudah ditugaskan ke jadwal");
+
+      const slotStart = booking.scheduledStartTime || new Date();
+
+      const services = await tx.product.findMany({
+        where: { id: { in: selections.map(s => s.serviceId) } }
+      });
+
+      let maxDuration = 0;
+      services.forEach((s: any) => {
+        if (s.duration > maxDuration) maxDuration = s.duration;
+      });
+
+      const slotEnd = addMinutes(slotStart, maxDuration);
+
+      const rooms = await tx.room.findMany({
+        where: { branchId: booking.branchId, isActive: true }
+      });
+
+      const staffList = await tx.staff.findMany({
+        where: {
+          branchStaffs: { some: { branchId: booking.branchId } },
+          isActive: true
+        }
+      });
+
+      const existingSessions = await tx.serviceSession.findMany({
+        where: {
+          branchId: booking.branchId,
+          status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+          startTime: {
+            gte: startOfDay(slotStart),
+            lte: endOfDay(slotStart)
+          }
+        }
+      });
+
+      const roomSessionCounts = new Map<string, number>();
+      const busyStaffIds = new Set<string>();
+
+      for (const session of existingSessions) {
+        if (!session.startTime) continue;
+        const sessionStart = session.startTime;
+        const sessionEnd = session.endTime || addMinutes(sessionStart, 60);
+
+        if (slotStart < sessionEnd && slotEnd > sessionStart) {
+          roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
+          if (session.staffId) {
+            busyStaffIds.add(session.staffId);
+          }
+        }
+      }
+
+      // Note: Since THIS booking is the one being assigned, its unassigned count (guestCount)
+      // shouldn't block its OWN assignment! We ignore its own unassigned guests by filtering it out,
+      // or we just calculate unassigned bookings excluding this one.
+      const unassignedBookings = await tx.booking.findMany({
+        where: {
+          branchId: booking.branchId,
+          isAssignedToTimetable: false,
+          status: { in: ["PENDING"] },
+          id: { not: booking.id }, // Ignore THIS booking
+          scheduledStartTime: {
+            gte: startOfDay(slotStart),
+            lte: endOfDay(slotStart)
+          }
+        }
+      });
+      let unassignedCountInSlot = 0;
+      for (const bkg of unassignedBookings) {
+        if (!bkg.scheduledStartTime) continue;
+        const bkgStart = bkg.scheduledStartTime;
+        const bkgEnd = addMinutes(bkgStart, bkg.estimatedDuration);
+        if (slotStart < bkgEnd && slotEnd > bkgStart) {
+          const assignedCount = existingSessions.filter(s => s.bookingId === bkg.id && s.startTime && slotStart < (s.endTime || addMinutes(s.startTime, 60)) && slotEnd > s.startTime).length;
+          unassignedCountInSlot += Math.max(0, (bkg.guestCount || 1) - assignedCount);
+        }
+      }
+
+      const availableRooms = [];
+      for (const r of rooms) {
+        const count = roomSessionCounts.get(r.id) || 0;
+        const capacity = r.capacity || 1;
+        const remaining = Math.max(0, capacity - count);
+        for (let i = 0; i < remaining; i++) {
+          availableRooms.push(r);
+        }
+      }
+
+      for (let i = 0; i < unassignedCountInSlot; i++) {
+        const stdIndex = availableRooms.findIndex(r => !r.isVip);
+        if (stdIndex !== -1) {
+          availableRooms.splice(stdIndex, 1);
+        } else if (availableRooms.length > 0) {
+          availableRooms.splice(0, 1);
+        }
+      }
+
+      const availableStaff = staffList.filter(s => !busyStaffIds.has(s.id));
+
+      const vipServicesCount = services.filter((s: any) => s.isVip).length;
+      const standardServicesCount = services.length - vipServicesCount;
+
+      const availableVipRooms = availableRooms.filter(r => r.isVip).length;
+      const availableStandardRooms = availableRooms.filter(r => !r.isVip).length;
+
+      const activeSelections = selections.filter(s => s.serviceId);
+      if (activeSelections.length === 0) {
+        throw new Error("Pilih setidaknya satu layanan.");
+      }
+
+      if (availableRooms.length < selections.length) {
+        throw new Error("Kapasitas ruangan tidak mencukupi untuk waktu ini.");
+      }
+
+      if (availableVipRooms < vipServicesCount || availableStandardRooms < standardServicesCount || availableStaff.length < activeSelections.length) {
+        throw new Error("Kapasitas ruangan/terapis tidak mencukupi untuk waktu ini.");
+      }
+
+      let subtotal = 0;
+      const transactionItems = [];
+
+      for (const sel of selections) {
+        if (!sel.serviceId) continue;
+        const service = services.find((s: any) => s.id === sel.serviceId);
+        if (!service) throw new Error("Service not found");
+
+        let assignedRoomIndex = availableRooms.findIndex(r => r.isVip === service.isVip);
+        if (assignedRoomIndex === -1) {
+          throw new Error(`Tidak ada ruangan ${service.isVip ? 'VIP' : 'Standar'} yang tersedia.`);
+        }
+        let assignedRoom = availableRooms.splice(assignedRoomIndex, 1)[0];
+        let assignedStaff;
+
+        if (sel.staffId) {
+          const staffIndex = availableStaff.findIndex((s: any) => s.id === sel.staffId);
+          if (staffIndex === -1) {
+            throw new Error("Terapis yang dipilih tidak tersedia di waktu ini.");
+          }
+          assignedStaff = availableStaff[staffIndex];
+          availableStaff.splice(staffIndex, 1);
+        } else {
+          assignedStaff = null;
+        }
+
+        if (!assignedRoom) {
+          throw new Error("Gagal mengalokasikan ruangan.");
+        }
+
+        subtotal += Number(service.price);
+
+        transactionItems.push({
+          type: "SERVICE",
+          serviceId: service.id,
+          itemNameSnapshot: service.name,
+          unitPrice: service.price,
+          subtotal: service.price,
+          quantity: 1,
+          _assignedRoomId: assignedRoom.id,
+          _assignedStaffId: assignedStaff?.id || null,
+          _duration: service.duration || 60
+        });
+      }
+
+      await tx.booking.update({
+        where: { id: bookingId },
+        data: {
+          isAssignedToTimetable: true,
+          status: "PROCESSED",
+          totalAmount: subtotal,
+          estimatedDuration: maxDuration,
+          guestCount: selections.length,
+          items: {
+            create: transactionItems.map(item => ({
+              serviceId: item.serviceId,
+              itemNameSnapshot: item.itemNameSnapshot,
+              unitPrice: item.unitPrice,
+              subtotal: item.subtotal,
+              quantity: item.quantity
+            }))
+          }
+        }
+      });
+
+      const today = new Date();
+      const dateStrTx = today.toISOString().slice(0, 10).replace(/-/g, '');
+      const randomStr = Math.floor(1000 + Math.random() * 9000).toString();
+      const transactionNumber = `TX-${dateStrTx}-${randomStr}`;
+
+      const transaction = await tx.transaction.create({
+        data: {
+          branchId: booking.branchId,
+          customerId: booking.customerId,
+          transactionNumber,
+          subtotal: subtotal,
+          totalAmount: subtotal,
+          status: 'PENDING',
+        }
+      });
+
+      const createdSessions = [];
+      for (let i = 0; i < transactionItems.length; i++) {
+        const itemSpec = transactionItems[i];
+        const sessionSlotEnd = addMinutes(slotStart, itemSpec._duration);
+
+        const txItem = await tx.transactionItem.create({
+          data: {
+            transactionId: transaction.id,
+            type: 'SERVICE',
+            serviceId: itemSpec.serviceId,
+            itemNameSnapshot: itemSpec.itemNameSnapshot,
+            unitPrice: itemSpec.unitPrice,
+            quantity: itemSpec.quantity,
+            subtotal: itemSpec.subtotal,
+          }
+        });
+
+        const session = await tx.serviceSession.create({
+          data: {
+            bookingId: booking.id,
+            customerId: booking.customerId,
+            serviceId: itemSpec.serviceId,
+            staffId: itemSpec._assignedStaffId || undefined,
+            roomId: itemSpec._assignedRoomId,
+            branchId: booking.branchId,
+            status: "SCHEDULED",
+            startTime: slotStart,
+            endTime: sessionSlotEnd,
+            transactionItemId: txItem.id,
+          }
+        });
+        createdSessions.push(session);
+      }
+
+      return true;
     });
   }
 };

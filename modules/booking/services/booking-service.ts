@@ -18,11 +18,15 @@ export class BookingService {
     return await BookingRepository.getDailySchedule(branchId, dateStr);
   }
 
-  static async getAvailableSlots(branchId: string, dateStr: string, selections: { serviceId: string, staffId?: string }[]) {
+  static async getAvailableSlots(branchId: string, dateStr: string, selections: { serviceId?: string, staffId?: string }[]) {
     return await BookingRepository.getAvailableSlots(branchId, dateStr, selections);
   }
 
   static async createBooking(data: BookingInput) {
     return await BookingRepository.createBooking(data);
+  }
+
+  static async assignBookingToTimetable(bookingId: string, selections: { serviceId: string; staffId?: string }[]) {
+    return await BookingRepository.assignBookingToTimetable(bookingId, selections);
   }
 }

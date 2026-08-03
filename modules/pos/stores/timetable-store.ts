@@ -19,6 +19,7 @@ interface TimetableState {
   isBookingModalOpen: boolean;
   selectedSessionForInfo: any | null;
   selectedTransactionForPayment: any | null;
+  selectedBookingForAssignment: any | null;
 
   rooms: any[];
   paymentMethods: any[];
@@ -33,6 +34,7 @@ interface TimetableState {
   setIsBookingModalOpen: (isOpen: boolean) => void;
   setSelectedSessionForInfo: (session: any | null) => void;
   setSelectedTransactionForPayment: (transaction: any | null) => void;
+  setSelectedBookingForAssignment: (booking: any | null) => void;
 
   fetchSessions: () => Promise<void>;
   fetchPendingBookings: () => Promise<void>;
@@ -53,6 +55,7 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   isBookingModalOpen: false,
   selectedSessionForInfo: null,
   selectedTransactionForPayment: null,
+  selectedBookingForAssignment: null,
   rooms: [],
   paymentMethods: [],
   staff: [],
@@ -85,6 +88,7 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   setIsBookingModalOpen: (isBookingModalOpen) => set({ isBookingModalOpen }),
   setSelectedSessionForInfo: (selectedSessionForInfo) => set({ selectedSessionForInfo }),
   setSelectedTransactionForPayment: (selectedTransactionForPayment) => set({ selectedTransactionForPayment }),
+  setSelectedBookingForAssignment: (selectedBookingForAssignment) => set({ selectedBookingForAssignment }),
 
   fetchSessions: async () => {
     const { branchId, date } = get();
@@ -164,7 +168,14 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   },
 
   handleProcessBooking: async (bookingId: string) => {
-    const { fetchPendingBookings, fetchSessions } = get();
+    const { fetchPendingBookings, fetchSessions, pendingBookings } = get();
+    const booking = pendingBookings.find(b => b.id === bookingId);
+    if (booking && !booking.isAssignedToTimetable) {
+      // If the booking hasn't been assigned to the timetable yet (no services selected)
+      set({ selectedBookingForAssignment: booking });
+      return;
+    }
+
     const res = await updateBookingStatusAction(bookingId, 'PROCESSED');
     if (res.success) {
       toast.success("Booking berhasil diproses");

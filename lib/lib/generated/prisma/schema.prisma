@@ -1,0 +1,752 @@
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+model LedgerAccount {
+  id       String  @id @default(cuid())
+  tenantId String?
+  branchId String? // Nullable if COA is global per tenant
+
+  code        String      @unique
+  name        String
+  type        AccountType
+  description String?
+  isLocked    Boolean     @default(false)
+
+  journalLines   JournalLine[]
+  paymentMethods PaymentMethod[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+}
+
+model JournalEntry {
+  id            String  @id @default(cuid())
+  journalNumber String? @unique
+  tenantId      String?
+  branchId      String
+
+  date        DateTime @default(now())
+  description String
+  reference   String? // Can link to a Transaction ID
+
+  lines JournalLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+  @@index([date])
+}
+
+model JournalLine {
+  id              String @id @default(cuid())
+  journalEntryId  String
+  ledgerAccountId String
+
+  debit  Decimal @default(0)
+  credit Decimal @default(0)
+
+  journalEntry  JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  ledgerAccount LedgerAccount @relation(fields: [ledgerAccountId], references: [id])
+
+  @@index([journalEntryId])
+  @@index([ledgerAccountId])
+}
+
+model WorkingHour {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  clockIn   String
+  clockOut  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendanceWorkingHours AttendanceWorkingHour[]
+}
+
+model AttendanceWorkingHour {
+  id             String   @id @default(cuid())
+  staffId        String
+  workingHourId  String
+  attendanceDate DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  staff       Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  workingHour WorkingHour @relation(fields: [workingHourId], references: [id], onDelete: Cascade)
+  attendance  Attendance?
+
+  @@unique([staffId, attendanceDate])
+}
+
+model AttendanceMachine {
+  id        String   @id @default(cuid())
+  sn        String   @unique
+  name      String
+  branchId  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch              Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staffMachines       StaffMachine[]
+  clockInAttendances  Attendance[]   @relation("ClockInMachine")
+  clockOutAttendances Attendance[]   @relation("ClockOutMachine")
+}
+
+model StaffMachine {
+  id            String   @id @default(cuid())
+  staffId       String
+  machineId     String
+  machineUserId String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  staff   Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  machine AttendanceMachine @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, machineId])
+  @@unique([machineId, machineUserId])
+}
+
+model AttendanceStatus {
+  id          String   @id @default(cuid())
+  code        String   @unique // Misal: PRESENT, LATE, ABSENT, SICK
+  name        String // Misal: Hadir, Terlambat, Mangkir, Sakit
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendances Attendance[]
+}
+
+model Attendance {
+  id                String    @id @default(cuid())
+  staffId           String
+  attendanceDate    DateTime
+  clockIn           DateTime?
+  clockOut          DateTime?
+  statusId          String?
+  notes             String?
+  clockInMachineId  String?
+  clockOutMachineId String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  staff  Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  status AttendanceStatus? @relation(fields: [statusId], references: [id], onDelete: SetNull)
+
+  // Relasi 1-to-1 ke jadwal jam kerja (AttendanceWorkingHour) di tanggal tersebut
+  attendanceWorkingHourId String?                @unique
+  attendanceWorkingHour   AttendanceWorkingHour? @relation(fields: [attendanceWorkingHourId], references: [id], onDelete: SetNull)
+
+  clockInMachine  AttendanceMachine? @relation("ClockInMachine", fields: [clockInMachineId], references: [id], onDelete: SetNull)
+  clockOutMachine AttendanceMachine? @relation("ClockOutMachine", fields: [clockOutMachineId], references: [id], onDelete: SetNull)
+
+  @@unique([staffId, attendanceDate])
+}
+
+model AttendanceMachineLog {
+  id              String    @id @default(cuid())
+  machineUserId   String?
+  cardName        String?
+  attendanceState Int       @default(0)
+  punchType       String?
+  deviceSn        String?
+  branchId        String?
+  staffId         String?
+  similarity      Int?
+  utcTime         DateTime?
+  rawPayload      String?   @db.Text
+  createdAt       DateTime  @default(now())
+
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  staff  Staff?  @relation(fields: [staffId], references: [id], onDelete: SetNull)
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  roleId        String?
+
+  accounts   Account[]
+  sessions   Session[]
+  staffUsers StaffUser[]
+  role       Role?       @relation(fields: [roleId], references: [id])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Booking {
+  id String @id @default(cuid())
+
+  branchId   String
+  customerId String?
+
+  bookingNumber String @unique
+
+  customerName  String?
+  customerPhone String?
+
+  totalAmount Decimal
+
+  status BookingStatus @default(PENDING)
+
+  scheduledStartTime    DateTime?
+  estimatedDuration     Int       @default(60)
+  isAssignedToTimetable Boolean   @default(false)
+
+  customer        Customer?        @relation(fields: [customerId], references: [id])
+  items           BookingItem[]
+  serviceSessions ServiceSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model BookingItem {
+  id String @id @default(cuid())
+
+  bookingId String
+  serviceId String
+
+  itemNameSnapshot String
+  unitPrice        Decimal
+  quantity         Int     @default(1)
+  subtotal         Decimal
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([serviceId])
+}
+
+enum BookingStatus {
+  PENDING
+  PROCESSED
+  CANCELLED
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  subdomain String   @unique
+  address   String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branchStaffs          BranchStaff[]
+  rooms                 Room[]
+  discounts             Discount[]
+  attendanceMachines    AttendanceMachine[]
+  attendanceMachineLogs AttendanceMachineLog[]
+}
+
+model BranchStaff {
+  id        String   @id @default(cuid())
+  staffId   String
+  branchId  String
+  roleId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff  Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, branchId])
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  name      String
+  capacity  Int?
+  isVip     Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  branchId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+}
+
+model Discount {
+  id         String  @id @default(cuid())
+  name       String
+  dayOfWeek  String // "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
+  startTime  String // Format "HH:mm"
+  endTime    String // Format "HH:mm"
+  percentage Decimal
+  isActive   Boolean @default(true)
+
+  branchId String? // If null, applies to all branches
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([dayOfWeek])
+  @@index([branchId])
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model BrandSetting {
+  id                String   @id @default(cuid())
+  businessStartTime String   @default("08:00")
+  businessEndTime   String   @default("21:00")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model MarketingOffer {
+  id String @id @default(cuid())
+
+  title       String
+  description String?
+  features    String? // Newline-separated string for features/benefits
+
+  normalPrice   Decimal?
+  discountPrice Decimal
+
+  isActive Boolean @default(true)
+  order    Int     @default(0) // For controlling the display order in the carousel
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  price           Decimal  @default(0)
+  duration        Int? // Duration in minutes
+  isVip           Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  showOnMarketing Boolean  @default(false)
+  image           String?
+  categoryId      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  category       Category?       @relation(fields: [categoryId], references: [id])
+  voucherPackets VoucherPacket[]
+}
+
+model VoucherPacket {
+  id String @id @default(cuid())
+
+  name       String
+  codeSuffix String?
+
+  price Decimal
+
+  totalVisitCount   Int?
+  totalCreditAmount Decimal?
+
+  validityDays Int?
+  isActive     Boolean @default(true)
+
+  productId String?
+
+  customerVouchers CustomerVoucher[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique // e.g. "Admin", "Cashier", "Manager"
+  description String?
+
+  permissions  RolePermission[]
+  branchStaffs BranchStaff[]
+  users        User[]
+}
+
+model Permission {
+  id          String  @id @default(cuid())
+  action      String  @unique // e.g. "sales:create", "inventory:read"
+  description String?
+
+  roles RolePermission[]
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model WorkPosition {
+  id          String   @id @default(cuid())
+  name        String // e.g., Therapist, Receptionist
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  staff Staff[]
+}
+
+model Staff {
+  id             String  @id @default(cuid())
+  firstName      String
+  lastName       String
+  phone          String?
+  email          String?
+  isActive       Boolean @default(true)
+  workPositionId String
+  staffIdNumber  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workPosition           WorkPosition            @relation(fields: [workPositionId], references: [id])
+  staffUsers             StaffUser[]
+  serviceSessions        ServiceSession[]
+  branchStaffs           BranchStaff[]
+  attendanceWorkingHours AttendanceWorkingHour[]
+  staffMachines          StaffMachine[]
+  attendanceMachineLogs  AttendanceMachineLog[]
+  attendances            Attendance[]
+}
+
+model StaffUser {
+  id        String   @id @default(cuid())
+  staffId   String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, userId])
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  VOIDED
+  REFUNDED
+  PARTIAL_REFUND
+}
+
+enum PaymentMethodType {
+  CASH
+  EDC
+  QRIS
+  TRANSFER
+  VOUCHER
+}
+
+enum TransactionItemType {
+  SERVICE
+  VOUCHER_PACKET
+}
+
+enum CustomerVoucherStatus {
+  ACTIVE
+  USED_UP
+  EXPIRED
+  VOID
+}
+
+enum ServiceSessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Transaction {
+  id String @id @default(cuid())
+
+  tenantId   String?
+  branchId   String
+  customerId String?
+  cashierId  String?
+
+  transactionNumber String @unique
+
+  subtotal      Decimal
+  discountTotal Decimal @default(0)
+  taxTotal      Decimal @default(0)
+  totalAmount   Decimal
+  paidAmount    Decimal @default(0)
+  changeAmount  Decimal @default(0)
+
+  status TransactionStatus @default(PENDING)
+
+  customer           Customer?            @relation(fields: [customerId], references: [id])
+  items              TransactionItem[]
+  payments           TransactionPayment[]
+  voucherRedemptions VoucherRedemption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId])
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model TransactionPayment {
+  id String @id @default(cuid())
+
+  transactionId   String
+  paymentMethodId String
+
+  amount          Decimal
+  referenceNumber String?
+  notes           String?
+
+  transaction   Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([transactionId])
+  @@index([paymentMethodId])
+}
+
+model PaymentMethod {
+  id String @id @default(cuid())
+
+  name            String
+  type            String // Enum mapped as String for SQLite compatibility: CASH, EDC, QRIS, TRANSFER, VOUCHER
+  isActive        Boolean @default(true)
+  ledgerAccountId String?
+
+  payments      TransactionPayment[]
+  ledgerAccount LedgerAccount?       @relation(fields: [ledgerAccountId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ledgerAccountId])
+}
+
+model TransactionItem {
+  id String @id @default(cuid())
+
+  transactionId String
+  type          String // SERVICE, VOUCHER_PACKET
+
+  serviceId       String?
+  voucherPacketId String?
+
+  itemNameSnapshot String
+  unitPrice        Decimal
+  quantity         Int     @default(1)
+  discountAmount   Decimal @default(0)
+  subtotal         Decimal
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  serviceSessions    ServiceSession[]
+  voucherRedemptions VoucherRedemption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([transactionId])
+  @@index([serviceId])
+  @@index([voucherPacketId])
+}
+
+model CustomerVoucher {
+  id String @id @default(cuid())
+
+  code String @unique
+
+  customerId      String
+  voucherPacketId String
+
+  sourceTransactionId     String?
+  sourceTransactionItemId String?
+
+  initialVisitCount   Int?
+  remainingVisitCount Int?
+
+  initialCreditAmount   Decimal?
+  remainingCreditAmount Decimal?
+
+  status    String    @default("ACTIVE") // ACTIVE, USED_UP, EXPIRED, VOID
+  expiresAt DateTime?
+
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  voucherPacket VoucherPacket @relation(fields: [voucherPacketId], references: [id])
+
+  redemptions VoucherRedemption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([voucherPacketId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model VoucherRedemption {
+  id String @id @default(cuid())
+
+  customerVoucherId String
+  transactionId     String
+  transactionItemId String?
+  serviceSessionId  String?
+
+  redeemedVisitCount Int?
+  redeemedAmount     Decimal?
+
+  redeemedAt DateTime @default(now())
+
+  customerVoucher CustomerVoucher  @relation(fields: [customerVoucherId], references: [id])
+  transaction     Transaction      @relation(fields: [transactionId], references: [id])
+  transactionItem TransactionItem? @relation(fields: [transactionItemId], references: [id])
+  serviceSession  ServiceSession?  @relation(fields: [serviceSessionId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerVoucherId])
+  @@index([transactionId])
+  @@index([transactionItemId])
+  @@index([serviceSessionId])
+}
+
+model ServiceSession {
+  id String @id @default(cuid())
+
+  transactionItemId String?
+  bookingId         String?
+  customerId        String?
+  serviceId         String
+  staffId           String?
+  roomId            String
+  branchId          String
+
+  status String @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+
+  startTime DateTime?
+  endTime   DateTime?
+
+  staff              Staff?              @relation(fields: [staffId], references: [id])
+  transactionItem    TransactionItem?    @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
+  booking            Booking?            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  voucherRedemptions VoucherRedemption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([transactionItemId])
+  @@index([bookingId])
+  @@index([customerId])
+  @@index([serviceId])
+  @@index([staffId])
+  @@index([roomId])
+  @@index([branchId])
+  @@index([status])
+}
+
+model Customer {
+  id String @id @default(cuid())
+
+  name  String
+  phone String?
+  email String?
+
+  vouchers     CustomerVoucher[]
+  transactions Transaction[]
+  bookings     Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([phone])
+  @@index([email])
+}

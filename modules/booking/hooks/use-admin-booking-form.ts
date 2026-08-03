@@ -61,7 +61,7 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
 
   // Fetch available slots when date or service changes
   useEffect(() => {
-    if (selectedServiceId && selectedDate) {
+    if (selectedDate) {
       setLoadingSlots(true);
       getAvailableSlotsAction(branchId, selectedDate, selections || []).then((res) => {
         if (res.success) {
@@ -81,7 +81,7 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
     try {
       const payload = {
         ...values,
-        selections: values.selections.map(s => ({
+        selections: (values.selections || []).map(s => ({
           ...s,
           staffId: s.staffId === "none" ? undefined : s.staffId
         }))

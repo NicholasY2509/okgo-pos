@@ -18,7 +18,7 @@ export function StepSummary({ form, services, staffList, branches }: StepSummary
   // Calculate Subtotal and Max Duration
   let totalAmount = 0;
   let maxDuration = 0;
-  const items = data.selections.map(sel => {
+  const items = (data.selections || []).map(sel => {
     const service = services.find(s => s.id === sel.serviceId);
     const staff = staffList.find(s => s.id === sel.staffId);
     if (service) {
@@ -91,15 +91,17 @@ export function StepSummary({ form, services, staffList, branches }: StepSummary
               <div key={i} className="flex justify-between items-center bg-background rounded-2xl p-4 shadow-sm border border-border/50">
                 <div className="flex items-start gap-3">
                   <div>
-                    <div className="text-sm font-medium">{item.service?.name || "Layanan tidak ditemukan"}</div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                      <User className="w-3 h-3" /> {item.staff?.firstName || "Terapis: Siapa Saja"}
-                    </div>
+                    <div className="text-sm font-medium">{item.service?.name || "Tidak memilih layanan spesifik"}</div>
+                    {item.service && (
+                      <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                        <User className="w-3 h-3" /> {item.staff?.firstName || "Terapis: Siapa Saja"}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium text-foreground">
-                    Rp {Number(item.service?.price || 0).toLocaleString('id-ID')}
+                    {item.service ? `Rp ${Number(item.service.price || 0).toLocaleString('id-ID')}` : "Rp 0"}
                   </div>
                   <div className="text-xs text-muted-foreground">{item.service?.duration || 60} mnt</div>
                 </div>

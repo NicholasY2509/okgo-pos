@@ -14,6 +14,7 @@ import { calculateSessionLanes } from "./timetable/timetable-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminBookingForm } from "../../booking/components/admin-booking-form";
+import { AssignBookingModal } from "./timetable/assign-booking-modal";
 import { useEffect } from "react";
 import { useTimetableStore } from "../stores/timetable-store";
 
@@ -221,6 +222,7 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandS
       />
 
       <ExistingTransactionPaymentModal />
+      <AssignBookingModal />
     </div>
   );
 }

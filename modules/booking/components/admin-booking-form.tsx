@@ -70,7 +70,7 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
                   <FormControl>
                     <ProductCombobox
                       branchId={branchId}
-                      value={field.value}
+                      value={field.value || ""}
                       onChange={field.onChange}
                       error={!!form.formState.errors.selections?.[0]?.serviceId}
                     />
@@ -149,10 +149,6 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
                   <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground font-light text-xs uppercase tracking-widest">
                     <Loader2 className="w-5 h-5 animate-spin mb-3 opacity-50" />
                     Mencari jadwal kosong...
-                  </div>
-                ) : !selectedServiceId ? (
-                  <div className="h-full flex items-center justify-center text-center bg-muted/10 border border-border/30 rounded-2xl">
-                    <p className="text-muted-foreground font-light text-sm">Pilih layanan terlebih dahulu.</p>
                   </div>
                 ) : availableSlots.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-center bg-muted/10 border border-border/30 rounded-2xl">
