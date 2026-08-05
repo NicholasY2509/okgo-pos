@@ -6,7 +6,7 @@ import { id } from "date-fns/locale";
 import { Calendar, XCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatIDR } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { updateBookingStatusAction } from "../actions/booking-list-actions";
 import {
@@ -29,6 +29,7 @@ interface BookingDetailDialogProps {
 export function BookingDetailDialog({ open, onOpenChange, booking }: BookingDetailDialogProps) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const router = useRouter();
+  const params = useParams();
 
   const handleStatusUpdate = async (status: 'PROCESSED' | 'CANCELLED') => {
     if (!booking) return;
@@ -155,9 +156,16 @@ export function BookingDetailDialog({ open, onOpenChange, booking }: BookingDeta
                 Tutup
               </Button>
               {booking.status === 'PENDING' && (
-                <Button onClick={() => handleStatusUpdate('PROCESSED')}>
+                <Button onClick={() => {
+                  if (booking.isAssignedToTimetable === false) {
+                    toast.info("Booking ini belum memilih layanan. Silakan proses melalui halaman Kasir (POS).");
+                    router.push(`/${params.tenant || 'pos'}/pos`);
+                  } else {
+                    handleStatusUpdate('PROCESSED');
+                  }
+                }}>
                   <CheckCircle className="w-4 h-4 mr-1.5" />
-                  Proses
+                  {booking.isAssignedToTimetable === false ? "Pilih Layanan (POS)" : "Proses"}
                 </Button>
               )}
             </div>
