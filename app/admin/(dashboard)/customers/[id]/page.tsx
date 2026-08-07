@@ -1,80 +1,133 @@
 import { CustomerService } from "@/modules/customer/services/customer-service";
 import { notFound } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { CustomerTransactionsTable } from "@/modules/customer/components/customer-transactions-table";
+import { Phone, Mail, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = {
   title: "Customer Details | Admin",
 };
 
-export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+interface CustomerDetailPageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function CustomerDetailPage({ params, searchParams }: CustomerDetailPageProps) {
   const { id } = await params;
+  const sParams = await searchParams;
+  const page = typeof sParams.page === 'string' ? Number(sParams.page) : 1;
+  const limit = typeof sParams.limit === 'string' ? Number(sParams.limit) : 10;
+
   const customer = await CustomerService.getById(id);
 
   if (!customer) {
     notFound();
   }
 
+  const { data: transactions, metadata: paginationMetadata } = await CustomerService.getCustomerTransactions(id, page, limit);
+
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <h2 className="text-2xl font-bold">Customer Profile</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Detail Pelanggan"
+        description="Lihat informasi pelanggan, voucher, dan riwayat transaksi."
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1 h-fit">
           <CardHeader>
-            <CardTitle>Details</CardTitle>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <User className="h-5 w-5" />
+              {customer.name}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p><strong>Name:</strong> {customer.name}</p>
-            <p><strong>Phone:</strong> {customer.phone || "-"}</p>
-            <p><strong>Email:</strong> {customer.email || "-"}</p>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3 text-sm">
+              <Phone className="h-4 w-4 shrink-0 text-gray-500" />
+              <span>{customer.phone || "Tidak ada telepon"}</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <Mail className="h-4 w-4 shrink-0 text-gray-500" />
+              <span>{customer.email || "Tidak ada email"}</span>
+            </div>
           </CardContent>
         </Card>
-      </div>
 
-      <h3 className="text-xl font-bold mt-8 mb-4">Voucher Balances</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {customer.vouchers.length === 0 ? (
-          <p className="text-gray-500">No vouchers found.</p>
-        ) : (
-          customer.vouchers.map((v: any) => (
-            <Card key={v.id}>
-              <CardHeader>
-                <CardTitle className="text-lg">{v.voucherPacket.name}</CardTitle>
-                <p className="text-sm text-gray-500">Code: {v.code}</p>
-              </CardHeader>
-              <CardContent>
-                <p>Status: <span className="font-semibold">{v.status}</span></p>
-                {v.remainingVisitCount != null && (
-                  <p>Visits: {v.remainingVisitCount} / {v.initialVisitCount}</p>
-                )}
-                {v.remainingCreditAmount != null && (
-                  <p>Credit: Rp {Number(v.remainingCreditAmount).toLocaleString()} / Rp {Number(v.initialCreditAmount).toLocaleString()}</p>
-                )}
-                {v.expiresAt && <p>Expires: {new Date(v.expiresAt).toLocaleDateString()}</p>}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-
-      <h3 className="text-xl font-bold mt-8 mb-4">Recent Transactions</h3>
-      {customer.transactions.length === 0 ? (
-        <p className="text-gray-500">No transactions found.</p>
-      ) : (
-        <div className="border rounded-md divide-y">
-          {customer.transactions.map((tx: any) => (
-            <div key={tx.id} className="p-4 flex justify-between items-center">
-              <div>
-                <p className="font-medium">{tx.transactionNumber}</p>
-                <p className="text-sm text-gray-500">{new Date(tx.createdAt).toLocaleDateString()}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-bold">Rp {Number(tx.totalAmount).toLocaleString()}</p>
-                <p className="text-sm">{tx.status}</p>
-              </div>
-            </div>
-          ))}
+        <div className="md:col-span-2">
+          <Tabs defaultValue="transactions" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="transactions">Riwayat Transaksi</TabsTrigger>
+              <TabsTrigger value="vouchers">Voucher Aktif</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="transactions" className="space-y-4">
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle>Transaksi</CardTitle>
+                  <CardDescription>Daftar semua transaksi yang dilakukan oleh pelanggan ini.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <CustomerTransactionsTable data={transactions} />
+                  <DataTablePagination metadata={paginationMetadata} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="vouchers" className="space-y-4">
+              {customer.vouchers.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center text-muted-foreground">
+                    Pelanggan ini tidak memiliki voucher aktif.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {customer.vouchers.map((v: any) => (
+                    <Card key={v.id}>
+                      <CardHeader className="pb-3 border-b">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-lg">{v.voucherPacket.name}</CardTitle>
+                            <p className="text-xs text-muted-foreground mt-1">Kode: {v.code}</p>
+                          </div>
+                          <Badge variant={v.status === "ACTIVE" ? "default" : "secondary"}>
+                            {v.status}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-4 space-y-2 text-sm">
+                        {v.remainingVisitCount != null && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Sisa Kunjungan:</span>
+                            <span className="font-medium">{v.remainingVisitCount} / {v.initialVisitCount}</span>
+                          </div>
+                        )}
+                        {v.remainingCreditAmount != null && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Sisa Saldo:</span>
+                            <span className="font-medium">Rp {Number(v.remainingCreditAmount).toLocaleString()}</span>
+                          </div>
+                        )}
+                        {v.expiresAt && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Kedaluwarsa:</span>
+                            <span>{new Date(v.expiresAt).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
-      )}
+      </div>
     </div>
   );
 }

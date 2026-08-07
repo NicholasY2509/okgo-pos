@@ -62,6 +62,21 @@ export const CustomerRepository = {
     });
   },
 
+  async getCustomerTransactions(customerId: string, skip: number, limit: number) {
+    const [data, total] = await Promise.all([
+      prisma.transaction.findMany({
+        where: { customerId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.transaction.count({
+        where: { customerId }
+      })
+    ]);
+    return { data, total };
+  },
+
   async delete(id: string) {
     return await prisma.customer.delete({
       where: { id },

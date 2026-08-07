@@ -47,6 +47,22 @@ export class CustomerService {
     return await CustomerRepository.getById(id);
   }
 
+  static async getCustomerTransactions(customerId: string, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    const { data, total } = await CustomerRepository.getCustomerTransactions(customerId, skip, limit);
+    
+    return {
+      data,
+      metadata: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasMore: page * limit < total,
+      },
+    };
+  }
+
   static async delete(id: string) {
     return await CustomerRepository.delete(id);
   }
