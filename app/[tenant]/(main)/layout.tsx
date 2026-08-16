@@ -1,7 +1,13 @@
-import { Store, Box, Users, Calculator, ReceiptText, CalendarClock, LogOut } from "lucide-react";
+import { Store, Box, Users, Calculator, ReceiptText, CalendarClock, LogOut, ChevronDown } from "lucide-react";
 import { PosStoreProvider } from "@/modules/pos/stores/pos-store";
 import Link from "next/link";
 import { TenantLogoutButton } from "@/components/tenant-logout-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default async function TenantLayout({
   children,
@@ -30,6 +36,19 @@ export default async function TenantLayout({
             <Link href={`/transactions`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
               Riwayat Transaksi
             </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95 focus:outline-none">
+                Lainnya <ChevronDown size={16} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                <DropdownMenuItem asChild>
+                  <Link href={`/kiosk`} className="w-full cursor-pointer">Mode Kiosk</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/reviews`} className="w-full cursor-pointer">Buku Ulasan</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Link href={`/hris`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
               HRIS
             </Link>

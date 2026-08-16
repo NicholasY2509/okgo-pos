@@ -208,6 +208,12 @@ model ServiceSession {
   startTime DateTime?
   endTime   DateTime?
 
+  actualStartTime DateTime?
+  actualEndTime   DateTime?
+
+  rating        Int?
+  reviewComment String?
+
   staff              Staff?              @relation(fields: [staffId], references: [id])
   transactionItem    TransactionItem?    @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
   booking            Booking?            @relation(fields: [bookingId], references: [id], onDelete: Cascade)

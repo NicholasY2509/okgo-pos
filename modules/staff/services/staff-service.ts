@@ -3,6 +3,7 @@ import {
   UpdateStaffInput,
 } from "../schemas/staff-schema"
 import { StaffRepository } from "../repositories/staff-repository"
+import bcrypt from "bcryptjs"
 
 export interface GetStaffParams {
   page?: number;
@@ -68,11 +69,27 @@ export class StaffService {
       }
       data.staffIdNumber = `STF-${String(nextNumber).padStart(3, "0")}`
     }
-    return await StaffRepository.createStaff(data)
+
+    const { pin, ...staffData } = data
+    const payload: any = { ...staffData }
+    if (pin) {
+      payload.pinHash = await bcrypt.hash(pin, 10)
+    }
+
+    return await StaffRepository.createStaff(payload)
   }
 
   static async updateStaff(id: string, data: Omit<UpdateStaffInput, "id">) {
-    return await StaffRepository.updateStaff(id, data)
+    const { pin, ...staffData } = data
+    const payload: any = { ...staffData }
+    if (pin) {
+      payload.pinHash = await bcrypt.hash(pin, 10)
+    } else if (pin === "") {
+      // If pin is explicitly empty, we could remove the pin, but usually we just don't update it unless provided.
+      // So if it's empty, we do nothing to pinHash.
+    }
+
+    return await StaffRepository.updateStaff(id, payload)
   }
 
   static async deleteStaff(id: string) {

@@ -99,7 +99,7 @@ export const PosCheckoutRepository = {
     const transactionItemsData: any[] = [];
     const serviceSessionsData: any[] = [];
     const customerVouchersData: any[] = [];
-    const itemVoucherRedemptionsData: any[] = []; 
+    const itemVoucherRedemptionsData: any[] = [];
 
     const applicableDiscountPercentage = await DiscountService.getApplicableDiscount(input.branchId);
 
@@ -122,7 +122,7 @@ export const PosCheckoutRepository = {
         if (room.branchId !== input.branchId) throw new Error(`Ruang ${room.name} tidak berada di cabang yang dipilih.`);
 
         const activeSessions = await tx.serviceSession.count({
-          where: { roomId: item.roomId, status: "IN_PROGRESS" }
+          where: { roomId: item.roomId, status: { in: ["SCHEDULED", "IN_PROGRESS"] } }
         });
         if (room.capacity !== null && (activeSessions + item.quantity) > room.capacity) {
           throw new Error(`Kapasitas ruang ${room.name} penuh.`);
@@ -139,7 +139,7 @@ export const PosCheckoutRepository = {
           customerId: input.customerId || null,
           startTime,
           endTime,
-          status: "IN_PROGRESS"
+          status: "SCHEDULED"
         });
 
         if (item.isVoucherRedemption && item.customerVoucherId) {
@@ -169,7 +169,7 @@ export const PosCheckoutRepository = {
               customerVoucherId: customerVoucher.id,
               redeemedVisitCount: 1,
               redeemedAmount: null,
-              _tempItemIndex: transactionItemsData.length 
+              _tempItemIndex: transactionItemsData.length
             });
           } else {
             throw new Error("Penukaran level item saat ini hanya mendukung voucher berbasis kunjungan.");

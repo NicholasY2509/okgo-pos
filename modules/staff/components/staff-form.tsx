@@ -133,7 +133,22 @@ export function StaffForm({ workPositions, initialData, onSuccess }: StaffFormPr
         )}
       </div>
 
-
+      <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+        <div className="space-y-2 flex flex-col mt-2">
+          <label className="text-sm font-medium">Username (Untuk Kiosk Login)</label>
+          <Input placeholder="Misal: johndoe" {...form.register("username")} />
+          {form.formState.errors.username && (
+            <p className="text-sm text-destructive">{form.formState.errors.username.message}</p>
+          )}
+        </div>
+        <div className="space-y-2 flex flex-col mt-2">
+          <label className="text-sm font-medium">{isEditing ? "PIN Baru (Opsional)" : "PIN (Untuk Kiosk Login)"}</label>
+          <Input type="password" placeholder="••••••" {...form.register("pin")} />
+          {form.formState.errors.pin && (
+            <p className="text-sm text-destructive">{form.formState.errors.pin.message}</p>
+          )}
+        </div>
+      </div>
 
       {error && (
         <div className="text-sm font-medium text-destructive mt-2" aria-live="polite">

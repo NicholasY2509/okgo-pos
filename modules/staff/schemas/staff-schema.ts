@@ -8,6 +8,8 @@ export const createStaffSchema = z.object({
   isActive: z.boolean().default(true),
   workPositionId: z.string().min(1, "Posisi kerja wajib diisi"),
   staffIdNumber: z.string().optional().nullable(),
+  username: z.string().optional().nullable(),
+  pin: z.string().min(4, "PIN minimal 4 digit").optional().nullable().or(z.literal("")),
 })
 
 export type CreateStaffInput = z.input<typeof createStaffSchema>
