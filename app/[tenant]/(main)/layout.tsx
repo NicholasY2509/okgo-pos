@@ -30,15 +30,24 @@ export default async function TenantLayout({
             <Link href={`/pos`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
               POS
             </Link>
-            <Link href={`/bookings`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
-              Daftar Booking
-            </Link>
-            <Link href={`/transactions`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
-              Riwayat Transaksi
-            </Link>
+
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95 focus:outline-none">
-                Lainnya <ChevronDown size={16} />
+                Transaksi <ChevronDown size={16} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                <DropdownMenuItem asChild>
+                  <Link href={`/bookings`} className="w-full cursor-pointer">Daftar Booking</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/transactions`} className="w-full cursor-pointer">Riwayat Transaksi</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95 focus:outline-none">
+                Fitur <ChevronDown size={16} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 rounded-xl">
                 <DropdownMenuItem asChild>
@@ -49,19 +58,29 @@ export default async function TenantLayout({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Link href={`/hris`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
-              HRIS
-            </Link>
-            <Link href={`/accounting`} className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95">
-              Accounting
-            </Link>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 px-4 py-2 rounded-full transition-all active:scale-95 focus:outline-none">
+                Manajemen <ChevronDown size={16} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                <DropdownMenuItem asChild>
+                  <Link href={`/hris`} className="w-full cursor-pointer">HRIS</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/accounting`} className="w-full cursor-pointer">Accounting</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Logout Button */}
-            <TenantLogoutButton />
+            <div className="ml-2 pl-2 border-l border-border">
+              <TenantLogoutButton />
+            </div>
           </nav>
         </div>
       </header>
-      <main className="flex-1 p-6 w-full mx-auto">
+      <main className="flex-1 p-6 w-full mx-auto max-w-[1600px]">
         <PosStoreProvider>
           {children}
         </PosStoreProvider>

@@ -16,8 +16,70 @@ import {
   KeyIcon,
   Book,
   Users2,
-  Banknote
+  Banknote,
+  MonitorSmartphoneIcon,
+  StarIcon
 } from "lucide-react"
+
+export const branchNav = [
+  {
+    label: "Utama",
+    items: [
+      {
+        title: "POS",
+        url: "/pos",
+        icon: (<StoreIcon />),
+        roles: ["Admin", "Manager", "Kasir"],
+      },
+      {
+        title: "Daftar Booking",
+        url: "/bookings",
+        icon: (<Calendar1 />),
+        roles: ["Admin", "Manager", "Kasir"],
+      },
+      {
+        title: "Riwayat Transaksi",
+        url: "/transactions",
+        icon: (<FileText />),
+        roles: ["Admin", "Manager", "Kasir"],
+      }
+    ]
+  },
+  {
+    label: "Fitur Tambahan",
+    items: [
+      {
+        title: "Mode Kiosk",
+        url: "/kiosk",
+        icon: (<MonitorSmartphoneIcon />),
+        roles: ["Admin", "Manager", "Kasir"],
+      },
+      {
+        title: "Buku Ulasan",
+        url: "/reviews",
+        icon: (<StarIcon />),
+        roles: ["Admin", "Manager"],
+      },
+    ]
+  },
+  {
+    label: "Manajemen",
+    items: [
+      {
+        title: "HRIS",
+        url: "/hris",
+        icon: (<UsersIcon />),
+        roles: ["Admin", "Manager"],
+      },
+      {
+        title: "Accounting",
+        url: "/accounting",
+        icon: (<Book />),
+        roles: ["Admin", "Manager"],
+      }
+    ]
+  }
+]
 
 export const adminNav = [
   {

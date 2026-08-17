@@ -14,16 +14,15 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-import { adminNav } from "./app-sidebar-data"
+import { adminNav, branchNav } from "./app-sidebar-data"
 
 export function AppSidebar({ portalType = "branch", session, ...props }: React.ComponentProps<typeof Sidebar> & { portalType?: "admin" | "branch", session: any }) {
   const pathname = usePathname()
 
-  // 1. Determine portal based on prop
   const isAdminPortal = portalType === "admin"
+  const navigationData = isAdminPortal ? adminNav : branchNav
 
-  // 3. Transform to match NavMain expected structure (No role filtering needed)
-  const navMainGroups = adminNav.map(group => ({
+  const navMainGroups = navigationData.map(group => ({
     ...group,
     items: group.items.map(link => ({
       ...link,
