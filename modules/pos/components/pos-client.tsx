@@ -77,6 +77,7 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
       <div className="w-[400px] shrink-0 flex flex-col sticky top-20 h-[calc(100vh-8rem)] min-h-[500px]">
         <PosCart
           onCheckout={() => setIsPaymentModalOpen(true)}
+          branchId={branchId}
         />
       </div>
 

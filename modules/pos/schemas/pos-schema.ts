@@ -31,6 +31,7 @@ export const posCheckoutSchema = z.object({
   branchId: z.string().min(1, "Branch ID is required"),
   customerId: z.string().optional(),
   cashierId: z.string().optional(),
+  promotionId: z.string().optional(),
   isPayLater: z.boolean().default(false).optional(),
 
   items: z.array(

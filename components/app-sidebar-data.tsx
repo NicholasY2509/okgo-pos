@@ -103,6 +103,12 @@ export const adminNav = [
         icon: (<StoreIcon />),
         roles: ["Admin"],
       },
+      {
+        title: "Promo & Diskon",
+        url: "/promotions",
+        icon: (<PercentCircle />),
+        roles: ["Admin"],
+      },
 
       {
         title: "Voucher",

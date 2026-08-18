@@ -1,17 +1,9 @@
 "use client";
 
-import { usePosStoreSelector } from "../../stores/pos-store";
+import { usePosCart } from "../../stores/pos-store";
 
 export function CartSummary() {
-  const subtotal = usePosStoreSelector((state) =>
-    state.items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0)
-  );
-
-  const discountTotal = usePosStoreSelector((state) =>
-    state.items.reduce((acc, item) => acc + item.discountAmount, 0)
-  );
-
-  const totalAmount = subtotal - discountTotal;
+  const { subtotal, discountTotal, totalAmount } = usePosCart();
 
   return (
     <div className="space-y-1.5 mb-3">

@@ -1,4 +1,3 @@
-import { DiscountService } from "../../discount/services/discount-service";
 import { PosDataRepository } from "../repositories/pos-data-repository";
 
 export class PosDataService {
@@ -9,7 +8,7 @@ export class PosDataService {
       return null;
     }
 
-    const activeDiscount = await DiscountService.getApplicableDiscount(branch.id);
+    const activeDiscount = 0;
 
     const products = await PosDataRepository.getActiveProducts();
 

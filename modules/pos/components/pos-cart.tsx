@@ -6,11 +6,14 @@ import { CartItems } from "./cart/cart-items";
 import { CartSummary } from "./cart/cart-summary";
 import { CartCheckout } from "./cart/cart-checkout";
 
+import { PosPromoDialog } from "./cart/pos-promo-dialog";
+
 interface PosCartProps {
   onCheckout: () => void;
+  branchId: string;
 }
 
-export function PosCart({ onCheckout }: PosCartProps) {
+export function PosCart({ onCheckout, branchId }: PosCartProps) {
   return (
     <div className="flex-1 bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col h-full relative overflow-hidden">
       <CartHeader />
@@ -19,7 +22,8 @@ export function PosCart({ onCheckout }: PosCartProps) {
       </div>
       <CartItems />
 
-      <div className="border-t border-border pt-3 mt-2 bg-card relative z-10 shrink-0">
+      <div className="border-t border-border pt-3 mt-2 bg-card relative z-10 shrink-0 space-y-3">
+        <PosPromoDialog branchId={branchId} />
         <CartSummary />
         <CartCheckout onCheckout={onCheckout} />
       </div>

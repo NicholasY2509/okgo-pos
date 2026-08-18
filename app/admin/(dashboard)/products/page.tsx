@@ -6,8 +6,6 @@ import { ProductsTable } from "@/modules/product/components/products-table"
 import { CategoriesTable } from "@/modules/product/components/categories-table"
 import { ProductFilters } from "@/modules/product/components/product-filters"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
-import { DiscountWeeklyCalendar } from "@/modules/discount/components/discount-weekly-calendar"
-import { DiscountService } from "@/modules/discount/services/discount-service"
 import { BranchService } from "@/modules/branch/services/branch-service"
 import { PageHeader } from "@/components/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -24,10 +22,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const search = typeof params.search === 'string' ? params.search : undefined;
   const categoryId = typeof params.categoryId === 'string' ? params.categoryId : undefined;
 
-  const [categories, productData, rawDiscounts, branches] = await Promise.all([
+  const [categories, productData, branches] = await Promise.all([
     CategoryService.getAllCategories(),
     ProductService.getAllProducts({ page, limit, search, categoryId }),
-    DiscountService.getDiscounts(),
     BranchService.getAllBranches()
   ])
 
@@ -36,19 +33,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     price: Number(p.price)
   }))
 
-  const discounts = rawDiscounts.map(d => ({
-    id: d.id,
-    name: d.name,
-    dayOfWeek: d.dayOfWeek,
-    startTime: d.startTime,
-    endTime: d.endTime,
-    percentage: Number(d.percentage),
-    isActive: d.isActive,
-    branchId: d.branchId,
-    createdAt: d.createdAt,
-    updatedAt: d.updatedAt,
-    branch: d.branch ? { ...d.branch } : null
-  }))
 
   return (
     <div className="flex flex-col gap-6">
@@ -62,7 +46,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           <TabsList>
             <TabsTrigger value="services">Layanan / Produk</TabsTrigger>
             <TabsTrigger value="categories">Kategori</TabsTrigger>
-            <TabsTrigger value="discounts">Diskon</TabsTrigger>
           </TabsList>
 
           <div className="flex gap-2">
@@ -83,10 +66,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
         <TabsContent value="categories" className="space-y-6">
           <CategoriesTable categories={categories} />
-        </TabsContent>
-
-        <TabsContent value="discounts" className="space-y-6">
-          <DiscountWeeklyCalendar data={discounts} branches={branches} />
         </TabsContent>
       </Tabs>
     </div>

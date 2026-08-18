@@ -57,6 +57,7 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
     const payload = {
       branchId,
       customerId: cart.customerId,
+      promotionId: cart.appliedPromo?.promoId,
       items: cart.items.map((i: any) => ({
         type: i.type,
         serviceId: i.type === "SERVICE" ? i.serviceId : undefined,

@@ -22,9 +22,17 @@ export type CartItem = {
   voucherCode?: string;
 };
 
+export type AppliedPromo = {
+  promoId: string;
+  name: string;
+  discountAmount: number;
+  rewardType: string;
+};
+
 interface PosState {
   items: CartItem[];
   customerId: string | undefined;
+  appliedPromo: AppliedPromo | null;
 }
 
 interface PosActions {
@@ -34,6 +42,8 @@ interface PosActions {
   updateQuantity: (cartId: string, quantity: number) => void;
   updateItemDiscount: (cartId: string, discountAmount: number) => void;
   clearCart: () => void;
+  applyPromo: (promo: AppliedPromo) => void;
+  removePromo: () => void;
 }
 
 export type PosStore = PosState & PosActions;
@@ -44,6 +54,7 @@ export const createPosStore = () => {
       (set) => ({
         items: [],
         customerId: undefined,
+        appliedPromo: null,
         setCustomerId: (customerId) => set({ customerId }),
         addItem: (item) =>
           set((state) => ({
@@ -54,20 +65,29 @@ export const createPosStore = () => {
                 cartId: Math.random().toString(36).substr(2, 9),
               },
             ],
+            // Auto remove promo when items are added as it might invalidate conditions
+            appliedPromo: null,
           })),
         removeItem: (cartId) =>
           set((state) => ({
             items: state.items.filter((i) => i.cartId !== cartId),
+            // Auto remove promo when items are removed
+            appliedPromo: null,
           })),
         updateQuantity: (cartId, quantity) =>
           set((state) => ({
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, quantity } : i)),
+            // Auto remove promo when quantity changes
+            appliedPromo: null,
           })),
         updateItemDiscount: (cartId, discountAmount) =>
           set((state) => ({
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, discountAmount } : i)),
+            appliedPromo: null,
           })),
-        clearCart: () => set({ items: [], customerId: undefined }),
+        clearCart: () => set({ items: [], customerId: undefined, appliedPromo: null }),
+        applyPromo: (promo) => set({ appliedPromo: promo }),
+        removePromo: () => set({ appliedPromo: null }),
       }),
       {
         name: "pos-cart-storage", // key in localStorage
@@ -115,6 +135,8 @@ export function usePosStoreActions() {
     updateQuantity: useStore(store, (s) => s.updateQuantity),
     updateItemDiscount: useStore(store, (s) => s.updateItemDiscount),
     clearCart: useStore(store, (s) => s.clearCart),
+    applyPromo: useStore(store, (s) => s.applyPromo),
+    removePromo: useStore(store, (s) => s.removePromo),
   };
 }
 
@@ -132,9 +154,14 @@ export function usePosCart() {
   const updateQuantity = useStore(store, (s) => s.updateQuantity);
   const updateItemDiscount = useStore(store, (s) => s.updateItemDiscount);
   const clearCart = useStore(store, (s) => s.clearCart);
+  const appliedPromo = useStore(store, (s) => s.appliedPromo);
+  const applyPromo = useStore(store, (s) => s.applyPromo);
+  const removePromo = useStore(store, (s) => s.removePromo);
 
   const subtotal = items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
-  const discountTotal = items.reduce((acc, item) => acc + item.discountAmount, 0);
+  const itemDiscountTotal = items.reduce((acc, item) => acc + item.discountAmount, 0);
+  const promoDiscountTotal = appliedPromo ? appliedPromo.discountAmount : 0;
+  const discountTotal = itemDiscountTotal + promoDiscountTotal;
   const totalAmount = subtotal - discountTotal;
 
   return {
@@ -146,7 +173,12 @@ export function usePosCart() {
     updateQuantity,
     updateItemDiscount,
     clearCart,
+    appliedPromo,
+    applyPromo,
+    removePromo,
     subtotal,
+    itemDiscountTotal,
+    promoDiscountTotal,
     discountTotal,
     totalAmount,
   };

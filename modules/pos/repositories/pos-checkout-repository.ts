@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { PosCheckoutInput } from "../schemas/pos-schema";
-import { DiscountService } from "../../discount/services/discount-service";
 import { PosUtils } from "../services/pos-utils";
 
 export const PosCheckoutRepository = {
@@ -52,6 +51,7 @@ export const PosCheckoutRepository = {
           transactionNumber: PosUtils.generateTransactionNumber(),
           subtotal,
           discountTotal,
+          promotionId: input.promotionId || null,
           taxTotal: 0,
           totalAmount,
           paidAmount,
@@ -101,7 +101,7 @@ export const PosCheckoutRepository = {
     const customerVouchersData: any[] = [];
     const itemVoucherRedemptionsData: any[] = [];
 
-    const applicableDiscountPercentage = await DiscountService.getApplicableDiscount(input.branchId);
+
 
     for (const item of input.items) {
       let unitPrice = 0;
@@ -196,9 +196,11 @@ export const PosCheckoutRepository = {
       if (item.type === "SERVICE") {
         if (item.isVoucherRedemption) {
           totalItemDiscount = unitPrice * item.quantity;
-        } else if (applicableDiscountPercentage > 0) {
-          totalItemDiscount = (unitPrice * item.quantity * applicableDiscountPercentage) / 100;
+        } else {
+          totalItemDiscount = item.discountAmount || 0;
         }
+      } else if (item.type === "VOUCHER_PACKET") {
+        totalItemDiscount = item.discountAmount || 0;
       }
 
       const itemSubtotal = (unitPrice * item.quantity) - totalItemDiscount;
@@ -218,6 +220,19 @@ export const PosCheckoutRepository = {
         subtotal: itemSubtotal,
         _tempType: item.type
       });
+    }
+
+    if (input.promotionId) {
+      const promo = await tx.promotion.findUnique({ where: { id: input.promotionId } });
+      if (promo && promo.isActive) {
+        const reward = promo.reward as any;
+        if (reward.type === "PERCENTAGE_TOTAL" && reward.value) {
+          discountTotal += subtotal * (reward.value / 100);
+        } else if (reward.type === "FREE_ADDON" && reward.addonServiceId) {
+          const product = await tx.product.findUnique({ where: { id: reward.addonServiceId } });
+          if (product) discountTotal += Number(product.price);
+        }
+      }
     }
 
     return { subtotal, discountTotal, transactionItemsData, serviceSessionsData, customerVouchersData, itemVoucherRedemptionsData };

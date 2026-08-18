@@ -1,19 +1,29 @@
-model Discount {
-  id         String  @id @default(cuid())
-  name       String
-  dayOfWeek  String // "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
-  startTime  String // Format "HH:mm"
-  endTime    String // Format "HH:mm"
-  percentage Decimal
-  isActive   Boolean @default(true)
+model Promotion {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean @default(true)
 
-  branchId String? // If null, applies to all branches
+  branchId    String? // Null applies to all branches
+
+  // JSON representation of active days and times.
+  // Example: [{ "days": ["MONDAY", "TUESDAY"], "startTime": "09:00", "endTime": "11:30" }]
+  schedules   Json
+
+  // JSON representation of what the cart needs to qualify.
+  // Example: { "minQuantity": 2, "requiredServiceIds": ["javanese_id"] }
+  conditions  Json?
+
+  // JSON representation of the reward.
+  // Example: { "type": "PERCENTAGE_TOTAL", "value": 15 }
+  // Example: { "type": "FREE_ADDON", "addonServiceId": "30_min_extension_id" }
+  reward      Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  branch Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  branch       Branch?       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
 
-  @@index([dayOfWeek])
   @@index([branchId])
 }

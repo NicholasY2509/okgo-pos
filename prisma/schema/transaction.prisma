@@ -54,6 +54,8 @@ model Transaction {
   status TransactionStatus @default(PENDING)
 
   customer           Customer?            @relation(fields: [customerId], references: [id])
+  promotionId        String?
+  promotion          Promotion?           @relation(fields: [promotionId], references: [id])
   items              TransactionItem[]
   payments           TransactionPayment[]
   voucherRedemptions VoucherRedemption[]
