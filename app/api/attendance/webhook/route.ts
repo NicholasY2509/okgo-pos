@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          await prisma.attendanceMachineLog.create({
+          const savedLog = await prisma.attendanceMachineLog.create({
             data: {
               machineUserId: machineUserId,
               cardName: eventData.CardName || "Unknown",
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
               where: { sn: deviceSn }
             });
             if (machine) {
-              await AttendanceService.processPunch(staffId, parsedTime, String(attendanceState), machine.id);
+              await AttendanceService.processPunch(staffId, savedLog.createdAt, String(attendanceState), machine.id);
             }
           }
         } catch (dbError) {

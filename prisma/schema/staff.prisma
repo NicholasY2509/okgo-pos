@@ -63,6 +63,8 @@ model Staff {
   staffMachines          StaffMachine[]
   attendanceMachineLogs  AttendanceMachineLog[]
   attendances            Attendance[]
+  staffSalaries          StaffSalary[]
+  staffSalaryComponents  StaffSalaryComponent[]
 }
 
 model StaffUser {
@@ -76,4 +78,18 @@ model StaffUser {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([staffId, userId])
+}
+
+model StaffSalary {
+  id            String   @id @default(cuid())
+  staffId       String
+  baseSalary    Decimal  @default(0)
+  effectiveDate DateTime
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  staff         Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, effectiveDate(sort: Desc)])
 }

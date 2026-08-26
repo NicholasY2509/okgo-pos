@@ -14,7 +14,13 @@ export const metadata: Metadata = {
 }
 
 export default async function AttendanceStatusesPage() {
-  const statuses = await AttendanceStatusService.getAll()
+  const rawStatuses = await AttendanceStatusService.getAll()
+
+  // Convert Prisma Decimal objects to simple numbers for the client component
+  const statuses = rawStatuses.map(status => ({
+    ...status,
+    penaltyAmount: status.penaltyAmount ? Number(status.penaltyAmount) : 0,
+  }))
 
   return (
     <div className="flex flex-col gap-6">

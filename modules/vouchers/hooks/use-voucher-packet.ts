@@ -25,7 +25,9 @@ export function useVoucherPacket({ productId, initialData, onSuccess }: UseVouch
       totalCreditAmount: null,
       validityDays: null,
       isActive: true,
-      productId: productId || null
+      cashierIncentiveType: "FIXED",
+      cashierIncentiveAmount: null,
+      productId: productId || ""
     },
   })
 
@@ -33,7 +35,7 @@ export function useVoucherPacket({ productId, initialData, onSuccess }: UseVouch
     setError(null)
 
     // Ensure productId is always correctly set
-    const submitValues = { ...values, productId: productId || null }
+    const submitValues = { ...values, productId: productId || values.productId }
 
     let result;
     if (initialData?.id) {

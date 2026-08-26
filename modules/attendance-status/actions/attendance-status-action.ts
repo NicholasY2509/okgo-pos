@@ -43,3 +43,12 @@ export async function deleteAttendanceStatusAction(id: string) {
     return { error: error.message || "Terjadi kesalahan saat menghapus status." }
   }
 }
+
+export async function getAttendanceStatusListAction() {
+  try {
+    const data = await AttendanceStatusService.getAll()
+    return { success: true, data }
+  } catch (error: any) {
+    return { error: error.message || "Gagal mengambil data status kehadiran." }
+  }
+}

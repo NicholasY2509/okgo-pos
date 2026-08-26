@@ -2,15 +2,32 @@ import { prisma } from "@/lib/prisma"
 
 export const VoucherPacketRepository = {
   async create(createData: any) {
+    const { productId, ...rest } = createData;
+    const data: any = { ...rest };
+    if (productId) {
+      data.product = { connect: { id: productId } };
+    }
+
     return await prisma.voucherPacket.create({
-      data: createData
+      data
     })
   },
 
   async update(id: string, updateData: any) {
+    const { productId, ...rest } = updateData;
+    const data: any = { ...rest };
+
+    if (productId !== undefined) {
+      if (productId === null) {
+        data.product = { disconnect: true };
+      } else {
+        data.product = { connect: { id: productId } };
+      }
+    }
+
     return await prisma.voucherPacket.update({
       where: { id },
-      data: updateData
+      data
     })
   },
 

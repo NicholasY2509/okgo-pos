@@ -1,6 +1,7 @@
 import { VoucherPacketService } from "@/modules/vouchers/services/voucher-packet-service"
 import { PageHeader } from "@/components/page-header"
 import { VoucherPacketsTable } from "@/modules/vouchers/components/voucher-packets-table"
+import { VoucherPacketDialog } from "@/modules/vouchers/components/voucher-packet-dialog"
 
 export default async function VouchersPage() {
   const rawVoucherPackets = await VoucherPacketService.getAll()
@@ -20,7 +21,9 @@ export default async function VouchersPage() {
       <PageHeader
         title="Paket Voucher"
         description="Kelola dan lihat semua paket voucher di seluruh produk Anda."
-      />
+      >
+        <VoucherPacketDialog />
+      </PageHeader>
 
       <VoucherPacketsTable data={voucherPackets} />
     </div>

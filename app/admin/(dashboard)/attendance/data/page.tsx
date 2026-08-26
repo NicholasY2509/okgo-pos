@@ -3,10 +3,9 @@ import { PageHeader } from "@/components/page-header"
 import { AttendanceService } from "@/modules/attendance/services/attendance-service"
 import { AttendanceTable } from "@/modules/attendance/components/attendance-table"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
-import { Card, CardContent } from "@/components/ui/card"
-
 import { AttendanceFilters } from "@/modules/attendance/components/attendance-filters"
 import { AttendanceStatusService } from "@/modules/attendance-status/services/attendance-status-service"
+import { AttendanceCalculatorDialog } from "@/modules/attendance/components/attendance-calculator-dialog"
 
 export const dynamic = "force-dynamic"
 
@@ -31,17 +30,25 @@ export default async function AttendanceDataPage({ searchParams }: AttendanceDat
   const endDate = endDateStr ? new Date(endDateStr) : undefined;
 
   const data = await AttendanceService.getAttendances({ page, limit, search, startDate, endDate, statusId })
-  const statuses = await AttendanceStatusService.getAll()
+  const rawStatuses = await AttendanceStatusService.getAll()
+  
+  // Cast Decimal to Number for Client Component
+  const statuses = rawStatuses.map(status => ({
+    ...status,
+    penaltyAmount: status.penaltyAmount ? Number(status.penaltyAmount) : 0
+  }))
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Data Kehadiran"
         description="Pusat data absensi harian yang sudah diolah dari log mesin absensi."
-      />
+      >
+        <AttendanceCalculatorDialog />
+      </PageHeader>
 
       <AttendanceFilters statuses={statuses} />
-      <AttendanceTable data={data.attendances} />
+      <AttendanceTable data={data.attendances} statuses={statuses} />
       <DataTablePagination metadata={data.metadata} />
     </div>
   )

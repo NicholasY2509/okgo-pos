@@ -40,6 +40,9 @@ model VoucherPacket {
   validityDays Int?
   isActive     Boolean @default(true)
 
+  cashierIncentiveType   String?  @default("FIXED") // FIXED, PERCENTAGE
+  cashierIncentiveAmount Decimal? @default(0)
+
   productId String?
 
   customerVouchers CustomerVoucher[]

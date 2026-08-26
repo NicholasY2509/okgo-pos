@@ -148,7 +148,7 @@ export function DataTablePagination({ metadata }: DataTablePaginationProps) {
                 className={page <= 1 || isPending ? "pointer-events-none opacity-50" : "cursor-pointer"}
               />
             </PaginationItem>
-            
+
             {renderPageNumbers()}
 
             <PaginationItem>

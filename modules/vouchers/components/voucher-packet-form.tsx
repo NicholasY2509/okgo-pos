@@ -8,6 +8,8 @@ import { VoucherPacketInput } from "../schemas/voucher-packet"
 import { Label } from "@/components/ui/label"
 import { Controller } from "react-hook-form"
 import { NumericFormat } from "react-number-format"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { GlobalProductCombobox } from "@/modules/product/components/global-product-combobox"
 
 interface VoucherPacketFormProps {
   productId?: string
@@ -25,6 +27,26 @@ export function VoucherPacketForm({ productId, initialData, onSuccess, onCancel 
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {!productId && (
+        <div className="space-y-2">
+          <Label htmlFor="productId">Pilih Produk (Wajib)</Label>
+          <Controller
+            control={form.control}
+            name="productId"
+            render={({ field }) => (
+              <GlobalProductCombobox
+                value={field.value || null}
+                onChange={field.onChange}
+                error={!!form.formState.errors.productId}
+              />
+            )}
+          />
+          {form.formState.errors.productId && (
+            <p className="text-sm text-red-500">{form.formState.errors.productId.message}</p>
+          )}
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="name">Nama Paket</Label>
         <Input
@@ -112,6 +134,63 @@ export function VoucherPacketForm({ productId, initialData, onSuccess, onCancel 
         {form.formState.errors.price && (
           <p className="text-sm text-red-500">{form.formState.errors.price.message}</p>
         )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2 col-span-1">
+          <Label htmlFor="cashierIncentiveType">Tipe</Label>
+          <Controller
+            control={form.control}
+            name="cashierIncentiveType"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value || "FIXED"}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tipe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FIXED">Rp</SelectItem>
+                  <SelectItem value="PERCENTAGE">%</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+
+        <div className="space-y-2 col-span-2">
+          <Label htmlFor="cashierIncentiveAmount">Insentif Kasir</Label>
+          <Controller
+            control={form.control}
+            name="cashierIncentiveAmount"
+            render={({ field }) => (
+              form.watch("cashierIncentiveType") === "PERCENTAGE" ? (
+                <Input
+                  id="cashierIncentiveAmount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  placeholder="cth. 5 untuk 5%"
+                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                  value={field.value ?? ""}
+                />
+              ) : (
+                <NumericFormat
+                  id="cashierIncentiveAmount"
+                  customInput={Input}
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  prefix="Rp "
+                  placeholder="cth. Rp 5.000"
+                  onValueChange={(values) => field.onChange(values.floatValue || 0)}
+                  value={field.value as number | undefined}
+                />
+              )
+            )}
+          />
+          {form.formState.errors.cashierIncentiveAmount && (
+            <p className="text-sm text-red-500">{form.formState.errors.cashierIncentiveAmount.message}</p>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">

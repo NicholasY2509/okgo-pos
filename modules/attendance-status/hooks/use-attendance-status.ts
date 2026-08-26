@@ -10,11 +10,14 @@ export function useAttendanceStatusForm(initialData?: any, onSuccess?: () => voi
   const [isDeleting, setIsDeleting] = useState(false)
 
   const form = useForm<AttendanceStatusInput>({
-    resolver: zodResolver(attendanceStatusSchema),
+    resolver: zodResolver(attendanceStatusSchema) as any,
     defaultValues: {
       code: initialData?.code || "",
       name: initialData?.name || "",
       description: initialData?.description || "",
+      isPenaltyApplicable: initialData?.isPenaltyApplicable ?? false,
+      penaltyType: initialData?.penaltyType || "FIXED",
+      penaltyAmount: initialData?.penaltyAmount ? Number(initialData.penaltyAmount) : 0,
     },
   })
 

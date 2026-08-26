@@ -1,15 +1,56 @@
 "use client"
 
-import React from "react"
+import React, { useTransition } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
 import { Badge } from "@/components/ui/badge"
+import { AttendanceStatusPicker } from "@/modules/attendance-status/components/attendance-status-picker"
+import { updateAttendanceStatusAction } from "../actions/attendance-action"
+import { toast } from "sonner"
+import { Lock } from "lucide-react"
 
 interface AttendanceTableProps {
   data: any[]
+  statuses?: any[]
 }
 
-export function AttendanceTable({ data }: AttendanceTableProps) {
+function StatusCell({ row, statuses }: { row: any, statuses?: any[] }) {
+  const [isPending, startTransition] = useTransition()
+  const status = row.original.status
+  const isManualOverride = row.original.isManualOverride
+  
+  const handleStatusChange = (newStatusId: string) => {
+    if (!newStatusId) return
+    startTransition(async () => {
+      const res = await updateAttendanceStatusAction(row.original.id, newStatusId)
+      if (res?.error) {
+        toast.error(res.error)
+      } else {
+        toast.success("Status absensi berhasil diubah.")
+      }
+    })
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-32">
+        <AttendanceStatusPicker 
+          value={status?.id} 
+          onChange={handleStatusChange} 
+          statusList={statuses}
+          className="h-8"
+        />
+      </div>
+      {isManualOverride && (
+        <div title="Diubah secara manual (tidak akan dioverride otomatis)">
+          <Lock className="w-3 h-3 text-muted-foreground" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function AttendanceTable({ data, statuses }: AttendanceTableProps) {
   const columns: ColumnDef<any>[] = [
     {
       accessorKey: "attendanceDate",
@@ -59,8 +100,7 @@ export function AttendanceTable({ data }: AttendanceTableProps) {
       accessorKey: "status.name",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.original.status
-        return status ? <Badge>{status.name}</Badge> : <span className="text-muted-foreground">-</span>
+        return <StatusCell row={row} statuses={statuses} />
       },
     },
   ]

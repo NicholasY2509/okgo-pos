@@ -106,6 +106,7 @@ export const PosCheckoutRepository = {
     for (const item of input.items) {
       let unitPrice = 0;
       let itemNameSnapshot = "";
+      let cashierIncentiveAmount = 0;
 
       if (item.type === "SERVICE") {
         const product = await tx.product.findUnique({ where: { id: item.serviceId } });
@@ -186,6 +187,16 @@ export const PosCheckoutRepository = {
         unitPrice = Number(packet.price);
         itemNameSnapshot = packet.name;
 
+        if (packet.cashierIncentiveAmount) {
+          let perUnitIncentive = 0;
+          if (packet.cashierIncentiveType === "PERCENTAGE") {
+            perUnitIncentive = (Number(packet.cashierIncentiveAmount) / 100) * unitPrice;
+          } else {
+            perUnitIncentive = Number(packet.cashierIncentiveAmount);
+          }
+          cashierIncentiveAmount = perUnitIncentive * item.quantity;
+        }
+
         customerVouchersData.push({
           packet,
           quantity: item.quantity
@@ -218,6 +229,7 @@ export const PosCheckoutRepository = {
         quantity: item.quantity,
         discountAmount: totalItemDiscount,
         subtotal: itemSubtotal,
+        cashierIncentiveAmount,
         _tempType: item.type
       });
     }

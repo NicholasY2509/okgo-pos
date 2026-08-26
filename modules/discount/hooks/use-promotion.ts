@@ -27,8 +27,8 @@ export function usePromotionForm(initialData?: any, onSuccess?: () => void) {
   }
 
   const form = useForm<PromotionInput>({
-    resolver: zodResolver(promotionSchema),
-    defaultValues,
+    resolver: zodResolver(promotionSchema) as any,
+    defaultValues: defaultValues as any,
   })
 
   // We expose field arrays for schedules so the UI can add/remove them dynamically

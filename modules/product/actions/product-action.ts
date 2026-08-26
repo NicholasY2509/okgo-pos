@@ -82,3 +82,13 @@ export async function getFeaturedProductsAction() {
     return { error: "Gagal memuat layanan unggulan." }
   }
 }
+
+export async function getAllProductsListAction() {
+  try {
+    // Just fetch up to 1000 products for the combobox
+    const result = await ProductService.getAllProducts({ page: 1, limit: 1000 });
+    return { success: true, data: result.products };
+  } catch (error: any) {
+    return { error: error.message || "Gagal memuat produk" };
+  }
+}

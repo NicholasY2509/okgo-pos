@@ -8,6 +8,7 @@ import { Edit2, Trash2 } from "lucide-react"
 import { AttendanceStatusDialog } from "./attendance-status-dialog"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useAttendanceStatusForm } from "../hooks/use-attendance-status"
+import { formatIDR } from "@/lib/utils"
 
 interface AttendanceStatusTableProps {
   data: any[]
@@ -58,6 +59,23 @@ export function AttendanceStatusTable({ data }: AttendanceStatusTableProps) {
       accessorKey: "description",
       header: "Deskripsi",
       cell: ({ row }) => <div className="text-muted-foreground">{row.getValue("description") || "-"}</div>,
+    },
+    {
+      id: "penalty",
+      header: "Penalti",
+      cell: ({ row }) => {
+        const isApplicable = row.original.isPenaltyApplicable
+        if (!isApplicable) return <span className="text-muted-foreground">-</span>
+
+        const type = row.original.penaltyType
+        const amount = Number(row.original.penaltyAmount)
+
+        if (type === "PERCENTAGE") {
+          return <span className="font-medium text-red-500">Potongan {amount}%</span>
+        }
+
+        return <span className="font-medium text-red-500">Potongan {formatIDR(amount)}</span>
+      }
     },
     {
       id: "actions",

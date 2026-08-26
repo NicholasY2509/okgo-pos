@@ -1,0 +1,28 @@
+model SalaryComponent {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  isDeduction Boolean  @default(false)
+  type        String   @default("FIXED") // FIXED, PERCENTAGE, PER_ATTENDANCE
+  amount      Decimal? @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staffSalaryComponents StaffSalaryComponent[]
+}
+
+model StaffSalaryComponent {
+  id                String   @id @default(cuid())
+  staffId           String
+  salaryComponentId String
+  amount            Decimal? // Override default amount if needed
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff           Staff           @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  salaryComponent SalaryComponent @relation(fields: [salaryComponentId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, salaryComponentId])
+}

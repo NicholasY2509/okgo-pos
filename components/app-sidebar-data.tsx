@@ -18,7 +18,8 @@ import {
   Users2,
   Banknote,
   MonitorSmartphoneIcon,
-  StarIcon
+  StarIcon,
+  CircleDollarSign
 } from "lucide-react"
 
 export const branchNav = [
@@ -217,6 +218,29 @@ export const adminNav = [
             url: "/admin/attendance/machines",
           }
         ]
+      },
+    ]
+  },
+  {
+    label: "Gaji & Insentif",
+    items: [
+      {
+        title: "Penggajian",
+        url: "/payroll",
+        icon: (<CalculatorIcon />),
+        roles: ["Admin"],
+      },
+      {
+        title: "Gaji Pokok",
+        url: "/salaries",
+        icon: (<CircleDollarSign />),
+        roles: ["Admin"],
+      },
+      {
+        title: "Komponen Gaji",
+        url: "/admin/payroll/components",
+        icon: (<CalculatorIcon />),
+        roles: ["Admin"],
       },
     ]
   },

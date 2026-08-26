@@ -4,6 +4,18 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { formatIDR } from "@/lib/utils"
 import Link from "next/link"
+import { MoreHorizontal, Edit, Trash } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
+import { VoucherPacketDialog } from "./voucher-packet-dialog"
+import { useVoucherPacket } from "../hooks/use-voucher-packet"
 
 export type VoucherPacketTableData = {
   id: string
@@ -15,6 +27,8 @@ export type VoucherPacketTableData = {
   validityDays: number | null
   isActive: boolean
   productId: string | null
+  cashierIncentiveType: string | null
+  cashierIncentiveAmount: any
   product: {
     name: string
   } | null
@@ -62,6 +76,16 @@ export const voucherPacketsColumns: ColumnDef<VoucherPacketTableData>[] = [
     },
   },
   {
+    accessorKey: "cashierIncentiveAmount",
+    header: "Insentif",
+    cell: ({ row }) => {
+      const type = row.original.cashierIncentiveType;
+      const amount = Number(row.original.cashierIncentiveAmount);
+      if (!amount) return "-";
+      return <div>{type === "PERCENTAGE" ? `${amount}%` : formatIDR(amount)}</div>;
+    },
+  },
+  {
     accessorKey: "validityDays",
     header: "Masa Berlaku",
     cell: ({ row }) => {
@@ -78,4 +102,52 @@ export const voucherPacketsColumns: ColumnDef<VoucherPacketTableData>[] = [
       </Badge>
     ),
   },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      return <ActionsCell packet={row.original} />
+    },
+  },
 ]
+
+function ActionsCell({ packet }: { packet: VoucherPacketTableData }) {
+  const router = useRouter()
+  const { onDelete } = useVoucherPacket({ onSuccess: () => router.refresh() })
+
+  return (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Buka menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+          <VoucherPacketDialog
+            initialData={packet as any}
+            onSuccess={() => router.refresh()}
+            trigger={
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+            }
+          />
+          <DropdownMenuItem
+            className="text-red-600 focus:text-red-600"
+            onClick={() => {
+              if (window.confirm("Apakah Anda yakin ingin menghapus paket voucher ini?")) {
+                onDelete(packet.id)
+              }
+            }}
+          >
+            <Trash className="mr-2 h-4 w-4" />
+            Hapus
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}

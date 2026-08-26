@@ -51,7 +51,7 @@ export function VoucherPacketList({ productId, packets }: VoucherPacketListProps
       {packets.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">Tidak ada paket voucher yang dikonfigurasi untuk produk ini.</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           {packets.map((packet) => (
             <PacketCard
               key={packet.id}

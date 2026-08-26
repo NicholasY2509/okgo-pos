@@ -1,7 +1,6 @@
 import { PromotionInput, PromotionSchedule, PromotionCondition, PromotionReward } from "../schemas/promotion";
 import { PromotionRepository } from "../repositories/promotion-repository";
-import { prisma } from "@/lib/prisma";
-
+import { ProductRepository } from "@/modules/product/repositories/product-repository";
 export interface CartItem {
   id?: string;
   serviceId?: string;
@@ -33,7 +32,7 @@ export class PromotionService {
 
   static async getEligiblePromotions(cartItems: CartItem[], branchId: string) {
     const activePromos = await PromotionRepository.getActivePromotions(branchId);
-    
+
     const now = new Date();
     const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
     const currentDay = days[now.getDay()];
@@ -51,8 +50,8 @@ export class PromotionService {
       // 1. Check schedule
       const isScheduleValid = schedules.some(schedule => {
         return schedule.days.includes(currentDay as any) &&
-               currentTime >= schedule.startTime &&
-               currentTime <= schedule.endTime;
+          currentTime >= schedule.startTime &&
+          currentTime <= schedule.endTime;
       });
 
       if (!isScheduleValid) continue;
@@ -67,7 +66,7 @@ export class PromotionService {
             isValidCondition = false;
           }
         }
-        
+
         // requiredServiceIds check
         if (isValidCondition && conditions.requiredServiceIds && conditions.requiredServiceIds.length > 0) {
           const cartServiceIds = cartItems.map(item => item.serviceId).filter(Boolean);
@@ -86,7 +85,7 @@ export class PromotionService {
         const subtotal = cartItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
         potentialDiscountValue = subtotal * (reward.value / 100);
       } else if (reward.type === "FREE_ADDON" && reward.addonServiceId) {
-        const product = await prisma.product.findUnique({ where: { id: reward.addonServiceId } });
+        const product = await ProductRepository.getProductById(reward.addonServiceId);
         if (product) {
           potentialDiscountValue = Number(product.price);
         }
