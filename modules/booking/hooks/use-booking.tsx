@@ -124,7 +124,6 @@ export function useBooking() {
       form.reset();
       setStep(1);
       localStorage.removeItem("booking_draft");
-      toast.success("Booking berhasil dibuat!");
     }
   }
 

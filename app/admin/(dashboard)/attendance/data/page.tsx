@@ -31,7 +31,7 @@ export default async function AttendanceDataPage({ searchParams }: AttendanceDat
 
   const data = await AttendanceService.getAttendances({ page, limit, search, startDate, endDate, statusId })
   const rawStatuses = await AttendanceStatusService.getAll()
-  
+
   // Cast Decimal to Number for Client Component
   const statuses = rawStatuses.map(status => ({
     ...status,

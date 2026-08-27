@@ -31,6 +31,7 @@ export default function MarketingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [offers, setOffers] = useState<(MarketingOfferInput & { id: string })[]>([]);
   const [featuredServices, setFeaturedServices] = useState<any[]>([]);
+  const [bgImage, setBgImage] = useState("bg-1.webp");
 
   useEffect(() => {
     // setTheme("light");
@@ -39,11 +40,11 @@ export default function MarketingPage() {
         getActiveOffersAction(),
         getFeaturedProductsAction()
       ]);
-      
+
       if (offersResult.success && offersResult.data) {
         setOffers(offersResult.data);
       }
-      
+
       if (servicesResult.success && servicesResult.data) {
         const mapped = servicesResult.data.map((p: any) => ({
           title: p.name,
@@ -60,6 +61,10 @@ export default function MarketingPage() {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     handleScroll();
+
+    const bgs = ["bg-1.webp", "bg-2.webp", "bg-3.webp"];
+    setBgImage(bgs[Math.floor(Math.random() * bgs.length)]);
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, [setTheme]);
 
@@ -160,17 +165,21 @@ export default function MarketingPage() {
 
       {/* NAVBAR */}
       <motion.nav
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1, ease: "easeOut" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1, delay: 1.5, ease: "easeOut" }}
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled
           ? "bg-background/10 backdrop-blur-xl border-b border-border/50 py-4"
           : "bg-transparent border-b-transparent py-6"
           }`}
       >
         <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
-          <a href="#" className="text-2xl font-display font-light tracking-widest text-foreground">
-            NYENYAK<span className="text-primary font-sans font-light text-sm tracking-normal">.spa</span>
+          <a href="#" className="flex items-center">
+            <img
+              src="/logo-long.webp"
+              alt="Nyenyak Spa"
+              className={`object-contain transition-all duration-500 ${isScrolled ? 'h-9 md:h-11' : 'h-10 md:h-12'}`}
+            />
           </a>
           <div className="hidden md:flex space-x-12 font-medium text-sm text-muted-foreground tracking-wide">
             <button onClick={(e) => scrollTo(e, 'layanan')} className="hover:text-foreground transition-colors cursor-pointer">Layanan</button>
@@ -229,7 +238,10 @@ export default function MarketingPage() {
 
         {/* Minimalist Image Reveal */}
         <div className="absolute inset-0 z-0 overflow-hidden opacity-30 pointer-events-none">
-          <div className="hero-img absolute inset-[-10%] bg-[url('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center grayscale" />
+          <div
+            className="hero-img absolute inset-[-10%] bg-cover bg-center grayscale"
+            style={{ backgroundImage: `url('/${bgImage}')` }}
+          />
         </div>
       </header>
 
@@ -315,31 +327,29 @@ export default function MarketingPage() {
             <p className="text-muted-foreground max-w-md mx-auto font-light text-lg">Pilihan perawatan terbaik untuk relaksasi tubuh dan pikiran Anda.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="max-w-4xl mx-auto flex flex-col gap-6">
             {featuredServices.length === 0 ? (
-              <div className="col-span-full text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border/50">
-                <p className="text-muted-foreground font-light">Belum ada layanan yang ditambahkan.</p>
+              <div className="w-full text-center py-20 bg-muted/20 rounded-[2rem] border border-dashed border-border/50">
+                <p className="text-muted-foreground font-light text-lg">Belum ada layanan yang ditambahkan.</p>
               </div>
             ) : (
               featuredServices.map((service, i) => (
                 <motion.div
                   key={i}
-                  whileHover={{ y: -5 }}
-                  className="group flex flex-col"
+                  whileHover={{ scale: 1.02 }}
+                  className="group flex flex-col md:flex-row justify-between items-start md:items-center p-8 md:p-10 rounded-[2rem] border border-border/40 hover:border-primary/50 bg-background hover:bg-muted/10 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer"
                 >
-                  <div className="aspect-4/5 relative overflow-hidden rounded-2xl mb-8 bg-muted">
-                    <div className="absolute inset-0 bg-foreground/10 group-hover:bg-transparent transition-colors duration-700 z-10" />
-                    <img src={service.img} alt={service.title} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out" />
+                  <div className="flex-1 pr-0 md:pr-12">
+                    <div className="flex items-start md:items-center gap-4 mb-4">
+                      <span className="text-primary/50 font-mono text-sm pt-1 md:pt-0">{(i + 1).toString().padStart(2, '0')}</span>
+                      <h3 className="text-2xl md:text-3xl font-display font-light text-foreground group-hover:text-primary transition-colors">{service.title}</h3>
+                    </div>
+                    <p className="text-muted-foreground text-base leading-relaxed font-light pl-0 md:pl-9 mb-6 md:mb-0">{service.desc}</p>
                   </div>
-                  <div>
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-2xl font-display font-light text-foreground">{service.title}</h3>
-                    </div>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-6 font-light">{service.desc}</p>
-                    <div className="flex justify-between items-center pt-6 border-t border-border/50">
-                      <span className="text-muted-foreground text-xs uppercase tracking-widest">{service.time}</span>
-                      <span className="font-medium text-foreground">{service.price}</span>
-                    </div>
+
+                  <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto border-t md:border-t-0 border-border/50 pt-6 md:pt-0 min-w-[150px]">
+                    <span className="text-xl md:text-2xl font-light text-foreground mb-0 md:mb-3">{service.price}</span>
+                    <span className="text-muted-foreground text-xs uppercase tracking-widest flex items-center gap-2"><Clock className="w-3 h-3 stroke-1" /> {service.time}</span>
                   </div>
                 </motion.div>
               ))

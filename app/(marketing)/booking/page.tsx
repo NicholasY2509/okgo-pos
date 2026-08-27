@@ -12,9 +12,9 @@ export default function BookingPage() {
 
       {/* NAVBAR MATCHING MARKETING PAGE */}
       <nav className="w-full z-50 bg-transparent py-6 border-b border-border/10">
-        <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
-          <a href="/" className="text-2xl font-display font-light tracking-widest text-foreground">
-            NYENYAK<span className="text-primary font-sans font-light text-sm tracking-normal">.spa</span>
+        <div className="max-w-7xl mx-auto px-8 flex justify-center">
+          <a href="/" className="text-2xl font-display font-light tracking-widest items-center text-foreground">
+            <img src="/logo-long.webp" alt="Nyenyak Spa" className="h-10 md:h-12 object-contain" />
           </a>
         </div>
       </nav>

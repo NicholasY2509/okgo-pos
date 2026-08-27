@@ -59,7 +59,7 @@ export function StepCart({ form, services, staffList, dailySchedule, loading }: 
   };
 
   return (
-    <div className="space-y-10 animate-in slide-in-from-right-8 fade-in duration-300">
+    <div className="space-y-4 animate-in slide-in-from-right-8 fade-in duration-300">
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-1 text-left">
           <h2 className="text-3xl font-display font-light tracking-tight">Pilih Layanan</h2>
@@ -75,12 +75,11 @@ export function StepCart({ form, services, staffList, dailySchedule, loading }: 
         </Button>
       </div>
 
-      <div className="bg-primary/5 border border-primary/20 text-primary-foreground rounded-2xl p-4 flex gap-3 text-sm leading-relaxed animate-in fade-in">
-        <Info className="w-5 h-5 shrink-0 text-primary mt-0.5" />
-        <div className="text-foreground/80">
-          Pilih treatment dan terapis untuk Anda. <br />
-          <span className="font-medium text-foreground">Tips:</span> Anda dapat melewati pemilihan layanan ini dan langsung klik <b>Lanjut</b> jika ingin berkonsultasi di lokasi. Untuk menambah jumlah pengunjung (booking grup), silakan klik tombol <b>Tambah</b> di atas.
-        </div>
+      <div className="flex gap-2 items-start text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl border border-border/50">
+        <Info className="w-4 h-4 shrink-0 mt-0.5 opacity-70" />
+        <p className="leading-relaxed">
+          <span className="font-medium text-foreground/70">Tips:</span> Boleh langsung klik <b>Lanjut</b> jika ingin memilih layanan di lokasi. Untuk booking grup, gunakan tombol <b>Tambah</b>.
+        </p>
       </div>
 
       {isOverCapacity && (
