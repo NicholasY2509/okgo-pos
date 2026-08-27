@@ -218,6 +218,8 @@ model ServiceSession {
   rating        Int?
   reviewComment String?
 
+  therapistCommissionAmount Decimal? @default(0)
+
   staff              Staff?              @relation(fields: [staffId], references: [id])
   transactionItem    TransactionItem?    @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
   booking            Booking?            @relation(fields: [bookingId], references: [id], onDelete: Cascade)

@@ -77,7 +77,13 @@ export class AttendanceCalculationService {
             let isOvertime = false;
             if (attendance.clockOut) {
               const clockOutHHMM = getHHMM(attendance.clockOut)
-              if (clockOutHHMM > schedule.workingHour.clockOut) {
+
+              const toMinutes = (timeStr: string) => {
+                const [h, m] = timeStr.split(':').map(Number);
+                return (h * 60) + m;
+              };
+
+              if (toMinutes(clockOutHHMM) >= toMinutes(schedule.workingHour.clockOut) + 15) {
                 isOvertime = true;
               }
             }

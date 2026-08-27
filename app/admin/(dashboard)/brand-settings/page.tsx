@@ -13,6 +13,9 @@ export default async function BrandSettingsPage() {
     ? {
         businessStartTime: brandSetting.businessStartTime,
         businessEndTime: brandSetting.businessEndTime,
+        therapistIncentiveType: brandSetting.therapistIncentiveType as "FIXED" | "DURATION_BASED",
+        therapistIncentiveAmount: Number(brandSetting.therapistIncentiveAmount),
+        therapistIncentiveDuration: brandSetting.therapistIncentiveDuration,
       }
     : undefined;
 
@@ -23,10 +26,8 @@ export default async function BrandSettingsPage() {
         description="Kelola pengaturan global untuk jam operasional bisnis Anda."
       />
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="md:col-span-1 lg:col-span-1">
-          <BrandSettingForm initialData={initialData} />
-        </div>
+      <div className="mt-4">
+        <BrandSettingForm initialData={initialData} />
       </div>
     </div>
   );

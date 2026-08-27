@@ -23,12 +23,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md flex flex-col items-center gap-8 relative z-10">
 
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-5xl font-display text-slate-900 dark:text-white tracking-widest drop-shadow-sm transition-colors duration-300">
-            NYENYAK
-          </h1>
-          <span className="text-primary tracking-widest text-lg uppercase ">
-            Admin
-          </span>
+          <img src="/logo-long.webp" alt="Nyenyak" className="h-20 object-contain" />
         </div>
 
         <div className="w-full relative group flex justify-center">

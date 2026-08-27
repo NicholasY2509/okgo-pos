@@ -1,5 +1,7 @@
 import { BookingWizard } from "@/modules/booking/components/booking-wizard";
 import { Metadata } from "next";
+import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Booking Layanan | Okgo POS",
@@ -12,10 +14,19 @@ export default function BookingPage() {
 
       {/* NAVBAR MATCHING MARKETING PAGE */}
       <nav className="w-full z-50 bg-transparent py-6 border-b border-border/10">
-        <div className="max-w-7xl mx-auto px-8 flex justify-center">
-          <a href="/" className="text-2xl font-display font-light tracking-widest items-center text-foreground">
-            <img src="/logo-long.webp" alt="Nyenyak Spa" className="h-10 md:h-12 object-contain" />
-          </a>
+        <div className="max-w-7xl mx-auto px-8 flex items-center justify-between h-12">
+          <div className="w-[100px] sm:w-[150px] flex items-center">
+            <Link href="/" className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span className="hidden sm:inline">Kembali</span>
+            </Link>
+          </div>
+          <div className="flex-1 flex justify-center">
+            <Link href="/" className="flex items-center">
+              <img src="/logo-long.webp" alt="Nyenyak Spa" className="h-10 md:h-12 object-contain" />
+            </Link>
+          </div>
+          <div className="w-[100px] sm:w-[150px]" /> {/* Spacer to keep logo dead center */}
         </div>
       </nav>
 

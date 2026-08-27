@@ -13,10 +13,13 @@ export function useBrandSetting({ initialData }: UseBrandSettingProps) {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<BrandSettingInput>({
-    resolver: zodResolver(brandSettingSchema),
+    resolver: zodResolver(brandSettingSchema) as any,
     defaultValues: initialData || {
       businessStartTime: "08:00",
       businessEndTime: "21:00",
+      therapistIncentiveType: "FIXED",
+      therapistIncentiveAmount: 0,
+      therapistIncentiveDuration: 60,
     },
   });
 
@@ -34,7 +37,9 @@ export function useBrandSetting({ initialData }: UseBrandSettingProps) {
 
   return {
     form,
-    onSubmit: form.handleSubmit(onSubmit),
+    onSubmit: form.handleSubmit(onSubmit, (errors) => {
+      console.log("Validation Errors in hook:", errors);
+    }),
     isSubmitting: form.formState.isSubmitting,
     error,
   };

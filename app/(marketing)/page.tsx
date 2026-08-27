@@ -173,14 +173,17 @@ export default function MarketingPage() {
           : "bg-transparent border-b-transparent py-6"
           }`}
       >
-        <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
-          <a href="#" className="flex items-center">
-            <img
-              src="/logo-long.webp"
-              alt="Nyenyak Spa"
-              className={`object-contain transition-all duration-500 ${isScrolled ? 'h-9 md:h-11' : 'h-10 md:h-12'}`}
-            />
-          </a>
+        <div className="max-w-7xl mx-auto px-8 flex justify-between items-center h-12 relative">
+          <div className={`flex items-center transition-all duration-700 ease-in-out z-10 md:w-[150px] md:relative md:left-auto md:translate-x-0 ${isScrolled ? 'absolute left-8 translate-x-0' : 'absolute left-1/2 -translate-x-1/2'
+            }`}>
+            <a href="#" className="flex items-center">
+              <img
+                src="/logo-long.webp"
+                alt="Nyenyak Spa"
+                className={`object-contain transition-all duration-500 ${isScrolled ? 'h-9 md:h-11' : 'h-10 md:h-12'}`}
+              />
+            </a>
+          </div>
           <div className="hidden md:flex space-x-12 font-medium text-sm text-muted-foreground tracking-wide">
             <button onClick={(e) => scrollTo(e, 'layanan')} className="hover:text-foreground transition-colors cursor-pointer">Layanan</button>
             <button onClick={(e) => scrollTo(e, 'voucher')} className="hover:text-foreground transition-colors cursor-pointer">Voucher</button>

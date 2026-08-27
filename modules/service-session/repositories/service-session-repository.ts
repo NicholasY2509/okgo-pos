@@ -47,12 +47,19 @@ export const ServiceSessionRepository = {
     })
   },
 
-  async endSession(sessionId: string) {
+  async getById(sessionId: string) {
+    return await prisma.serviceSession.findUnique({
+      where: { id: sessionId },
+    })
+  },
+
+  async endSession(sessionId: string, commissionAmount: number = 0) {
     return await prisma.serviceSession.update({
       where: { id: sessionId },
       data: {
         status: "COMPLETED",
         actualEndTime: new Date(),
+        therapistCommissionAmount: commissionAmount,
       }
     })
   },

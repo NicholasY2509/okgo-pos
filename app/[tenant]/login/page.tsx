@@ -19,9 +19,7 @@ export default async function LoginPage({ params }: { params: Promise<{ tenant: 
           {/* <div className="h-16 w-16 rounded-2xl bg-linear-to-br from-primary to-primary/80 flex items-center justify-center shadow-xl shadow-primary/30 border border-primary/20 transform transition-transform hover:scale-105 duration-300">
             <span className="font-display font-bold text-4xl text-primary-foreground tracking-tighter">N</span>
           </div> */}
-          <h1 className="text-5xl font-display tracking-widest">
-            NYENYAK
-          </h1>
+          <img src="/logo-long.webp" alt="Nyenyak" className="h-20 object-contain" />
           <span className="text-primary font-sans tracking-widest text-2xl font-extralight capitalize">{tenant}</span>
         </div>
 
