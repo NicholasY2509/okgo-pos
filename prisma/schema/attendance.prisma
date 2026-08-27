@@ -81,6 +81,7 @@ model Attendance {
   clockInMachineId  String?
   clockOutMachineId String?
   isManualOverride  Boolean   @default(false)
+  overtimeHours     Float?    @default(0)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

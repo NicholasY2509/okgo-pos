@@ -65,6 +65,7 @@ model Staff {
   attendances            Attendance[]
   staffSalaries          StaffSalary[]
   staffSalaryComponents  StaffSalaryComponent[]
+  payrolls               Payroll[]
 }
 
 model StaffUser {

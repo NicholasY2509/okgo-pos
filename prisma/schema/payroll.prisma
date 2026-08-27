@@ -26,3 +26,39 @@ model StaffSalaryComponent {
 
   @@unique([staffId, salaryComponentId])
 }
+
+model Payroll {
+  id             String        @id @default(cuid())
+  staffId        String
+  monthPeriod    String
+  startDate      DateTime
+  endDate        DateTime
+  baseSalary     Decimal
+  totalAllowance Decimal
+  totalDeduction Decimal
+  netSalary      Decimal
+  status         String        @default("DRAFT") // DRAFT, PAID
+  items          PayrollItem[]
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  staff          Staff         @relation(fields: [staffId], references: [id])
+
+  @@unique([staffId, monthPeriod])
+}
+
+model PayrollItem {
+  id          String   @id @default(cuid())
+  payrollId   String
+  name        String
+  amount      Decimal
+  type        String   // ALLOWANCE, DEDUCTION
+  isManual    Boolean  @default(false)
+  notes       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  payroll     Payroll  @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+}

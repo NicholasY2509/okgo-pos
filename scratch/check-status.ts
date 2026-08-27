@@ -1,5 +1,4 @@
-import pkg from "@prisma/client"
-const { PrismaClient } = pkg
+import { PrismaClient } from "../lib/generated/prisma"
 const prisma = new PrismaClient()
 async function main() {
   const statuses = await prisma.attendanceStatus.findMany()
