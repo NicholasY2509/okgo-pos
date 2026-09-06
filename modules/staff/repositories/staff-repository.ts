@@ -2,24 +2,57 @@ import { prisma } from "@/lib/prisma"
 import { CreateStaffInput, UpdateStaffInput } from "../schemas/staff-schema"
 
 export const StaffRepository = {
-  async getAllStaff(branchId?: string) {
-    return await prisma.staff.findMany({
-      where: branchId ? { branchStaffs: { some: { branchId } } } : undefined,
-      orderBy: { createdAt: "desc" },
+  async getAllStaff(branchId?: string, serviceId?: string) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStart = new Date(todayStr + "T00:00:00.000Z");
+    const todayEnd = new Date(todayStr + "T23:59:59.999Z");
+
+    let workPositionId: string | undefined = undefined;
+    if (serviceId) {
+      const product = await prisma.product.findUnique({
+        where: { id: serviceId },
+        include: { category: true }
+      });
+      if (product?.category?.targetWorkPositionId) {
+        workPositionId = product.category.targetWorkPositionId;
+      }
+    }
+
+    const whereClause: any = {
+      isActive: true,
+    };
+    if (branchId) {
+      whereClause.branchStaffs = { some: { branchId } };
+    }
+    if (workPositionId) {
+      whereClause.workPositionId = workPositionId;
+    }
+
+    const staffList = await prisma.staff.findMany({
+      where: whereClause,
       include: {
         workPosition: true,
-        branchStaffs: {
-          include: {
-            branch: true,
-          }
-        },
-        staffUsers: {
-          include: {
-            user: true,
+        branchStaffs: { include: { branch: true } },
+        staffUsers: { include: { user: true } },
+        attendances: {
+          where: {
+            attendanceDate: {
+              gte: todayStart,
+              lte: todayEnd,
+            }
           }
         }
       },
-    })
+    });
+
+    // Sort by attendance clockIn (earliest first), then nulls at the bottom
+    staffList.sort((a: any, b: any) => {
+      const aTime = a.attendances?.[0]?.clockIn ? new Date(a.attendances[0].clockIn).getTime() : Infinity;
+      const bTime = b.attendances?.[0]?.clockIn ? new Date(b.attendances[0].clockIn).getTime() : Infinity;
+      return aTime - bTime;
+    });
+
+    return staffList;
   },
 
   async getActiveStaff(branchId: string) {

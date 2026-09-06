@@ -1,26 +1,28 @@
 model Category {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  name                 String
+  description          String?
+  targetWorkPositionId String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  products Product[]
+  products           Product[]
+  targetWorkPosition WorkPosition? @relation(fields: [targetWorkPositionId], references: [id])
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  price       Decimal  @default(0)
-  duration    Int? // Duration in minutes
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  price           Decimal  @default(0)
+  duration        Int? // Duration in minutes
   isVip           Boolean  @default(false)
   isActive        Boolean  @default(true)
   showOnMarketing Boolean  @default(false)
   image           String?
-  categoryId  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  categoryId      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   category       Category?       @relation(fields: [categoryId], references: [id])
   voucherPackets VoucherPacket[]

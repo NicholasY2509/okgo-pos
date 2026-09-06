@@ -78,6 +78,7 @@ export function BrandSettingForm({ initialData }: BrandSettingFormProps) {
                   <SelectContent>
                     <SelectItem value="FIXED">Flat Rate (Per Service)</SelectItem>
                     <SelectItem value="DURATION_BASED">Berdasarkan Durasi</SelectItem>
+                    <SelectItem value="PERCENTAGE">Persentase (%)</SelectItem>
                   </SelectContent>
                 </Select>
                 {form.formState.errors.therapistIncentiveType && (
@@ -86,16 +87,19 @@ export function BrandSettingForm({ initialData }: BrandSettingFormProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="therapistIncentiveAmount">Nominal Insentif</Label>
+                <Label htmlFor="therapistIncentiveAmount">
+                  {incentiveType === "PERCENTAGE" ? "Persentase Insentif" : "Nominal Insentif"}
+                </Label>
                 <Controller
                   control={form.control}
                   name="therapistIncentiveAmount"
                   render={({ field: { onChange, value } }) => (
                     <NumericFormat
                       customInput={Input}
-                      thousandSeparator="."
+                      thousandSeparator={incentiveType === "PERCENTAGE" ? false : "."}
                       decimalSeparator=","
-                      prefix="Rp "
+                      prefix={incentiveType === "PERCENTAGE" ? "" : "Rp "}
+                      suffix={incentiveType === "PERCENTAGE" ? " %" : ""}
                       allowNegative={false}
                       value={value}
                       onValueChange={(values) => {

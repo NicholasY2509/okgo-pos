@@ -3,9 +3,9 @@ import { z } from "zod";
 export const posPaymentSchema = z.object({
   paymentMethodId: z.string().min(1, "Payment method is required"),
   amount: z.number().positive("Amount must be positive"),
-  referenceNumber: z.string().optional(),
-  voucherCode: z.string().optional(),
-  notes: z.string().optional(),
+  referenceNumber: z.string().optional().nullable(),
+  voucherCode: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
 });
 
 export const posItemServiceSchema = z.object({
@@ -15,9 +15,9 @@ export const posItemServiceSchema = z.object({
   staffId: z.string().min(1, "Staff is required"),
   roomId: z.string().min(1, "Room is required"),
   discountAmount: z.number().nonnegative().default(0),
-  isVoucherRedemption: z.boolean().optional(),
-  customerVoucherId: z.string().optional(),
-  voucherCode: z.string().optional(),
+  isVoucherRedemption: z.boolean().optional().nullable(),
+  customerVoucherId: z.string().optional().nullable(),
+  voucherCode: z.string().optional().nullable(),
 });
 
 export const posItemVoucherPacketSchema = z.object({
@@ -29,10 +29,12 @@ export const posItemVoucherPacketSchema = z.object({
 
 export const posCheckoutSchema = z.object({
   branchId: z.string().min(1, "Branch ID is required"),
-  customerId: z.string().optional(),
-  cashierId: z.string().optional(),
-  promotionId: z.string().optional(),
-  isPayLater: z.boolean().default(false).optional(),
+  customerId: z.string().optional().nullable(),
+  cashierId: z.string().optional().nullable(),
+  promotionId: z.string().optional().nullable(),
+  isPayLater: z.boolean().default(false).optional().nullable(),
+  loadedBookingId: z.string().optional().nullable(),
+  loadedTransactionId: z.string().optional().nullable(),
 
   items: z.array(
     z.discriminatedUnion("type", [

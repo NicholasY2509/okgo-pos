@@ -4,20 +4,20 @@ model Promotion {
   description String?
   isActive    Boolean @default(true)
 
-  branchId    String? // Null applies to all branches
+  branchId String? // Null applies to all branches
 
   // JSON representation of active days and times.
   // Example: [{ "days": ["MONDAY", "TUESDAY"], "startTime": "09:00", "endTime": "11:30" }]
-  schedules   Json
+  schedules Json
 
   // JSON representation of what the cart needs to qualify.
   // Example: { "minQuantity": 2, "requiredServiceIds": ["javanese_id"] }
-  conditions  Json?
+  conditions Json?
 
   // JSON representation of the reward.
   // Example: { "type": "PERCENTAGE_TOTAL", "value": 15 }
   // Example: { "type": "FREE_ADDON", "addonServiceId": "30_min_extension_id" }
-  reward      Json
+  reward Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

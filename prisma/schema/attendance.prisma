@@ -56,16 +56,16 @@ model StaffMachine {
 }
 
 model AttendanceStatus {
-  id          String   @id @default(cuid())
-  code        String   @unique // Misal: PRESENT, LATE, ABSENT, SICK
-  name        String // Misal: Hadir, Terlambat, Mangkir, Sakit
-  description String?
+  id                  String   @id @default(cuid())
+  code                String   @unique // Misal: PRESENT, LATE, ABSENT, SICK
+  name                String // Misal: Hadir, Terlambat, Mangkir, Sakit
+  description         String?
   isPenaltyApplicable Boolean  @default(false)
   penaltyType         String?  @default("FIXED") // FIXED, PERCENTAGE
   penaltyAmount       Decimal? @default(0)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   attendances Attendance[]
 }

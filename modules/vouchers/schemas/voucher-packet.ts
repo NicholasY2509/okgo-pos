@@ -9,7 +9,7 @@ export const voucherPacketSchema = z.object({
   totalCreditAmount: z.coerce.number().min(1, "Harus lebih besar dari 0").optional().nullable(),
   validityDays: z.coerce.number().min(1, "Masa berlaku minimal 1 hari").optional().nullable(),
   isActive: z.boolean().default(true),
-  productId: z.string().min(1, "Produk wajib dipilih"),
+  productId: z.string().optional().nullable(),
   cashierIncentiveType: z.enum(["FIXED", "PERCENTAGE"]).default("FIXED").optional().nullable(),
   cashierIncentiveAmount: z.coerce.number().min(0, "Insentif minimal 0").optional().nullable(),
 }).refine(data => data.totalVisitCount || data.totalCreditAmount, {

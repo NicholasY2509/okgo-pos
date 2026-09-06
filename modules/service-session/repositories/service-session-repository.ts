@@ -4,7 +4,7 @@ export const ServiceSessionRepository = {
   async getStaffDailySessions(staffId: string) {
     const startOfDay = new Date()
     startOfDay.setHours(0, 0, 0, 0)
-    
+
     const endOfDay = new Date()
     endOfDay.setHours(23, 59, 59, 999)
 
@@ -50,24 +50,41 @@ export const ServiceSessionRepository = {
   async getById(sessionId: string) {
     return await prisma.serviceSession.findUnique({
       where: { id: sessionId },
+      include: { transactionItem: true },
     })
   },
 
-  async endSession(sessionId: string, commissionAmount: number = 0) {
-    return await prisma.serviceSession.update({
-      where: { id: sessionId },
-      data: {
-        status: "COMPLETED",
-        actualEndTime: new Date(),
-        therapistCommissionAmount: commissionAmount,
+  async endSession(sessionId: string, commissionAmount: number = 0, staffId?: string | null) {
+    return await prisma.$transaction(async (tx) => {
+      const session = await tx.serviceSession.update({
+        where: { id: sessionId },
+        data: {
+          status: "COMPLETED",
+          actualEndTime: new Date(),
+          therapistCommissionAmount: commissionAmount,
+        }
+      });
+
+      if (commissionAmount > 0 && staffId) {
+        await tx.staffIncentive.create({
+          data: {
+            staffId: staffId,
+            amount: commissionAmount,
+            type: "SERVICE_COMMISSION",
+            description: `Commission for service session`,
+            serviceSessionId: sessionId,
+          }
+        });
       }
-    })
+
+      return session;
+    });
   },
 
   async getDailyReviewableSessions(tenantId: string) {
     const startOfDay = new Date()
     startOfDay.setHours(0, 0, 0, 0)
-    
+
     const endOfDay = new Date()
     endOfDay.setHours(23, 59, 59, 999)
 

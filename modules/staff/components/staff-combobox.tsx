@@ -24,11 +24,12 @@ interface StaffComboboxProps {
   value: string;
   onChange: (value: string) => void;
   branchId?: string;
+  serviceId?: string;
   className?: string;
 }
 
-export function StaffCombobox({ value, onChange, branchId, className }: StaffComboboxProps) {
-  const { open, setOpen, staffList, loading } = useStaffCombobox(branchId);
+export function StaffCombobox({ value, onChange, branchId, serviceId, className }: StaffComboboxProps) {
+  const { open, setOpen, staffList, loading } = useStaffCombobox(branchId, serviceId);
 
 
   const selectedStaff = staffList.find((s) => s.id === value)
@@ -52,7 +53,7 @@ export function StaffCombobox({ value, onChange, branchId, className }: StaffCom
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+      <PopoverContent className="p-0 min-w-75" style={{ width: 'var(--radix-popover-trigger-width)' }}>
         <Command>
           <CommandInput placeholder="Cari terapis..." />
           <CommandList>
@@ -77,8 +78,16 @@ export function StaffCombobox({ value, onChange, branchId, className }: StaffCom
                     onChange(staff.id === value ? "" : staff.id)
                     setOpen(false)
                   }}
+                  className="flex justify-between items-center w-full"
                 >
-                  {staff.firstName} {staff.lastName}
+                  <span>{staff.firstName} {staff.lastName}</span>
+                  {staff.attendances?.[0]?.clockIn ? (
+                    <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded-sm">
+                      {new Date(staff.attendances[0].clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground italic">Belum Hadir</span>
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>

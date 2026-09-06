@@ -30,4 +30,3 @@ export function PosCart({ onCheckout, branchId }: PosCartProps) {
     </div>
   );
 }
-

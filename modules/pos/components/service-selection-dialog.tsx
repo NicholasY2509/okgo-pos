@@ -47,6 +47,7 @@ export function ServiceSelectionDialog({ selectedProduct, onClose, staff, rooms,
             <div className="space-y-3">
               <Label className="text-muted-foreground font-semibold">Terapis</Label>
               <StaffCombobox
+                serviceId={selectedProduct?.id}
                 value={selectedStaffId}
                 onChange={setSelectedStaffId}
                 className=""

@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Calendar, Scissors, Check, Eye } from "lucide-react";
+import { Calendar, Scissors, Check, Eye, Ticket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatIDR } from "@/lib/utils";
@@ -87,9 +87,27 @@ export const getBookingColumns = (onViewDetail: (booking: any) => void): ColumnD
     accessorKey: "totalAmount",
     header: () => <div className="text-right">Total</div>,
     cell: ({ row }) => {
+      const booking = row.original;
+      const originalAmount = booking.items?.reduce((sum: number, item: any) => sum + Number(item.subtotal), 0) || 0;
+      const totalAmount = Number(booking.totalAmount);
+      const appliedVoucher = booking.appliedVoucher;
+
       return (
-        <div className="text-right font-semibold">
-          {formatIDR(Number(row.original.totalAmount))}
+        <div className="text-right flex flex-col items-end">
+          {appliedVoucher && originalAmount > totalAmount && (
+             <div className="text-[10px] line-through text-muted-foreground">
+               {formatIDR(originalAmount)}
+             </div>
+          )}
+          <div className="font-semibold text-primary">
+            {formatIDR(totalAmount)}
+          </div>
+          {appliedVoucher && (
+            <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+              <Ticket className="w-3 h-3" />
+              {appliedVoucher.code}
+            </div>
+          )}
         </div>
       );
     },

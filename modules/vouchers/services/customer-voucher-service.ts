@@ -1,6 +1,21 @@
 import { CustomerVoucherRepository } from "../repositories/customer-voucher-repository"
 
 export class CustomerVoucherService {
+  
+  static async getPaginated(params: {
+    page: number;
+    limit: number;
+    status?: string;
+    type?: string;
+    productId?: string;
+  }) {
+    const result = await CustomerVoucherRepository.getPaginated(params);
+    return {
+      ...result,
+      data: result.data.map(v => this.serializeVoucher(v))
+    };
+  }
+
   static async getAll() {
     return await CustomerVoucherRepository.getAll()
   }

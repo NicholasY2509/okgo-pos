@@ -68,3 +68,15 @@ export async function deleteVoucherPacketAction(id: string, productId: string) {
     return { error: error?.message || "Terjadi kesalahan tak terduga." }
   }
 }
+
+
+export async function generateVouchersAction(packetId: string, quantity: number) {
+  try {
+    const result = await VoucherPacketService.generateVouchers(packetId, quantity)
+    revalidatePath("/admin/vouchers")
+    return { success: true, count: result.length }
+  } catch (error: any) {
+    console.error("Failed to generate vouchers:", error)
+    return { error: error?.message || "Terjadi kesalahan tak terduga." }
+  }
+}

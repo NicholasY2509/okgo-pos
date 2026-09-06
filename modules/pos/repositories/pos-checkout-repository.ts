@@ -17,6 +17,20 @@ export const PosCheckoutRepository = {
     return await prisma.$transaction(async (tx) => {
       await this.validatePreconditions(tx, input);
 
+      if (input.loadedTransactionId) {
+        // Hapus transaksi lama beserta item dan sesinya secara cascade.
+        await tx.transaction.delete({
+          where: { id: input.loadedTransactionId }
+        });
+      }
+
+      if (input.loadedBookingId) {
+        await tx.booking.update({
+          where: { id: input.loadedBookingId },
+          data: { status: "PROCESSED" }
+        });
+      }
+
       const {
         subtotal,
         discountTotal,
@@ -138,6 +152,7 @@ export const PosCheckoutRepository = {
           roomId: item.roomId,
           branchId: input.branchId,
           customerId: input.customerId || null,
+          bookingId: input.loadedBookingId || null,
           startTime,
           endTime,
           status: "SCHEDULED"
@@ -235,8 +250,71 @@ export const PosCheckoutRepository = {
     }
 
     if (input.promotionId) {
+      let isVoucherUsed = itemVoucherRedemptionsData.length > 0;
+      
+      // Check if any payment method is VOUCHER
+      if (!isVoucherUsed && input.payments) {
+        const pmIds = input.payments.map(p => p.paymentMethodId);
+        const pms = await tx.paymentMethod.findMany({
+          where: { id: { in: pmIds }, type: "VOUCHER" }
+        });
+        if (pms.length > 0) isVoucherUsed = true;
+      }
+
+      if (isVoucherUsed) {
+        throw new Error("Voucher dan Diskon Promosi tidak dapat digunakan bersamaan. Voucher memiliki prioritas.");
+      }
+
       const promo = await tx.promotion.findUnique({ where: { id: input.promotionId } });
       if (promo && promo.isActive) {
+        
+        // Validate schedule
+        const now = new Date();
+        const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+        const todayStr = days[now.getDay()];
+        const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        
+        let isTimeValid = false;
+        
+        if (promo.schedules && Array.isArray(promo.schedules)) {
+          for (const schedule of promo.schedules as any[]) {
+            if (schedule.days && schedule.days.includes(todayStr)) {
+              if (schedule.startTime && schedule.endTime) {
+                if (currentTimeStr >= schedule.startTime && currentTimeStr <= schedule.endTime) {
+                  isTimeValid = true;
+                  break;
+                }
+              } else {
+                isTimeValid = true;
+                break;
+              }
+            }
+          }
+        } else {
+          // If no schedules defined, it's always active
+          isTimeValid = true;
+        }
+
+        if (!isTimeValid) {
+          throw new Error("Diskon promosi tidak berlaku pada waktu ini.");
+        }
+
+        // Validate conditions (minQuantity, requiredServiceIds)
+        if (promo.conditions) {
+          const conditions = promo.conditions as any;
+          if (conditions.minQuantity && input.items.length < conditions.minQuantity) {
+            throw new Error(`Promosi membutuhkan minimal ${conditions.minQuantity} item layanan.`);
+          }
+          if (conditions.requiredServiceIds && conditions.requiredServiceIds.length > 0) {
+            const hasRequired = input.items.some(item => 
+              item.type === "SERVICE" && conditions.requiredServiceIds.includes(item.serviceId)
+            );
+            if (!hasRequired) {
+              throw new Error("Promosi ini tidak berlaku untuk layanan yang dipilih.");
+            }
+          }
+        }
+
         const reward = promo.reward as any;
         if (reward.type === "PERCENTAGE_TOTAL" && reward.value) {
           discountTotal += subtotal * (reward.value / 100);
@@ -294,12 +372,12 @@ export const PosCheckoutRepository = {
           if (Number(customerVoucher.remainingCreditAmount) < payment.amount) {
             throw new Error("Saldo nominal voucher tidak mencukupi.");
           }
-          const newBalance = Number(customerVoucher.remainingCreditAmount) - payment.amount;
+          // Sisa saldo voucher selalu hangus (0) setelah digunakan
           await tx.customerVoucher.update({
             where: { id: customerVoucher.id },
             data: {
-              remainingCreditAmount: newBalance,
-              status: newBalance === 0 ? "USED_UP" : "ACTIVE"
+              remainingCreditAmount: 0,
+              status: "USED_UP"
             }
           });
           voucherRedemptionsData.push({
@@ -403,8 +481,8 @@ export const PosCheckoutRepository = {
                     sourceTransactionItemId: createdItem.id,
                     initialVisitCount: 1,
                     remainingVisitCount: 1,
-                    initialCreditAmount: null,
-                    remainingCreditAmount: null,
+                    initialCreditAmount: packet.totalCreditAmount || null,
+                    remainingCreditAmount: packet.totalCreditAmount || null,
                     status: "ACTIVE",
                     expiresAt
                   }
@@ -429,6 +507,18 @@ export const PosCheckoutRepository = {
             }
           }
         }
+      }
+
+      if (itemData.cashierIncentiveAmount > 0 && transaction.cashierId) {
+        await tx.staffIncentive.create({
+          data: {
+            staffId: transaction.cashierId,
+            amount: itemData.cashierIncentiveAmount,
+            type: "CASHIER_COMMISSION",
+            description: `Cashier incentive for selling voucher packet`,
+            transactionItemId: createdItem.id,
+          }
+        });
       }
     }
 

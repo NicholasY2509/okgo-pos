@@ -44,8 +44,8 @@ export class StaffService {
     };
   }
 
-  static async getAllStaff(branchId?: string) {
-    return await StaffRepository.getAllStaff(branchId)
+  static async getAllStaff(branchId?: string, serviceId?: string) {
+    return await StaffRepository.getAllStaff(branchId, serviceId)
   }
 
   static async getActiveStaff(branchId: string) {

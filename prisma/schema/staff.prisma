@@ -34,7 +34,8 @@ model WorkPosition {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  staff Staff[]
+  staff      Staff[]
+  categories Category[]
 }
 
 model Staff {
@@ -48,9 +49,9 @@ model Staff {
   staffIdNumber  String?
 
   // Kiosk Login Fields
-  username       String? @unique
-  pinHash        String?
-  imageUrl       String?
+  username String? @unique
+  pinHash  String?
+  imageUrl String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -66,6 +67,7 @@ model Staff {
   staffSalaries          StaffSalary[]
   staffSalaryComponents  StaffSalaryComponent[]
   payrolls               Payroll[]
+  staffIncentives        StaffIncentive[]
 }
 
 model StaffUser {
@@ -87,10 +89,10 @@ model StaffSalary {
   baseSalary    Decimal  @default(0)
   effectiveDate DateTime
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  staff         Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
   @@index([staffId, effectiveDate(sort: Desc)])
 }

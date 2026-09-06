@@ -98,13 +98,14 @@ export function useBooking() {
     // Validate fields before proceeding
     const fieldsToValidate = {
       1: ["branchId", "customerName", "customerPhone"],
-      2: ["date", "startTime"],
-      3: ["selections"],
+      2: ["selections"],
+      3: ["date", "startTime"],
+      4: [], // Staff is optional or part of selections which was already validated
     }[step] as any;
 
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
-      setStep((prev) => Math.min(prev + 1, 4));
+      setStep((prev) => Math.min(prev + 1, 5));
     }
   };
 

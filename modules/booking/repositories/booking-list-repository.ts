@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/prisma";
 
 export const BookingListRepository = {
+
+  async getProductsWithCategories() {
+    return await prisma.product.findMany({
+      include: { category: true }
+    });
+  },
+
   async getBranchBySlug(branchSlug: string) {
     return await prisma.branch.findUnique({
       where: { subdomain: branchSlug },
@@ -19,7 +26,22 @@ export const BookingListRepository = {
       where: { AND: andConditions },
       include: {
         customer: true,
-        items: true,
+        items: {
+          include: {
+            appliedVoucher: {
+              include: { voucherPacket: { include: { product: true } } }
+            }
+          }
+        },
+        appliedVoucher: {
+          include: {
+            voucherPacket: {
+              include: {
+                product: true
+              }
+            }
+          }
+        },
         serviceSessions: {
           include: {
             staff: true
@@ -27,7 +49,7 @@ export const BookingListRepository = {
         }
       },
       orderBy: {
-        createdAt: 'asc'
+        createdAt: 'desc'
       }
     });
   },
@@ -38,7 +60,13 @@ export const BookingListRepository = {
         where: { id: bookingId },
         data: { status },
         include: {
-          items: true,
+          items: {
+            include: {
+              appliedVoucher: {
+                include: { voucherPacket: { include: { product: true } } }
+              }
+            }
+          },
           serviceSessions: true
         }
       });
@@ -56,16 +84,44 @@ export const BookingListRepository = {
 
         const subtotal = booking.items.reduce((acc, item) => acc + Number(item.subtotal), 0);
 
+        let discountAmount = 0;
+        if (booking.appliedVoucherId) {
+           const voucher = await tx.customerVoucher.findUnique({ where: { id: booking.appliedVoucherId } });
+           if (voucher && voucher.remainingCreditAmount) {
+             discountAmount = Math.min(subtotal, Number(voucher.remainingCreditAmount));
+           }
+        }
+
         const transaction = await tx.transaction.create({
           data: {
             branchId: booking.branchId,
             customerId: booking.customerId,
             transactionNumber,
             subtotal,
-            totalAmount: booking.totalAmount,
+            discountTotal: discountAmount,
+            totalAmount: Math.max(0, subtotal - discountAmount),
             status: 'PENDING',
           }
         });
+
+        if (booking.appliedVoucherId && discountAmount > 0) {
+           await tx.customerVoucher.update({
+             where: { id: booking.appliedVoucherId },
+             data: {
+               customerId: booking.customerId,
+               remainingCreditAmount: {
+                 decrement: discountAmount
+               }
+             }
+           });
+           await tx.voucherRedemption.create({
+             data: {
+               customerVoucherId: booking.appliedVoucherId,
+               transactionId: transaction.id,
+               redeemedAmount: discountAmount
+             }
+           });
+        }
 
         for (const item of booking.items) {
           const txItem = await tx.transactionItem.create({

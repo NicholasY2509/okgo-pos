@@ -22,6 +22,9 @@ model Booking {
   items           BookingItem[]
   serviceSessions ServiceSession[]
 
+  appliedVoucherId String?
+  appliedVoucher   CustomerVoucher? @relation(fields: [appliedVoucherId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -43,11 +46,15 @@ model BookingItem {
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
+  appliedVoucherId String?
+  appliedVoucher   CustomerVoucher? @relation(fields: [appliedVoucherId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([bookingId])
   @@index([serviceId])
+  @@index([appliedVoucherId])
 }
 
 enum BookingStatus {

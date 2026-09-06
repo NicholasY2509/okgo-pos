@@ -47,6 +47,9 @@ export class PromotionService {
       const conditions = promo.conditions as unknown as PromotionCondition | null;
       const reward = promo.reward as unknown as PromotionReward;
 
+      let isEligible = true;
+      let ineligibilityReason = "";
+
       // 1. Check schedule
       const isScheduleValid = schedules.some(schedule => {
         return schedule.days.includes(currentDay as any) &&
@@ -54,40 +57,44 @@ export class PromotionService {
           currentTime <= schedule.endTime;
       });
 
-      if (!isScheduleValid) continue;
+      if (!isScheduleValid) {
+        isEligible = false;
+        ineligibilityReason = "Tidak berlaku pada hari/jam ini.";
+      }
 
       // 2. Check conditions
-      let isValidCondition = true;
-      if (conditions) {
+      if (isEligible && conditions) {
         // minQuantity check
         if (conditions.minQuantity) {
           const totalCartQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
           if (totalCartQuantity < conditions.minQuantity) {
-            isValidCondition = false;
+            isEligible = false;
+            ineligibilityReason = `Minimal pembelian ${conditions.minQuantity} layanan.`;
           }
         }
 
         // requiredServiceIds check
-        if (isValidCondition && conditions.requiredServiceIds && conditions.requiredServiceIds.length > 0) {
+        if (isEligible && conditions.requiredServiceIds && conditions.requiredServiceIds.length > 0) {
           const cartServiceIds = cartItems.map(item => item.serviceId).filter(Boolean);
           const hasRequiredService = conditions.requiredServiceIds.some(reqId => cartServiceIds.includes(reqId));
           if (!hasRequiredService) {
-            isValidCondition = false;
+            isEligible = false;
+            ineligibilityReason = "Layanan keranjang tidak memenuhi syarat.";
           }
         }
       }
 
-      if (!isValidCondition) continue;
-
       // Calculate potential value for UI display
       let potentialDiscountValue = 0;
-      if (reward.type === "PERCENTAGE_TOTAL" && reward.value) {
-        const subtotal = cartItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
-        potentialDiscountValue = subtotal * (reward.value / 100);
-      } else if (reward.type === "FREE_ADDON" && reward.addonServiceId) {
-        const product = await ProductRepository.getProductById(reward.addonServiceId);
-        if (product) {
-          potentialDiscountValue = Number(product.price);
+      if (isEligible) {
+        if (reward.type === "PERCENTAGE_TOTAL" && reward.value) {
+          const subtotal = cartItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+          potentialDiscountValue = subtotal * (reward.value / 100);
+        } else if (reward.type === "FREE_ADDON" && reward.addonServiceId) {
+          const product = await ProductRepository.getProductById(reward.addonServiceId);
+          if (product) {
+            potentialDiscountValue = Number(product.price);
+          }
         }
       }
 
@@ -95,9 +102,16 @@ export class PromotionService {
         promoId: promo.id,
         name: promo.name,
         rewardType: reward.type,
-        potentialDiscountValue
+        potentialDiscountValue,
+        isEligible,
+        ineligibilityReason
       });
     }
+
+    eligiblePromos.sort((a, b) => {
+      if (a.isEligible === b.isEligible) return 0;
+      return a.isEligible ? -1 : 1;
+    });
 
     return eligiblePromos;
   }

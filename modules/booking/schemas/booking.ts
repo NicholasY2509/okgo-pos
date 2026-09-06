@@ -8,9 +8,12 @@ export const bookingSchema = z.object({
   selections: z.array(z.object({
     serviceId: z.string().optional().or(z.literal("")),
     staffId: z.string().optional(),
+    appliedVoucherId: z.string().optional(),
+    appliedVoucherCode: z.string().optional(),
   })).optional(),
   date: z.string().min(1, "Tanggal wajib dipilih"),
   startTime: z.string().min(1, "Waktu wajib dipilih"),
+  appliedVoucherId: z.string().optional(),
 });
 
 export type BookingInput = z.infer<typeof bookingSchema>;

@@ -24,7 +24,7 @@ export async function updateBrandSettingAction(values: BrandSettingInput) {
 export async function getBrandSettingAction() {
   try {
     const result = await BrandSettingService.get();
-    return { success: true, data: result };
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
   } catch (error) {
     return { error: "Failed to get brand setting." };
   }

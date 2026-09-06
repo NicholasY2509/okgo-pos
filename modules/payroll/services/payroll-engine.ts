@@ -12,8 +12,7 @@ export class PayrollEngine {
       if (existingPayroll.status === "PAID") {
         throw new Error("Payroll for this period is already paid and cannot be regenerated.");
       }
-      // If DRAFT, we might want to delete and regenerate or just update. 
-      // For simplicity, let's delete the old draft.
+
       await PayrollRepository.deletePayroll(existingPayroll.id);
     }
 
@@ -23,17 +22,11 @@ export class PayrollEngine {
 
     // 3. Fetch Attendances & Overtime
     const attendances = await PayrollRepository.getAttendancesByPeriod(staffId, startDate, endDate);
-    
+
     // We assume 1 attendance record = 1 working day (simplification)
     const totalWorkingDays = attendances.length;
     const totalDaysPresent = attendances.filter(a => a.status?.code === "PRESENT" || a.status?.code === "LATE").length;
-    
-    // We assume a global overtime rate for now, or it could be a salary component.
-    // Since we don't have a specific overtime component defined, we will just sum the hours.
-    // If a business rule defines a flat rate per hour, say 50000, we use it.
-    // For this engine, we will calculate total overtime hours and if > 0, we can add it as a placeholder amount or calculate if a rate exists.
-    // Let's assume an arbitrary overtime rate of 0 for now until defined, or let the user edit it manually later.
-    // Alternatively, if there's a component called "OVERTIME", we could link it.
+
     const totalOvertimeHours = attendances.reduce((acc, curr) => acc + (curr.overtimeHours || 0), 0);
     const overtimeRate = 0; // TODO: Fetch from settings or SalaryComponent
 
@@ -41,11 +34,13 @@ export class PayrollEngine {
     const staffComponents = await PayrollRepository.getStaffSalaryComponents(staffId);
 
     // 5. Fetch Incentives and Commissions
-    const cashierIncentives = await PayrollRepository.getCashierIncentives(staffId, startDate, endDate);
-    const totalCashierIncentives = cashierIncentives.reduce((acc, curr) => acc + Number(curr.cashierIncentiveAmount || 0), 0);
+    const staffIncentives = await PayrollRepository.getStaffIncentivesByPeriod(staffId, startDate, endDate);
 
-    const therapistCommissions = await PayrollRepository.getTherapistCommissions(staffId, startDate, endDate);
-    const totalTherapistCommissions = therapistCommissions.reduce((acc, curr) => acc + Number(curr.therapistCommissionAmount || 0), 0);
+    const cashierIncentives = staffIncentives.filter(i => i.type === "CASHIER_COMMISSION");
+    const totalCashierIncentives = cashierIncentives.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+    const therapistCommissions = staffIncentives.filter(i => i.type === "SERVICE_COMMISSION");
+    const totalTherapistCommissions = therapistCommissions.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
 
     // 6. Calculate Components
     const payslipComponents: PayslipComponent[] = [];

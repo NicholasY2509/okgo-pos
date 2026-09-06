@@ -7,6 +7,7 @@ export async function createPosTransactionAction(values: PosCheckoutInput) {
   try {
     const validatedFields = posCheckoutSchema.safeParse(values);
     if (!validatedFields.success) {
+      console.error("ZOD VALIDATION ERROR in posCheckoutSchema:", JSON.stringify(validatedFields.error.flatten(), null, 2));
       return { error: "Invalid transaction data.", details: validatedFields.error.flatten() };
     }
 

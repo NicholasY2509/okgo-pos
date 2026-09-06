@@ -25,12 +25,22 @@ export class ServiceSessionService {
         const product = await prisma.product.findUnique({ where: { id: session.serviceId } });
         const duration = product?.duration || 60; // default to 60 if not set
         const baseDuration = brandSetting.therapistIncentiveDuration || 60;
-        
+
         commissionAmount = (duration / baseDuration) * Number(brandSetting.therapistIncentiveAmount);
+      } else if (brandSetting.therapistIncentiveType === "PERCENTAGE") {
+        const percentage = Number(brandSetting.therapistIncentiveAmount);
+        let pricePerSession = 0;
+
+        if (session.transactionItem) {
+          const quantity = Math.max(session.transactionItem.quantity, 1);
+          pricePerSession = Number(session.transactionItem.subtotal) / quantity;
+        }
+
+        commissionAmount = Math.floor(pricePerSession * (percentage / 100));
       }
     }
 
-    return await ServiceSessionRepository.endSession(sessionId, commissionAmount)
+    return await ServiceSessionRepository.endSession(sessionId, commissionAmount, session.staffId)
   }
 
   static async getDailyReviewableSessions(tenantId: string) {

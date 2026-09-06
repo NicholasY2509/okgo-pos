@@ -26,6 +26,14 @@ export class BookingService {
     return await BookingRepository.createBooking(data);
   }
 
+  static async updateBooking(bookingId: string, data: BookingInput) {
+    return await BookingRepository.updateBooking(bookingId, data);
+  }
+
+  static async validateVoucher(code: string) {
+    return await BookingRepository.validateVoucher(code);
+  }
+
   static async assignBookingToTimetable(bookingId: string, selections: { serviceId: string; staffId?: string }[]) {
     return await BookingRepository.assignBookingToTimetable(bookingId, selections);
   }

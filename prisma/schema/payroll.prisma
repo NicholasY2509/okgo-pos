@@ -40,25 +40,47 @@ model Payroll {
   status         String        @default("DRAFT") // DRAFT, PAID
   items          PayrollItem[]
 
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  staff          Staff         @relation(fields: [staffId], references: [id])
+  staff Staff @relation(fields: [staffId], references: [id])
 
   @@unique([staffId, monthPeriod])
 }
 
 model PayrollItem {
-  id          String   @id @default(cuid())
-  payrollId   String
-  name        String
+  id        String  @id @default(cuid())
+  payrollId String
+  name      String
+  amount    Decimal
+  type      String // ALLOWANCE, DEDUCTION
+  isManual  Boolean @default(false)
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payroll Payroll @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+}
+
+model StaffIncentive {
+  id          String  @id @default(cuid())
+  staffId     String
   amount      Decimal
-  type        String   // ALLOWANCE, DEDUCTION
-  isManual    Boolean  @default(false)
-  notes       String?
+  type        String // SERVICE_COMMISSION, CASHIER_COMMISSION, MANUAL_BONUS
+  description String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  serviceSessionId  String?
+  transactionItemId String?
 
-  payroll     Payroll  @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff           Staff            @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  serviceSession  ServiceSession?  @relation(fields: [serviceSessionId], references: [id])
+  transactionItem TransactionItem? @relation(fields: [transactionItemId], references: [id])
+
+  @@index([staffId])
+  @@index([date])
 }

@@ -138,4 +138,18 @@ export class TimetableService {
       }))
     }));
   }
+
+  static async getLoadableBookings(branchId: string) {
+    const bookings = await TimetableRepository.getLoadableBookings(branchId);
+
+    return bookings.map(booking => ({
+      ...booking,
+      totalAmount: booking.totalAmount ? Number(booking.totalAmount) : 0,
+      items: booking.items.map(item => ({
+        ...item,
+        unitPrice: item.unitPrice ? Number(item.unitPrice) : 0,
+        subtotal: item.subtotal ? Number(item.subtotal) : 0,
+      }))
+    }));
+  }
 }

@@ -101,6 +101,11 @@ export function ProductCombobox({ branchId, value, onChange, error }: ProductCom
                         </Badge>
                       )}
                     </div>
+                    {p.category && (
+                      <div className="text-[10px] text-muted-foreground/70 uppercase tracking-wider font-semibold mt-0.5 mb-0.5">
+                        {p.category.name}
+                      </div>
+                    )}
                     <div className="text-muted-foreground text-xs">{p.duration}m - {formatIDR(p.price)}</div>
                   </div>
                 </CommandItem>

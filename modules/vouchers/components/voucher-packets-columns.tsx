@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { formatIDR } from "@/lib/utils"
 import Link from "next/link"
-import { MoreHorizontal, Edit, Trash } from "lucide-react"
+import { MoreHorizontal, Edit, Trash, CopyPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { VoucherPacketDialog } from "./voucher-packet-dialog"
+import { GenerateVouchersDialog } from "./generate-vouchers-dialog"
 import { useVoucherPacket } from "../hooks/use-voucher-packet"
 
 export type VoucherPacketTableData = {
@@ -125,6 +126,17 @@ function ActionsCell({ packet }: { packet: VoucherPacketTableData }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+          <GenerateVouchersDialog
+            packetId={packet.id}
+            onSuccess={() => router.refresh()}
+            trigger={
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <CopyPlus className="mr-2 h-4 w-4" />
+                Generate Vouchers
+              </DropdownMenuItem>
+            }
+          />
+
           <VoucherPacketDialog
             initialData={packet as any}
             onSuccess={() => router.refresh()}

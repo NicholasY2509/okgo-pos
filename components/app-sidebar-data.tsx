@@ -237,6 +237,12 @@ export const adminNav = [
         roles: ["Admin"],
       },
       {
+        title: "Daftar Insentif",
+        url: "/admin/incentives",
+        icon: (<Banknote />),
+        roles: ["Admin"],
+      },
+      {
         title: "Komponen Gaji",
         url: "/admin/payroll/components",
         icon: (<CalculatorIcon />),

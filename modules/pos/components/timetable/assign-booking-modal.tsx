@@ -145,19 +145,22 @@ export function AssignBookingModal() {
                     <FormField
                       control={form.control}
                       name={`selections.${index}.staffId`}
-                      render={({ field }) => (
+                      render={({ field }) => {
+                        const selectedServiceId = form.watch(`selections.${index}.serviceId`);
+                        return (
                         <FormItem>
                           <FormLabel>Terapis (Opsional)</FormLabel>
                           <FormControl>
                             <StaffCombobox
                               branchId={branchId!}
+                              serviceId={selectedServiceId}
                               value={field.value || ""}
                               onChange={(val) => field.onChange(val || undefined)}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
-                      )}
+                      )}}
                     />
                   </div>
                 </div>

@@ -143,5 +143,35 @@ export const TimetableRepository = {
         createdAt: 'asc'
       }
     });
+  },
+
+  async getLoadableBookings(branchId: string) {
+    return await prisma.booking.findMany({
+      where: {
+        branchId,
+        status: { in: ['PENDING', 'PROCESSED'] }
+      },
+      include: {
+        customer: true,
+        items: true,
+        appliedVoucher: {
+          include: {
+            voucherPacket: {
+              include: {
+                product: true
+              }
+            }
+          }
+        },
+        serviceSessions: {
+          include: {
+            staff: true
+          }
+        }
+      },
+      orderBy: {
+        scheduledStartTime: 'asc'
+      }
+    });
   }
 };

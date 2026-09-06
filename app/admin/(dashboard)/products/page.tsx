@@ -4,6 +4,7 @@ import { CategoryDialog } from "@/modules/product/components/category-dialog"
 import { ProductDialog } from "@/modules/product/components/product-dialog"
 import { ProductsTable } from "@/modules/product/components/products-table"
 import { CategoriesTable } from "@/modules/product/components/categories-table"
+import { WorkPositionService } from "@/modules/work-position/services/work-position-service"
 import { ProductFilters } from "@/modules/product/components/product-filters"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { BranchService } from "@/modules/branch/services/branch-service"
@@ -22,10 +23,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const search = typeof params.search === 'string' ? params.search : undefined;
   const categoryId = typeof params.categoryId === 'string' ? params.categoryId : undefined;
 
-  const [categories, productData, branches] = await Promise.all([
+  const [categories, productData, branches, workPositions] = await Promise.all([
     CategoryService.getAllCategories(),
     ProductService.getAllProducts({ page, limit, search, categoryId }),
-    BranchService.getAllBranches()
+    BranchService.getAllBranches(),
+    WorkPositionService.getAllWorkPositions()
   ])
 
   const products = productData.products.map(p => ({
@@ -49,7 +51,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </TabsList>
 
           <div className="flex gap-2">
-            <CategoryDialog>
+            <CategoryDialog workPositions={workPositions}>
               <Button variant="outline">Tambah Kategori</Button>
             </CategoryDialog>
             <ProductDialog categories={categories}>
@@ -65,7 +67,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-6">
-          <CategoriesTable categories={categories} />
+          <CategoriesTable categories={categories} workPositions={workPositions} />
         </TabsContent>
       </Tabs>
     </div>

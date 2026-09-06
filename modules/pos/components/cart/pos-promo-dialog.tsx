@@ -99,25 +99,36 @@ export function PosPromoDialog({ branchId }: PosPromoDialogProps) {
             <div className="space-y-3">
               {eligiblePromos.map((promo) => {
                 const isSelected = appliedPromo?.promoId === promo.promoId;
+                const isEligible = promo.isEligible !== false;
+
                 return (
-                  <div 
-                    key={promo.promoId} 
-                    className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                      isSelected ? "border-primary bg-primary/5" : "border-border/60 hover:border-primary/40"
-                    }`}
+                  <div
+                    key={promo.promoId}
+                    className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${isSelected ? "border-primary bg-primary/5" :
+                      !isEligible ? "border-border/40 opacity-60 bg-muted/30" :
+                        "border-border/60 hover:border-primary/40"
+                      }`}
                   >
                     <div>
                       <div className="font-semibold text-foreground flex items-center gap-2">
                         {promo.name}
                         {isSelected && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                        {!isEligible && (
+                          <Badge variant="secondary" className="text-[10px] ml-2 font-normal">Tidak Memenuhi Syarat</Badge>
+                        )}
                       </div>
                       <div className="text-sm text-muted-foreground mt-1">
-                        {promo.rewardType === "PERCENTAGE_TOTAL" ? "Diskon Total Keranjang" : 
-                         promo.rewardType === "FREE_ADDON" ? "Gratis Layanan Tambahan" : "Diskon Item"}
+                        {promo.rewardType === "PERCENTAGE_TOTAL" ? "Diskon Total Keranjang" :
+                          promo.rewardType === "FREE_ADDON" ? "Gratis Layanan Tambahan" : "Diskon Item"}
                       </div>
-                      {promo.potentialDiscountValue > 0 && (
+                      {promo.potentialDiscountValue > 0 && isEligible && (
                         <div className="text-sm font-medium text-primary mt-2">
                           Potongan: -Rp {promo.potentialDiscountValue.toLocaleString('id-ID')}
+                        </div>
+                      )}
+                      {!isEligible && promo.ineligibilityReason && (
+                        <div className="text-xs text-destructive mt-2">
+                          * {promo.ineligibilityReason}
                         </div>
                       )}
                     </div>
@@ -126,7 +137,7 @@ export function PosPromoDialog({ branchId }: PosPromoDialogProps) {
                         Hapus
                       </Button>
                     ) : (
-                      <Button variant="default" size="sm" onClick={() => handleApply(promo)}>
+                      <Button variant="default" size="sm" onClick={() => handleApply(promo)} disabled={!isEligible}>
                         Gunakan
                       </Button>
                     )}

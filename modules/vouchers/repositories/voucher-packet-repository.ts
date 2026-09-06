@@ -51,5 +51,39 @@ export const VoucherPacketRepository = {
       },
       orderBy: { createdAt: 'desc' }
     })
+  },
+  
+  async generateVouchers(packetId: string, quantity: number) {
+    const packet = await prisma.voucherPacket.findUnique({ where: { id: packetId } });
+    if (!packet) throw new Error("Voucher packet not found");
+
+    const vouchers = [];
+    
+    // Jika paket ini merupakan "Bundle" (memiliki Jumlah Kunjungan)
+    // maka 1 quantity = menghasilkan banyak lembar voucher (sebanyak Jumlah Kunjungan)
+    const generatePerQuantity = packet.totalVisitCount && packet.totalVisitCount > 0 ? packet.totalVisitCount : 1;
+    const finalVisitCount = packet.totalVisitCount && packet.totalVisitCount > 0 ? 1 : null;
+
+    for (let i = 0; i < quantity; i++) {
+      for (let v = 0; v < generatePerQuantity; v++) {
+        const code = (packet.codeSuffix || 'VCH') + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        vouchers.push({
+          code,
+          voucherPacketId: packet.id,
+          customerId: null,
+          initialVisitCount: finalVisitCount,
+          remainingVisitCount: finalVisitCount,
+          initialCreditAmount: packet.totalCreditAmount,
+          remainingCreditAmount: packet.totalCreditAmount,
+        });
+      }
+    }
+
+    await prisma.customerVoucher.createMany({
+      data: vouchers
+    });
+
+    return vouchers;
   }
+
 }

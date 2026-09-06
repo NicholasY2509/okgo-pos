@@ -29,7 +29,7 @@ export function VoucherPacketForm({ productId, initialData, onSuccess, onCancel 
     <form onSubmit={onSubmit} className="space-y-4">
       {!productId && (
         <div className="space-y-2">
-          <Label htmlFor="productId">Pilih Produk (Wajib)</Label>
+          <Label htmlFor="productId">Pilih Produk (Opsional)</Label>
           <Controller
             control={form.control}
             name="productId"

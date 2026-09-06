@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { CategoryDialog } from "./category-dialog"
 import { Edit } from "lucide-react"
 
-export const getCategoriesColumns = (): ColumnDef<any>[] => [
+export const getCategoriesColumns = (workPositions: any[]): ColumnDef<any>[] => [
   {
     accessorKey: "name",
     header: "Nama",
@@ -32,13 +32,21 @@ export const getCategoriesColumns = (): ColumnDef<any>[] => [
     }
   },
   {
+    accessorKey: "targetWorkPosition",
+    header: "Target Staff",
+    cell: ({ row }) => {
+      const wp = row.original.targetWorkPosition
+      return <div>{wp ? wp.name : "-"}</div>
+    }
+  },
+  {
     id: "actions",
     header: () => <div className="text-right pr-4">Aksi</div>,
     cell: ({ row }) => {
       const category = row.original
       return (
         <div className="text-right">
-          <CategoryDialog initialData={category}>
+          <CategoryDialog initialData={category} workPositions={workPositions}>
             <Button variant="ghost" size="icon">
               <Edit className="h-4 w-4" />
             </Button>

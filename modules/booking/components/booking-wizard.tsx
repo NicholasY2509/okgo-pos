@@ -4,7 +4,7 @@ import { useBookingWizard } from "../hooks/use-booking-wizard";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { StepIdentity } from "./steps/step-identity";
-import { StepCart } from "./steps/step-cart";
+import { StepServices } from "./steps/step-services";
 import { StepTime } from "./steps/step-time";
 import { StepSummary } from "./steps/step-summary";
 
@@ -68,10 +68,10 @@ export function BookingWizard() {
         {step === 1 && <StepIdentity form={form} branches={branches} loadingBranches={loadingBranches} />}
 
         {/* STEP 2: Date & Time */}
-        {step === 2 && <StepTime form={form} dailySchedule={dailySchedule} brandSetting={brandSetting} loading={loading} />}
+        {step === 2 && <StepTime form={form} dailySchedule={dailySchedule} brandSetting={brandSetting} loading={loading} services={services} />}
 
-        {/* STEP 3: Cart (Services & Staff) */}
-        {step === 3 && <StepCart form={form} services={services} staffList={staffList} dailySchedule={dailySchedule} loading={loading} />}
+        {/* STEP 3: Services & Staff */}
+        {step === 3 && <StepServices form={form} services={services} staffList={staffList} dailySchedule={dailySchedule} loading={loading} />}
 
         {/* STEP 4: Summary */}
         {step === 4 && <StepSummary form={form} services={services} staffList={staffList} branches={branches} />}

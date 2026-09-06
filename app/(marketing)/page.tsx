@@ -174,7 +174,7 @@ export default function MarketingPage() {
           }`}
       >
         <div className="max-w-7xl mx-auto px-8 flex justify-between items-center h-12 relative">
-          <div className={`flex items-center transition-all duration-700 ease-in-out z-10 md:w-[150px] md:relative md:left-auto md:translate-x-0 ${isScrolled ? 'absolute left-8 translate-x-0' : 'absolute left-1/2 -translate-x-1/2'
+          <div className={`flex items-center transition-all duration-700 ease-in-out z-10 md:w-[250px] md:relative md:left-auto md:translate-x-0 ${isScrolled ? 'absolute left-8 translate-x-0' : 'absolute left-1/2 -translate-x-1/2'
             }`}>
             <a href="#" className="flex items-center">
               <img
@@ -189,7 +189,7 @@ export default function MarketingPage() {
             <button onClick={(e) => scrollTo(e, 'voucher')} className="hover:text-foreground transition-colors cursor-pointer">Voucher</button>
             <button onClick={(e) => scrollTo(e, 'reservasi')} className="hover:text-foreground transition-colors cursor-pointer">Reservasi</button>
           </div>
-          <div className="w-[150px] flex justify-end">
+          <div className="w-auto md:w-[250px] flex justify-end ml-auto z-20">
             <motion.button
               initial={false}
               animate={{ opacity: isScrolled ? 1 : 0, y: isScrolled ? 0 : -10 }}
@@ -216,11 +216,11 @@ export default function MarketingPage() {
           <motion.div variants={itemVariants} className="inline-flex items-center gap-2 text-muted-foreground text-xs font-medium uppercase tracking-[0.3em] mb-10">
             Deep Relaxation & Sleep Therapy
           </motion.div>
-          <motion.h1 variants={itemVariants} className="text-4xl md:text-8xl font-display font-light leading-[1.1] tracking-tight mb-8 text-foreground">
+          <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl font-display font-light leading-[1.1] tracking-tight mb-8 text-foreground">
             Lepas Lelah<br />
             Tidur Lebih <span className="text-primary italic font-light">Nyenyak</span>
           </motion.h1>
-          <motion.p variants={itemVariants} className="text-muted-foreground text-lg md:text-xl font-light max-w-2xl mx-auto mb-14 leading-relaxed">
+          <motion.p variants={itemVariants} className="text-muted-foreground text-base md:text-xl font-light max-w-2xl mx-auto mb-14 leading-relaxed">
             Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.
           </motion.p>
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-8 w-full sm:w-auto items-center">

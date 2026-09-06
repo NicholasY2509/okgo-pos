@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Clock, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,7 +9,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { ChevronDown, ClockIcon } from "lucide-react"
 
 interface TimePickerProps {
   value?: string
@@ -67,7 +67,7 @@ export function TimePicker({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -79,14 +79,20 @@ export function TimePicker({
           )}
         >
           <div className="flex items-center gap-2 truncate">
-            <ClockIcon className="shrink-0 text-primary/70" size={18} />
+            <Clock
+              size={18}
+              className="shrink-0 text-muted-foreground"
+            />
             <span className="truncate font-medium">{value || placeholder}</span>
           </div>
-          <ChevronDown className="shrink-0 text-muted-foreground" size={18} />
+          <ChevronDown
+            size={16}
+            className="shrink-0 text-muted-foreground"
+          />
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] min-w-fit overflow-hidden rounded-3xl border-border/40 bg-background/95 p-0 shadow-2xl backdrop-blur-xl"
+        className="w-[var(--radix-popover-trigger-width)] min-w-fit overflow-hidden rounded-3xl border-border/40 bg-card p-0 shadow-2xl backdrop-blur-xl"
         align="start"
       >
         <div className="relative flex h-[280px]">

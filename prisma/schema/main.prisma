@@ -8,14 +8,14 @@ datasource db {
 }
 
 model BrandSetting {
-  id                String   @id @default(cuid())
-  businessStartTime String   @default("08:00")
-  businessEndTime   String   @default("21:00")
+  id                String @id @default(cuid())
+  businessStartTime String @default("08:00")
+  businessEndTime   String @default("21:00")
 
-  therapistIncentiveType     String   @default("FIXED") // FIXED, DURATION_BASED
-  therapistIncentiveAmount   Decimal  @default(0)
-  therapistIncentiveDuration Int      @default(60) // in minutes
+  therapistIncentiveType     String  @default("FIXED") // FIXED, DURATION_BASED, PERCENTAGE
+  therapistIncentiveAmount   Decimal @default(0)
+  therapistIncentiveDuration Int     @default(60) // in minutes
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -64,3 +64,12 @@ export async function getPendingBookingsAction(branchId: string) {
     return { error: error.message || "Gagal memuat booking" };
   }
 }
+
+export async function getLoadableBookingsAction(branchId: string) {
+  try {
+    const bookings = await TimetableService.getLoadableBookings(branchId);
+    return { success: true, data: bookings };
+  } catch (error: any) {
+    return { error: error.message || "Gagal memuat booking" };
+  }
+}

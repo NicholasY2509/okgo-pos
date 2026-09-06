@@ -42,31 +42,14 @@ export const PayrollRepository = {
     });
   },
 
-  async getCashierIncentives(staffId: string, startDate: Date, endDate: Date) {
-    // We assume cashierId on Transaction represents the cashier
-    return await prisma.transactionItem.findMany({
-      where: {
-        transaction: {
-          cashierId: staffId,
-          createdAt: {
-            gte: startDate,
-            lte: endDate,
-          },
-          status: "COMPLETED",
-        },
-      },
-    });
-  },
-
-  async getTherapistCommissions(staffId: string, startDate: Date, endDate: Date) {
-    return await prisma.serviceSession.findMany({
+  async getStaffIncentivesByPeriod(staffId: string, startDate: Date, endDate: Date) {
+    return await prisma.staffIncentive.findMany({
       where: {
         staffId,
-        actualStartTime: {
+        date: {
           gte: startDate,
           lte: endDate,
         },
-        status: "COMPLETED",
       },
     });
   },
@@ -79,7 +62,7 @@ export const PayrollRepository = {
       },
     });
   },
-  
+
   async findPayrollByPeriod(staffId: string, monthPeriod: string) {
     return await prisma.payroll.findUnique({
       where: {

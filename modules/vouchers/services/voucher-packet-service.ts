@@ -23,4 +23,10 @@ export class VoucherPacketService {
   static async getAll() {
     return await VoucherPacketRepository.getAll()
   }
+
+  static async generateVouchers(packetId: string, quantity: number) {
+    if (quantity <= 0 || quantity > 1000) throw new Error("Jumlah harus antara 1 dan 1000");
+    return await VoucherPacketRepository.generateVouchers(packetId, quantity);
+  }
+
 }

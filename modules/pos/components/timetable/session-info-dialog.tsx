@@ -74,6 +74,7 @@ export function SessionInfoDialog({
                 value={session.staffId || ""}
                 onChange={(val) => handleUpdateSessionStaff(session.id, val)}
                 branchId={branchId || session.branchId}
+                serviceId={session.serviceId}
               />
             )}
           </div>

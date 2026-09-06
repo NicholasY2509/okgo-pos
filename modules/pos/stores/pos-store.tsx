@@ -33,6 +33,8 @@ interface PosState {
   items: CartItem[];
   customerId: string | undefined;
   appliedPromo: AppliedPromo | null;
+  loadedBookingId: string | null;
+  loadedTransactionId: string | null;
 }
 
 interface PosActions {
@@ -44,6 +46,9 @@ interface PosActions {
   clearCart: () => void;
   applyPromo: (promo: AppliedPromo) => void;
   removePromo: () => void;
+  setLoadedBookingId: (id: string | null) => void;
+  setLoadedTransactionId: (id: string | null) => void;
+  loadBookingIntoCart: (booking: any) => void;
 }
 
 export type PosStore = PosState & PosActions;
@@ -55,6 +60,8 @@ export const createPosStore = () => {
         items: [],
         customerId: undefined,
         appliedPromo: null,
+        loadedBookingId: null,
+        loadedTransactionId: null,
         setCustomerId: (customerId) => set({ customerId }),
         addItem: (item) =>
           set((state) => ({
@@ -85,9 +92,71 @@ export const createPosStore = () => {
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, discountAmount } : i)),
             appliedPromo: null,
           })),
-        clearCart: () => set({ items: [], customerId: undefined, appliedPromo: null }),
+        clearCart: () => set({ items: [], customerId: undefined, appliedPromo: null, loadedBookingId: null, loadedTransactionId: null }),
         applyPromo: (promo) => set({ appliedPromo: promo }),
         removePromo: () => set({ appliedPromo: null }),
+        setLoadedBookingId: (loadedBookingId) => set({ loadedBookingId }),
+        setLoadedTransactionId: (loadedTransactionId) => set({ loadedTransactionId }),
+        loadBookingIntoCart: (booking) => {
+          const items: CartItem[] = [];
+          
+          let remainingVoucherCredit = 0;
+          let voucherProductId: string | null = null;
+          let hasVoucher = false;
+
+          if (booking.appliedVoucher) {
+            hasVoucher = true;
+            if (booking.appliedVoucher.voucherPacket?.product) {
+              voucherProductId = booking.appliedVoucher.voucherPacket.product.id;
+            } else if (booking.appliedVoucher.remainingCreditAmount) {
+              remainingVoucherCredit = Number(booking.appliedVoucher.remainingCreditAmount);
+            }
+          }
+
+          if (booking.items && Array.isArray(booking.items)) {
+            let voucherProductRedeemed = false;
+
+            booking.items.forEach((item: any) => {
+              let discountAmount = 0;
+              let isVoucherRedemption = false;
+              
+              if (hasVoucher) {
+                if (voucherProductId && item.serviceId === voucherProductId && !voucherProductRedeemed) {
+                  discountAmount = Number(item.unitPrice);
+                  isVoucherRedemption = true;
+                  voucherProductRedeemed = true;
+                } else if (remainingVoucherCredit > 0) {
+                  const itemTotal = Number(item.unitPrice) * (item.quantity || 1);
+                  const discount = Math.min(itemTotal, remainingVoucherCredit);
+                  discountAmount = discount / (item.quantity || 1);
+                  remainingVoucherCredit -= discount;
+                  isVoucherRedemption = true;
+                }
+              }
+
+              items.push({
+                cartId: Math.random().toString(36).substr(2, 9),
+                name: item.itemNameSnapshot || "Layanan",
+                unitPrice: Number(item.unitPrice),
+                type: "SERVICE",
+                serviceId: item.serviceId,
+                quantity: item.quantity || 1,
+                discountAmount,
+                isVoucherRedemption: isVoucherRedemption ? true : undefined,
+                customerVoucherId: isVoucherRedemption ? booking.appliedVoucher.id : undefined,
+                voucherCode: isVoucherRedemption ? booking.appliedVoucher.code : undefined,
+              });
+            });
+          }
+
+          set({
+            items,
+            customerId: booking.customerId || undefined,
+            loadedBookingId: booking.id,
+            loadedTransactionId: booking.transactions?.[0]?.id || null, // Assuming first transaction if any
+            appliedPromo: null,
+          });
+        },
       }),
       {
         name: "pos-cart-storage", // key in localStorage
@@ -137,6 +206,9 @@ export function usePosStoreActions() {
     clearCart: useStore(store, (s) => s.clearCart),
     applyPromo: useStore(store, (s) => s.applyPromo),
     removePromo: useStore(store, (s) => s.removePromo),
+    setLoadedBookingId: useStore(store, (s) => s.setLoadedBookingId),
+    setLoadedTransactionId: useStore(store, (s) => s.setLoadedTransactionId),
+    loadBookingIntoCart: useStore(store, (s) => s.loadBookingIntoCart),
   };
 }
 
@@ -157,6 +229,9 @@ export function usePosCart() {
   const appliedPromo = useStore(store, (s) => s.appliedPromo);
   const applyPromo = useStore(store, (s) => s.applyPromo);
   const removePromo = useStore(store, (s) => s.removePromo);
+  const loadedBookingId = useStore(store, (s) => s.loadedBookingId);
+  const loadedTransactionId = useStore(store, (s) => s.loadedTransactionId);
+  const loadBookingIntoCart = useStore(store, (s) => s.loadBookingIntoCart);
 
   const subtotal = items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
   const itemDiscountTotal = items.reduce((acc, item) => acc + item.discountAmount, 0);
@@ -181,5 +256,8 @@ export function usePosCart() {
     promoDiscountTotal,
     discountTotal,
     totalAmount,
+    loadedBookingId,
+    loadedTransactionId,
+    loadBookingIntoCart,
   };
 }

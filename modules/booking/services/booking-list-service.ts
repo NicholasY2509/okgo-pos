@@ -8,6 +8,9 @@ export class BookingListService {
 
     const rooms = await BookingListRepository.getRoomsByBranch(branch.id);
     const roomMap = new Map(rooms.map(r => [r.id, r.name]));
+    
+    const products = await BookingListRepository.getProductsWithCategories();
+    const productMap = new Map(products.map(p => [p.id, p]));
 
     const andConditions: any[] = [{ branchId: branch.id }];
 
@@ -80,40 +83,22 @@ export class BookingListService {
     const mappedBookings = bookings.map(booking => ({
       ...booking,
       totalAmount: booking.totalAmount ? Number(booking.totalAmount) : 0,
-      items: booking.items.map(item => ({
-        ...item,
-        unitPrice: item.unitPrice ? Number(item.unitPrice) : 0,
-        subtotal: item.subtotal ? Number(item.subtotal) : 0,
-      })),
+      items: booking.items.map(item => {
+        const product = productMap.get(item.serviceId);
+        return {
+          ...item,
+          unitPrice: item.unitPrice ? Number(item.unitPrice) : 0,
+          subtotal: item.subtotal ? Number(item.subtotal) : 0,
+          categoryName: product?.category?.name || "Lainnya"
+        };
+      }),
       serviceSessions: booking.serviceSessions.map(session => ({
         ...session,
         room: { name: roomMap.get(session.roomId) || "Room Unknown" }
       }))
     }));
 
-    mappedBookings.sort((a, b) => {
-      let aTime: number | null = null;
-      let bTime: number | null = null;
 
-      a.serviceSessions.forEach((s: any) => {
-        if (s.startTime) {
-          const t = new Date(s.startTime).getTime();
-          if (!aTime || t < aTime) aTime = t;
-        }
-      });
-
-      b.serviceSessions.forEach((s: any) => {
-        if (s.startTime) {
-          const t = new Date(s.startTime).getTime();
-          if (!bTime || t < bTime) bTime = t;
-        }
-      });
-
-      const aDate = aTime || new Date(a.createdAt).getTime();
-      const bDate = bTime || new Date(b.createdAt).getTime();
-
-      return aDate - bDate;
-    });
 
     return mappedBookings;
   }

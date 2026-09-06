@@ -8,9 +8,10 @@ interface StepTimeProps {
   dailySchedule: any;
   brandSetting?: any;
   loading: boolean;
+  services?: any[];
 }
 
-export function StepTime({ form, dailySchedule, brandSetting, loading }: StepTimeProps) {
+export function StepTime({ form, dailySchedule, brandSetting, loading, services = [] }: StepTimeProps) {
   const selectedTime = form.watch("startTime");
   const selectedDate = form.watch("date");
 
@@ -32,14 +33,30 @@ export function StepTime({ form, dailySchedule, brandSetting, loading }: StepTim
     }
   }, [dates, selectedDate, form]);
 
+  const selections = form.watch("selections");
+  const totalDuration = useMemo(() => {
+    let duration = 0;
+    if (selections && selections.length > 0) {
+      selections.forEach(sel => {
+        if (sel.serviceId) {
+          const service = services.find(s => s.id === sel.serviceId);
+          if (service) {
+            duration += (service.duration || 60);
+          }
+        }
+      });
+    }
+    return duration > 0 ? duration : 30; // Default to 30 if no services selected yet
+  }, [selections, services]);
+
   const timeSlots = useMemo(() => {
     if (!selectedDate || !dailySchedule) return [];
     const date = new Date(selectedDate);
-    
+
     // Parse business hours from settings or use defaults
     let businessStart = 8;
     let businessEnd = 22;
-    
+
     if (brandSetting) {
       if (brandSetting.businessStartTime) {
         businessStart = parseInt(brandSetting.businessStartTime.split(':')[0], 10);
@@ -63,8 +80,8 @@ export function StepTime({ form, dailySchedule, brandSetting, loading }: StepTim
         const slotStart = new Date(date);
         slotStart.setHours(hour, min, 0, 0);
 
-        // Assume baseline 30 min duration for availability check
-        const slotEnd = addMinutes(slotStart, 30);
+        // Calculate slot end based on selected services' total duration
+        const slotEnd = addMinutes(slotStart, totalDuration);
 
         if (isBefore(slotStart, minTime)) continue;
 
@@ -89,7 +106,7 @@ export function StepTime({ form, dailySchedule, brandSetting, loading }: StepTim
       }
     }
     return slots;
-  }, [selectedDate, dailySchedule, brandSetting]);
+  }, [selectedDate, dailySchedule, brandSetting, totalDuration]);
 
   return (
     <div className="space-y-10 animate-in slide-in-from-right-8 fade-in duration-300">
@@ -139,7 +156,8 @@ export function StepTime({ form, dailySchedule, brandSetting, loading }: StepTim
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-[300px] overflow-y-auto pr-2 pb-2">
               {timeSlots.map(slot => {
                 const isSelected = selectedTime === slot.timeString;
-                const isFull = slot.availableRooms === 0;
+                const requiredRooms = Math.max(1, (selections || []).length);
+                const isFull = slot.availableRooms < requiredRooms;
                 return (
                   <div
                     key={slot.timeString}
