@@ -5,7 +5,7 @@ import { createPosTransactionAction } from "../actions/pos-action";
 export function usePosPayment(cart: any, branchId: string, paymentMethods: any[], onSuccess: () => void) {
   const [payment, setPayment] = useState({
     paymentMethodId: "",
-    amount: cart.totalAmount,
+    amount: cart.amountDue ?? cart.totalAmount,
     referenceNumber: "",
     voucherCode: "",
     notes: ""
@@ -13,9 +13,9 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const totalPaid = Number(payment.amount || 0);
-  const remaining = Math.max(0, cart.totalAmount - totalPaid);
-  const changeAmount = Math.max(0, totalPaid - cart.totalAmount);
-  const isZeroTotal = cart.totalAmount === 0;
+  const remaining = Math.max(0, (cart.amountDue ?? cart.totalAmount) - totalPaid);
+  const changeAmount = Math.max(0, totalPaid - (cart.amountDue ?? cart.totalAmount));
+  const isZeroTotal = (cart.amountDue ?? cart.totalAmount) === 0;
 
   const handleUpdatePayment = (field: string, value: any) => {
     setPayment(prev => ({ ...prev, [field]: value }));
@@ -30,12 +30,12 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
         return;
       }
     } else if (!isZeroTotal) {
-      if (totalPaid < cart.totalAmount) {
+      if (totalPaid < (cart.amountDue ?? cart.totalAmount)) {
         toast.error("Jumlah bayar masih kurang.");
         return;
       }
 
-      if (!payment.paymentMethodId) {
+      if ((cart.amountDue ?? cart.totalAmount) > 0 && !payment.paymentMethodId) {
         toast.error("Pilih metode pembayaran.");
         return;
       }
@@ -54,12 +54,38 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
 
     setIsSubmitting(true);
 
+    const paymentsArray: any[] = [];
+
+    // Auto-inject applied nominal voucher as payment
+    if (cart.appliedVoucher && cart.appliedVoucher.remainingCreditAmount) {
+      const voucherPm = paymentMethods.find(x => x.type === "VOUCHER");
+      if (voucherPm) {
+        paymentsArray.push({
+          paymentMethodId: voucherPm.id,
+          amount: Math.min(Number(cart.appliedVoucher.remainingCreditAmount), cart.totalAmount),
+          voucherCode: cart.appliedVoucher.code
+        });
+      }
+    }
+
+    // Add user's selected payment if amountDue > 0
+    if (!isZeroTotal && !isPayLater && payment.paymentMethodId && payment.amount > 0) {
+      paymentsArray.push({
+        paymentMethodId: payment.paymentMethodId,
+        amount: Number(payment.amount),
+        referenceNumber: payment.referenceNumber || undefined,
+        voucherCode: payment.voucherCode || undefined,
+        notes: payment.notes || undefined
+      });
+    }
+
     const payload = {
       branchId,
       customerId: cart.customerId,
       promotionId: cart.appliedPromo?.promoId,
       loadedBookingId: cart.loadedBookingId,
       loadedTransactionId: cart.loadedTransactionId,
+      voucherNominalDiscount: cart.voucherNominalDiscount ?? 0,
       items: cart.items.map((i: any) => ({
         type: i.type,
         serviceId: i.type === "SERVICE" ? i.serviceId : undefined,
@@ -72,15 +98,10 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
         customerVoucherId: i.customerVoucherId,
         voucherCode: i.voucherCode
       })),
-      payments: (isZeroTotal || isPayLater) ? [] : [{
-        paymentMethodId: payment.paymentMethodId,
-        amount: Number(payment.amount),
-        referenceNumber: payment.referenceNumber || undefined,
-        voucherCode: payment.voucherCode || undefined,
-        notes: payment.notes || undefined
-      }],
+      payments: isPayLater ? [] : paymentsArray,
       isPayLater
     };
+    console.log("[PAYMENT CLIENT DEBUG] appliedPromo:", cart.appliedPromo, "promotionId in payload:", payload.promotionId);
 
     const res = await createPosTransactionAction(payload);
     setIsSubmitting(false);

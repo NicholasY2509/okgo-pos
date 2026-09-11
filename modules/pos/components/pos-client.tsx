@@ -6,7 +6,6 @@ import { PaymentModal } from "./payment-modal";
 import { ServiceList } from "./service-list";
 import { VoucherPacketList } from "./voucher-packet-list";
 import { ServiceSelectionDialog } from "./service-selection-dialog";
-import { VoucherRedeemTab } from "./voucher-redeem-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
@@ -42,10 +41,9 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
       <div className="flex-1 bg-card p-6 md:p-8 rounded-2xl shadow-sm border border-border overflow-y-auto flex flex-col">
         <Tabs defaultValue="services" className="w-full">
           <div className="flex items-center justify-between mb-6">
-            <TabsList className="grid w-[600px] grid-cols-3">
+            <TabsList className="grid w-[400px] grid-cols-2">
               <TabsTrigger value="services">Layanan</TabsTrigger>
               <TabsTrigger value="vouchers">Paket Voucher</TabsTrigger>
-              <TabsTrigger value="redeem">Redeem Voucher</TabsTrigger>
             </TabsList>
 
             <div className="flex gap-2">
@@ -67,10 +65,6 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
           <TabsContent value="vouchers" className="mt-0">
             <VoucherPacketList voucherPackets={voucherPackets} onVoucherPacketClick={handleVoucherPacketClick} />
           </TabsContent>
-
-          <TabsContent value="redeem" className="mt-0">
-            <VoucherRedeemTab customers={customers} onRedeemVoucher={handleRedeemVoucherClick} />
-          </TabsContent>
         </Tabs>
       </div>
 
@@ -78,6 +72,7 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
         <PosCart
           onCheckout={() => setIsPaymentModalOpen(true)}
           branchId={branchId}
+          onRedeemVoucher={handleRedeemVoucherClick}
         />
       </div>
 

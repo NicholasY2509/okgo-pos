@@ -33,8 +33,13 @@ interface PosState {
   items: CartItem[];
   customerId: string | undefined;
   appliedPromo: AppliedPromo | null;
+  appliedVoucher: any | null;
   loadedBookingId: string | null;
   loadedTransactionId: string | null;
+  // UI State
+  isPaymentModalOpen: boolean;
+  selectedProduct: any | null;
+  selectedVoucherRedemption: any | null;
 }
 
 interface PosActions {
@@ -46,9 +51,15 @@ interface PosActions {
   clearCart: () => void;
   applyPromo: (promo: AppliedPromo) => void;
   removePromo: () => void;
+  applyVoucher: (voucher: any) => void;
+  removeVoucher: () => void;
   setLoadedBookingId: (id: string | null) => void;
   setLoadedTransactionId: (id: string | null) => void;
   loadBookingIntoCart: (booking: any) => void;
+  // UI Actions
+  setIsPaymentModalOpen: (isOpen: boolean) => void;
+  setSelectedProduct: (product: any | null) => void;
+  setSelectedVoucherRedemption: (voucher: any | null) => void;
 }
 
 export type PosStore = PosState & PosActions;
@@ -60,8 +71,12 @@ export const createPosStore = () => {
         items: [],
         customerId: undefined,
         appliedPromo: null,
+        appliedVoucher: null,
         loadedBookingId: null,
         loadedTransactionId: null,
+        isPaymentModalOpen: false,
+        selectedProduct: null,
+        selectedVoucherRedemption: null,
         setCustomerId: (customerId) => set({ customerId }),
         addItem: (item) =>
           set((state) => ({
@@ -92,14 +107,19 @@ export const createPosStore = () => {
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, discountAmount } : i)),
             appliedPromo: null,
           })),
-        clearCart: () => set({ items: [], customerId: undefined, appliedPromo: null, loadedBookingId: null, loadedTransactionId: null }),
-        applyPromo: (promo) => set({ appliedPromo: promo }),
+        clearCart: () => set({ items: [], customerId: undefined, appliedPromo: null, appliedVoucher: null, loadedBookingId: null, loadedTransactionId: null }),
+        applyPromo: (promo) => set({ appliedPromo: promo }), // Nominal vouchers can coexist with promos
         removePromo: () => set({ appliedPromo: null }),
+        applyVoucher: (voucher) => set({ appliedVoucher: voucher }), // Nominal vouchers can coexist with promos
+        removeVoucher: () => set({ appliedVoucher: null }),
         setLoadedBookingId: (loadedBookingId) => set({ loadedBookingId }),
         setLoadedTransactionId: (loadedTransactionId) => set({ loadedTransactionId }),
+        setIsPaymentModalOpen: (isOpen) => set({ isPaymentModalOpen: isOpen }),
+        setSelectedProduct: (product) => set({ selectedProduct: product }),
+        setSelectedVoucherRedemption: (voucher) => set({ selectedVoucherRedemption: voucher }),
         loadBookingIntoCart: (booking) => {
           const items: CartItem[] = [];
-          
+
           let remainingVoucherCredit = 0;
           let voucherProductId: string | null = null;
           let hasVoucher = false;
@@ -119,7 +139,7 @@ export const createPosStore = () => {
             booking.items.forEach((item: any) => {
               let discountAmount = 0;
               let isVoucherRedemption = false;
-              
+
               if (hasVoucher) {
                 if (voucherProductId && item.serviceId === voucherProductId && !voucherProductRedeemed) {
                   discountAmount = Number(item.unitPrice);
@@ -196,7 +216,7 @@ export function usePosStoreActions() {
   if (!store) {
     throw new Error("usePosStoreActions must be used within PosStoreProvider");
   }
-  
+
   return {
     setCustomerId: useStore(store, (s) => s.setCustomerId),
     addItem: useStore(store, (s) => s.addItem),
@@ -206,9 +226,14 @@ export function usePosStoreActions() {
     clearCart: useStore(store, (s) => s.clearCart),
     applyPromo: useStore(store, (s) => s.applyPromo),
     removePromo: useStore(store, (s) => s.removePromo),
+    applyVoucher: useStore(store, (s) => s.applyVoucher),
+    removeVoucher: useStore(store, (s) => s.removeVoucher),
     setLoadedBookingId: useStore(store, (s) => s.setLoadedBookingId),
     setLoadedTransactionId: useStore(store, (s) => s.setLoadedTransactionId),
     loadBookingIntoCart: useStore(store, (s) => s.loadBookingIntoCart),
+    setIsPaymentModalOpen: useStore(store, (s) => s.setIsPaymentModalOpen),
+    setSelectedProduct: useStore(store, (s) => s.setSelectedProduct),
+    setSelectedVoucherRedemption: useStore(store, (s) => s.setSelectedVoucherRedemption),
   };
 }
 
@@ -229,15 +254,23 @@ export function usePosCart() {
   const appliedPromo = useStore(store, (s) => s.appliedPromo);
   const applyPromo = useStore(store, (s) => s.applyPromo);
   const removePromo = useStore(store, (s) => s.removePromo);
+  const appliedVoucher = useStore(store, (s) => s.appliedVoucher);
+  const applyVoucher = useStore(store, (s) => s.applyVoucher);
+  const removeVoucher = useStore(store, (s) => s.removeVoucher);
   const loadedBookingId = useStore(store, (s) => s.loadedBookingId);
   const loadedTransactionId = useStore(store, (s) => s.loadedTransactionId);
   const loadBookingIntoCart = useStore(store, (s) => s.loadBookingIntoCart);
+  const isPaymentModalOpen = useStore(store, (s) => s.isPaymentModalOpen);
+  const selectedProduct = useStore(store, (s) => s.selectedProduct);
+  const selectedVoucherRedemption = useStore(store, (s) => s.selectedVoucherRedemption);
 
   const subtotal = items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
   const itemDiscountTotal = items.reduce((acc, item) => acc + item.discountAmount, 0);
   const promoDiscountTotal = appliedPromo ? appliedPromo.discountAmount : 0;
   const discountTotal = itemDiscountTotal + promoDiscountTotal;
   const totalAmount = subtotal - discountTotal;
+  const voucherNominalDiscount = appliedVoucher?.remainingCreditAmount ? Math.min(Number(appliedVoucher.remainingCreditAmount), totalAmount) : 0;
+  const amountDue = totalAmount - voucherNominalDiscount;
 
   return {
     items,
@@ -251,13 +284,21 @@ export function usePosCart() {
     appliedPromo,
     applyPromo,
     removePromo,
+    appliedVoucher,
+    applyVoucher,
+    removeVoucher,
     subtotal,
     itemDiscountTotal,
     promoDiscountTotal,
     discountTotal,
     totalAmount,
+    amountDue,
+    voucherNominalDiscount,
     loadedBookingId,
     loadedTransactionId,
     loadBookingIntoCart,
+    isPaymentModalOpen,
+    selectedProduct,
+    selectedVoucherRedemption,
   };
 }

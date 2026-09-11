@@ -67,6 +67,7 @@ model StaffIncentive {
   id          String  @id @default(cuid())
   staffId     String
   amount      Decimal
+  gross       Decimal @default(0)
   type        String // SERVICE_COMMISSION, CASHIER_COMMISSION, MANUAL_BONUS
   description String?
 

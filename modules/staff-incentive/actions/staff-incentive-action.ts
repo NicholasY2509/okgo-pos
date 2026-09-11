@@ -11,3 +11,12 @@ export async function getIncentivesAction(filter: GetIncentivesFilter) {
     return { success: false, error: error.message };
   }
 }
+
+export async function getIncentiveSummaryAction(filter: Omit<GetIncentivesFilter, "page" | "limit">) {
+  try {
+    const result = await StaffIncentiveService.getIncentiveSummary(filter);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

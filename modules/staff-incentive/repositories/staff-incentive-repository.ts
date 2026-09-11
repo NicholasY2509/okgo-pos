@@ -3,6 +3,7 @@ import { Prisma } from "@/lib/generated/prisma";
 
 export interface GetIncentivesFilter {
   search?: string;
+  type?: string;
   startDate?: Date;
   endDate?: Date;
   page?: number;
@@ -11,7 +12,7 @@ export interface GetIncentivesFilter {
 
 export const StaffIncentiveRepository = {
   async getIncentives(filter: GetIncentivesFilter) {
-    const { search, startDate, endDate, page = 1, limit = 10 } = filter;
+    const { search, type, startDate, endDate, page = 1, limit = 10 } = filter;
 
     const where: Prisma.StaffIncentiveWhereInput = {};
 
@@ -21,6 +22,10 @@ export const StaffIncentiveRepository = {
         { staff: { lastName: { contains: search } } },
         { description: { contains: search } }
       ];
+    }
+
+    if (type) {
+      where.type = type;
     }
 
     if (startDate && endDate) {
@@ -61,4 +66,50 @@ export const StaffIncentiveRepository = {
       },
     };
   },
+
+  async getIncentiveSummary(filter: Omit<GetIncentivesFilter, "page" | "limit">) {
+    const { search, type, startDate, endDate } = filter;
+
+    const where: Prisma.StaffIncentiveWhereInput = {};
+
+    if (search) {
+      where.OR = [
+        { staff: { firstName: { contains: search } } },
+        { staff: { lastName: { contains: search } } },
+        { description: { contains: search } }
+      ];
+    }
+
+    if (type) {
+      where.type = type;
+    }
+
+    if (startDate && endDate) {
+      where.date = {
+        gte: startDate,
+        lte: endDate,
+      };
+    } else if (startDate) {
+      where.date = { gte: startDate };
+    } else if (endDate) {
+      where.date = { lte: endDate };
+    }
+
+    const aggregations = await prisma.staffIncentive.aggregate({
+      where,
+      _sum: {
+        amount: true,
+        gross: true,
+      },
+      _count: {
+        id: true,
+      }
+    });
+
+    return {
+      totalIncentive: aggregations._sum.amount ? Number(aggregations._sum.amount) : 0,
+      totalGross: aggregations._sum.gross ? Number(aggregations._sum.gross) : 0,
+      totalCount: aggregations._count.id || 0,
+    };
+  }
 };

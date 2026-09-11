@@ -5,117 +5,191 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DatePickerWithRange } from "@/components/ui/date-picker-with-range";
 import { useStaffIncentives } from "../hooks/use-staff-incentives";
-import { DataTable } from "@/components/ui/data-table";
-import { getStaffIncentiveColumns } from "./staff-incentive-columns";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis
-} from "@/components/ui/pagination";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { NumericFormat } from "react-number-format";
 
-export function StaffIncentiveClient() {
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { IncentiveSettings } from "./incentive-settings";
+import { PageHeader } from "@/components/page-header";
+
+export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: { workPositions?: any[], initialRules?: any[] }) {
   const {
-    incentives,
+    summary,
     loading,
     searchTerm,
     setSearchTerm,
     dateRange,
     setDateRange,
-    page,
-    setPage,
-    pagination,
+    incentiveRuleId,
+    setIncentiveRuleId,
     handleResetFilter,
-  } = useStaffIncentives();
+  } = useStaffIncentives(initialRules);
 
-  const renderPagination = () => {
-    if (pagination.totalPages <= 1) return null;
+  let grossTitle = "Pendapatan Kotor";
+  let grossDesc = "Total nilai transaksi atau layanan";
+  let incentiveTitle = "Komisi Diberikan";
+  let incentiveDesc = "Total insentif untuk staf";
+  let countTitle = "Total Tindakan";
+  let countDesc = "Jumlah layanan atau transaksi";
+  let showCount = true;
 
-    return (
-      <div className="mt-4 flex justify-end">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-              />
-            </PaginationItem>
-            
-            <PaginationItem>
-              <span className="text-sm text-gray-600 px-4">
-                Halaman {page} dari {pagination.totalPages}
-              </span>
-            </PaginationItem>
-
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                className={page === pagination.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-    );
-  };
+  if (incentiveRuleId !== "ALL") {
+    const selectedRule = initialRules.find(r => r.id === incentiveRuleId);
+    if (selectedRule) {
+      if (selectedRule.ruleType === "SERVICE_PRICE_PERCENTAGE") {
+        grossTitle = "Pendapatan Kotor Layanan";
+        grossDesc = "Total pendapatan dari layanan selesai";
+        incentiveTitle = "Komisi Terapis";
+        incentiveDesc = "Total insentif untuk terapis";
+        countTitle = "Layanan Selesai";
+        countDesc = "Jumlah layanan yang dikerjakan";
+      } else if (selectedRule.ruleType === "VOUCHER_SALES_TIERED") {
+        grossTitle = "Penjualan Paket Voucher";
+        grossDesc = "Total pendapatan penjualan paket voucher";
+        incentiveTitle = "Komisi Kasir";
+        incentiveDesc = "Total insentif dari penjualan paket";
+        countTitle = "Paket Terjual";
+        countDesc = "Jumlah paket voucher yang terjual";
+      } else {
+        grossTitle = "Pendapatan Kotor Cabang";
+        grossDesc = "Total seluruh pendapatan penjualan cabang";
+        incentiveTitle = "Komisi SPV / Ekstra";
+        incentiveDesc = "Total insentif khusus";
+        showCount = false;
+      }
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-800">Daftar Insentif</h2>
-          <p className="text-sm text-slate-500">
-            Lihat dan kelola insentif staf (komisi terapis dan kasir)
-          </p>
-        </div>
-      </div>
+    <Tabs defaultValue="list" className="space-y-6">
+      <PageHeader
+        title="Insentif Staf"
+        description="Kelola dan lihat daftar insentif serta aturan pembagian komisi."
+      >
+        <TabsList>
+          <TabsTrigger value="list">Daftar Insentif</TabsTrigger>
+          <TabsTrigger value="settings">Pengaturan</TabsTrigger>
+        </TabsList>
+      </PageHeader>
 
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-        <div className="flex gap-4 items-center w-full sm:w-auto">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Cari staf atau deskripsi..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+      <TabsContent value="list" className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="flex gap-4 items-center w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Cari staf atau deskripsi..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <Select value={incentiveRuleId} onValueChange={setIncentiveRuleId}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Pilih Aturan Insentif" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Semua Aturan</SelectItem>
+                {initialRules.map((rule) => (
+                  <SelectItem key={rule.id} value={rule.id}>
+                    {rule.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <DatePickerWithRange
+              date={dateRange}
+              setDate={setDateRange}
             />
           </div>
-          
-          <DatePickerWithRange 
-            date={dateRange} 
-            setDate={setDateRange} 
-          />
+
+          {(searchTerm || incentiveRuleId !== "ALL") && (
+            <Button
+              variant="ghost"
+              onClick={handleResetFilter}
+              className="text-slate-500 hover:text-slate-800"
+            >
+              <FilterX className="h-4 w-4 mr-2" />
+              Reset Filter
+            </Button>
+          )}
         </div>
 
-        {(searchTerm || dateRange) && (
-          <Button 
-            variant="ghost" 
-            onClick={handleResetFilter}
-            className="text-slate-500 hover:text-slate-800"
-          >
-            <FilterX className="h-4 w-4 mr-2" />
-            Reset Filter
-          </Button>
-        )}
-      </div>
+        <div>
+          {loading ? (
+            <div className="p-8 text-center text-slate-500">Memuat data...</div>
+          ) : (
+            <div className={`grid gap-4 ${showCount ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{grossTitle}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    <NumericFormat
+                      value={summary.totalGross}
+                      displayType="text"
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="Rp "
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{grossDesc}</p>
+                </CardContent>
+              </Card>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-slate-500">Memuat data...</div>
-        ) : (
-          <DataTable
-            columns={getStaffIncentiveColumns()}
-            data={incentives}
-          />
-        )}
-      </div>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{incentiveTitle}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    <NumericFormat
+                      value={summary.totalIncentive}
+                      displayType="text"
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="Rp "
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{incentiveDesc}</p>
+                </CardContent>
+              </Card>
 
-      {!loading && renderPagination()}
-    </div>
+              {showCount && (
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{countTitle}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      <NumericFormat
+                        value={summary.totalCount}
+                        displayType="text"
+                        thousandSeparator="."
+                        decimalSeparator=","
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{countDesc}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </div>
+      </TabsContent>
+
+      <TabsContent value="settings">
+        <IncentiveSettings workPositions={workPositions} initialRules={initialRules} />
+      </TabsContent>
+    </Tabs>
   );
 }

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
-import { usePosStoreActions, usePosStoreSelector } from "../stores/pos-store";
+import { usePosStoreActions, usePosStoreSelector, usePosCart } from "../stores/pos-store";
 
 interface UsePosClientProps {
   staff: any[];
@@ -10,13 +10,19 @@ interface UsePosClientProps {
 }
 
 export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosClientProps) {
-  const { addItem, updateItemDiscount, clearCart, setCustomerId } = usePosStoreActions();
+  const {
+    addItem, updateItemDiscount, clearCart,
+    setIsPaymentModalOpen, setSelectedProduct, setSelectedVoucherRedemption
+  } = usePosStoreActions();
+
+  const {
+    isPaymentModalOpen,
+    selectedProduct,
+    selectedVoucherRedemption
+  } = usePosCart();
+
   const cartItems = usePosStoreSelector((state) => state.items);
   const cartCustomerId = usePosStoreSelector((state) => state.customerId);
-
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [selectedVoucherRedemption, setSelectedVoucherRedemption] = useState<any | null>(null);
 
   // Auto-recalculate discounts for items already in the cart
   useEffect(() => {

@@ -17,9 +17,6 @@ export function useBrandSetting({ initialData }: UseBrandSettingProps) {
     defaultValues: initialData || {
       businessStartTime: "08:00",
       businessEndTime: "21:00",
-      therapistIncentiveType: "FIXED",
-      therapistIncentiveAmount: 0,
-      therapistIncentiveDuration: 60,
     },
   });
 

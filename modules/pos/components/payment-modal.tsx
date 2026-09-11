@@ -54,45 +54,59 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
           <div className="p-6 border-r border-border/40 bg-muted/5 flex flex-col space-y-6">
             <div className="bg-card rounded-2xl p-5 border border-border/50 space-y-2 text-base shadow-sm">
               <div className="flex justify-between items-center">
-                <span className="font-medium text-muted-foreground ml-auto">Total</span>
+                <span className="font-medium text-muted-foreground ml-auto">Total Layanan</span>
                 <span className="w-32 text-right font-medium">{cart.subtotal.toLocaleString('id-ID')}</span>
               </div>
 
-              <div className="flex justify-between items-center">
-                <div className="ml-auto flex items-center gap-2">
-                  <span className="text-muted-foreground text-sm font-medium">
-                    Discount ({cart.subtotal > 0 ? Math.round((cart.discountTotal / cart.subtotal) * 100) : 0}%)
-                  </span>
+              {cart.itemDiscountTotal > 0 && (
+                <div className="flex justify-between items-center text-red-500">
+                  <span className="text-sm font-medium ml-auto">Diskon Item</span>
+                  <span className="w-32 text-right font-medium">-{cart.itemDiscountTotal.toLocaleString('id-ID')}</span>
                 </div>
-                <span className="w-32 text-right font-medium">({cart.discountTotal.toLocaleString('id-ID')})</span>
-              </div>
+              )}
 
-
+              {cart.promoDiscountTotal > 0 && (
+                <div className="flex justify-between items-center text-red-500">
+                  <span className="text-sm font-medium ml-auto">Promo ({cart.appliedPromo?.name})</span>
+                  <span className="w-32 text-right font-medium">-{cart.promoDiscountTotal.toLocaleString('id-ID')}</span>
+                </div>
+              )}
 
               <div className="flex justify-between items-center">
-                <span className="font-medium text-muted-foreground ml-auto">Tax</span>
-                <span className="w-32 text-right font-medium">0</span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-muted-foreground ml-auto">Service Tax</span>
+                <span className="font-medium text-muted-foreground ml-auto">Tax (0%)</span>
                 <span className="w-32 text-right font-medium">0</span>
               </div>
 
               <div className="border-t border-border/60 mt-2 pt-2 flex justify-between items-center">
-                <span className="font-medium text-muted-foreground ml-auto">Grand Total</span>
+                <span className="font-medium text-muted-foreground ml-auto">Total Belanja</span>
                 <span className="w-32 text-right font-medium">{cart.totalAmount.toLocaleString('id-ID')}</span>
               </div>
 
-              <div className="border-t border-border/60 mt-1 pt-2 flex justify-between items-center">
-                <span className="font-medium text-muted-foreground ml-auto">Sisa Tagihan</span>
-                <span className="w-32 text-right font-medium">{remaining.toLocaleString('id-ID')}</span>
+              {cart.voucherNominalDiscount > 0 && (
+                <div className="flex justify-between items-center text-primary pt-1">
+                  <span className="text-sm font-medium ml-auto">Potongan Voucher</span>
+                  <span className="w-32 text-right font-medium">-{cart.voucherNominalDiscount.toLocaleString('id-ID')}</span>
+                </div>
+              )}
+
+              <div className="border-t border-border/60 mt-1 pt-2 flex justify-between items-center text-lg">
+                <span className="font-bold text-foreground ml-auto">Total Tagihan</span>
+                <span className="w-32 text-right font-bold">{(cart.amountDue ?? cart.totalAmount).toLocaleString('id-ID')}</span>
               </div>
 
-              <div className="flex justify-between items-center pt-1">
-                <span className="font-medium text-primary ml-auto">Kembalian</span>
-                <span className="w-32 text-right font-medium text-primary">{changeAmount.toLocaleString('id-ID')}</span>
-              </div>
+              {!isZeroTotal && (
+                <>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="font-medium text-muted-foreground ml-auto">Kekurangan</span>
+                    <span className="w-32 text-right font-medium text-red-500">{remaining.toLocaleString('id-ID')}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="font-medium text-muted-foreground ml-auto">Kembalian</span>
+                    <span className="w-32 text-right font-medium text-primary">{changeAmount.toLocaleString('id-ID')}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {!isZeroTotal && (
@@ -120,7 +134,7 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
               <Button
                 className="w-full h-14 text-lg rounded-xl font-medium"
                 onClick={() => handleSubmit(false)}
-                disabled={isSubmitting || (!isZeroTotal && (totalPaid < cart.totalAmount || !payment.paymentMethodId))}
+                disabled={isSubmitting || (!isZeroTotal && (totalPaid < (cart.amountDue ?? cart.totalAmount) || !payment.paymentMethodId))}
               >
                 {isSubmitting ? "Memproses..." : (
                   <>
@@ -129,7 +143,7 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
                   </>
                 )}
               </Button>
-              
+
               {!isZeroTotal && !hasVoucherPacket && (
                 <Button
                   variant="outline"

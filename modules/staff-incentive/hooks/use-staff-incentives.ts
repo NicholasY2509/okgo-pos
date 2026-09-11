@@ -1,26 +1,26 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { DateRange } from "react-day-picker";
-import { getIncentivesAction } from "../actions/staff-incentive-action";
+import { getIncentiveSummaryAction } from "../actions/staff-incentive-action";
+import { startOfMonth, endOfMonth } from "date-fns";
 
-export function useStaffIncentives() {
-  const [incentives, setIncentives] = useState<any[]>([]);
+export function useStaffIncentives(initialRules: any[] = []) {
+  const [summary, setSummary] = useState({ totalGross: 0, totalIncentive: 0, totalCount: 0 });
   const [loading, setLoading] = useState(true);
 
-  // Filters
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
+  });
+  const [incentiveRuleId, setIncentiveRuleId] = useState<string>("ALL");
 
-  // Pagination
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [pagination, setPagination] = useState({ total: 0, totalPages: 0 });
-
-  const fetchIncentives = async () => {
+  const fetchSummary = async (ruleType?: string) => {
     setLoading(true);
-    const filters: any = { page, limit };
+    const filters: any = {};
 
     if (searchTerm) filters.search = searchTerm;
+    if (ruleType && ruleType !== "ALL") filters.type = ruleType;
     if (dateRange?.from) filters.startDate = dateRange.from;
     if (dateRange?.to) {
       const end = new Date(dateRange.to);
@@ -28,12 +28,9 @@ export function useStaffIncentives() {
       filters.endDate = end;
     }
 
-    const result = await getIncentivesAction(filters);
+    const result = await getIncentiveSummaryAction(filters);
     if (result.success && result.data) {
-      setIncentives(result.data);
-      if (result.pagination) {
-        setPagination(result.pagination);
-      }
+      setSummary(result.data);
     } else {
       toast.error(result.error || "Gagal memuat insentif");
     }
@@ -42,30 +39,40 @@ export function useStaffIncentives() {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      fetchIncentives();
+      let mappedType = "ALL";
+      if (incentiveRuleId !== "ALL") {
+        const selectedRule = initialRules.find(r => r.id === incentiveRuleId);
+        if (selectedRule) {
+          if (selectedRule.ruleType === "SERVICE_PRICE_PERCENTAGE") mappedType = "SERVICE_COMMISSION";
+          else if (selectedRule.ruleType === "VOUCHER_SALES_TIERED") mappedType = "CASHIER_COMMISSION";
+          else mappedType = "MANUAL_BONUS";
+        }
+      }
+      fetchSummary(mappedType);
     }, 400); // 400ms debounce
     return () => clearTimeout(handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, dateRange, page, limit]);
+  }, [searchTerm, dateRange, incentiveRuleId, initialRules]);
 
   const handleResetFilter = () => {
     setSearchTerm("");
-    setDateRange(undefined);
-    setPage(1);
+    setDateRange({
+      from: startOfMonth(new Date()),
+      to: endOfMonth(new Date()),
+    });
+    setIncentiveRuleId("ALL");
   };
 
   return {
-    incentives,
+    summary,
     loading,
     searchTerm,
     setSearchTerm,
     dateRange,
     setDateRange,
-    page,
-    setPage,
-    limit,
-    setLimit,
-    pagination,
+    incentiveRuleId,
+    setIncentiveRuleId,
+    fetchSummary,
     handleResetFilter,
   };
 }

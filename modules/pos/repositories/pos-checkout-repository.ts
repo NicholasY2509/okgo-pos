@@ -16,6 +16,7 @@ export const PosCheckoutRepository = {
 
     return await prisma.$transaction(async (tx) => {
       await this.validatePreconditions(tx, input);
+      console.log("[CHECKOUT DEBUG] promotionId received:", input.promotionId, "appliedPromo raw:", JSON.stringify(input.promotionId));
 
       if (input.loadedTransactionId) {
         // Hapus transaksi lama beserta item dan sesinya secara cascade.
@@ -136,8 +137,16 @@ export const PosCheckoutRepository = {
         if (!room || !room.isActive) throw new Error(`Ruang tidak valid: ${item.roomId}`);
         if (room.branchId !== input.branchId) throw new Error(`Ruang ${room.name} tidak berada di cabang yang dipilih.`);
 
+        const now = new Date();
         const activeSessions = await tx.serviceSession.count({
-          where: { roomId: item.roomId, status: { in: ["SCHEDULED", "IN_PROGRESS"] } }
+          where: {
+            roomId: item.roomId,
+            status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+            OR: [
+              { endTime: { gt: now } },
+              { endTime: null }
+            ]
+          }
         });
         if (room.capacity !== null && (activeSessions + item.quantity) > room.capacity) {
           throw new Error(`Kapasitas ruang ${room.name} penuh.`);
@@ -250,34 +259,32 @@ export const PosCheckoutRepository = {
     }
 
     if (input.promotionId) {
-      let isVoucherUsed = itemVoucherRedemptionsData.length > 0;
-      
-      // Check if any payment method is VOUCHER
-      if (!isVoucherUsed && input.payments) {
-        const pmIds = input.payments.map(p => p.paymentMethodId);
-        const pms = await tx.paymentMethod.findMany({
-          where: { id: { in: pmIds }, type: "VOUCHER" }
-        });
-        if (pms.length > 0) isVoucherUsed = true;
-      }
+      // Only service/visit voucher redemptions conflict with promo discounts.
+      // Nominal credit vouchers used as a payment method are allowed alongside promos.
+      const isServiceVoucherUsed = itemVoucherRedemptionsData.length > 0;
 
-      if (isVoucherUsed) {
-        throw new Error("Voucher dan Diskon Promosi tidak dapat digunakan bersamaan. Voucher memiliki prioritas.");
+      if (isServiceVoucherUsed) {
+        throw new Error("Voucher layanan dan Diskon Promosi tidak dapat digunakan bersamaan. Voucher memiliki prioritas.");
       }
 
       const promo = await tx.promotion.findUnique({ where: { id: input.promotionId } });
+      console.log("[PROMO DEBUG] promotionId:", input.promotionId, "found:", !!promo, "isActive:", promo?.isActive);
       if (promo && promo.isActive) {
-        
+
         // Validate schedule
         const now = new Date();
         const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
         const todayStr = days[now.getDay()];
         const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        
+
         let isTimeValid = false;
-        
-        if (promo.schedules && Array.isArray(promo.schedules)) {
-          for (const schedule of promo.schedules as any[]) {
+        const schedules = promo.schedules as any[];
+
+        if (!schedules || !Array.isArray(schedules) || schedules.length === 0) {
+          // No schedules = always active
+          isTimeValid = true;
+        } else {
+          for (const schedule of schedules) {
             if (schedule.days && schedule.days.includes(todayStr)) {
               if (schedule.startTime && schedule.endTime) {
                 if (currentTimeStr >= schedule.startTime && currentTimeStr <= schedule.endTime) {
@@ -290,10 +297,9 @@ export const PosCheckoutRepository = {
               }
             }
           }
-        } else {
-          // If no schedules defined, it's always active
-          isTimeValid = true;
         }
+
+        console.log("[PROMO DEBUG] isTimeValid:", isTimeValid, "day:", todayStr, "time:", currentTimeStr, "schedules:", JSON.stringify(promo.schedules));
 
         if (!isTimeValid) {
           throw new Error("Diskon promosi tidak berlaku pada waktu ini.");
@@ -306,7 +312,7 @@ export const PosCheckoutRepository = {
             throw new Error(`Promosi membutuhkan minimal ${conditions.minQuantity} item layanan.`);
           }
           if (conditions.requiredServiceIds && conditions.requiredServiceIds.length > 0) {
-            const hasRequired = input.items.some(item => 
+            const hasRequired = input.items.some(item =>
               item.type === "SERVICE" && conditions.requiredServiceIds.includes(item.serviceId)
             );
             if (!hasRequired) {
@@ -316,12 +322,14 @@ export const PosCheckoutRepository = {
         }
 
         const reward = promo.reward as any;
+        console.log("[PROMO DEBUG] reward:", JSON.stringify(reward), "subtotal before promo:", subtotal, "discountTotal before promo:", discountTotal);
         if (reward.type === "PERCENTAGE_TOTAL" && reward.value) {
           discountTotal += subtotal * (reward.value / 100);
         } else if (reward.type === "FREE_ADDON" && reward.addonServiceId) {
           const product = await tx.product.findUnique({ where: { id: reward.addonServiceId } });
           if (product) discountTotal += Number(product.price);
         }
+        console.log("[PROMO DEBUG] discountTotal after promo:", discountTotal);
       }
     }
 
@@ -401,11 +409,16 @@ export const PosCheckoutRepository = {
       });
     }
 
-    if (paidAmount < totalAmount) {
-      throw new Error(`Jumlah pembayaran kurang. Total tagihan Rp ${totalAmount}, tetapi hanya dibayar Rp ${paidAmount}.`);
+    // Subtract the nominal voucher discount that was applied as a price reduction
+    // (not as a payment method entry) so the sufficiency check uses the actual amount due.
+    const voucherNominalDiscount = Number(input.voucherNominalDiscount ?? 0);
+    const amountDue = Math.max(0, totalAmount - voucherNominalDiscount);
+
+    if (paidAmount < amountDue) {
+      throw new Error(`Jumlah pembayaran kurang. Total tagihan Rp ${amountDue}, tetapi hanya dibayar Rp ${paidAmount}.`);
     }
 
-    const changeAmount = paidAmount - totalAmount;
+    const changeAmount = paidAmount - amountDue;
 
     return { paidAmount, changeAmount, transactionPaymentsData, voucherRedemptionsData };
   },

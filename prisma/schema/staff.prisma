@@ -34,8 +34,44 @@ model WorkPosition {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  staff      Staff[]
-  categories Category[]
+  staff          Staff[]
+  categories     Category[]
+  incentiveRules IncentiveRule[]
+}
+
+model IncentiveRule {
+  id                   String @id @default(cuid())
+  name                 String
+
+  // e.g., "SERVICE_PRICE_PERCENTAGE", "VOUCHER_SALES_TIERED", "TOTAL_SALES_TIERED", "FIXED_AMOUNT"
+  ruleType String
+
+  flatAmount     Decimal?
+  flatPercentage Decimal?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  targetWorkPositions WorkPosition[]
+  tiers               IncentiveTier[]
+}
+
+model IncentiveTier {
+  id              String @id @default(cuid())
+  incentiveRuleId String
+
+  minTarget Decimal // e.g. 0
+  maxTarget Decimal? // e.g. 80000000, null means infinity
+
+  // The commission given if within this tier
+  amount     Decimal? // If it's a fixed amount bonus
+  percentage Decimal? // If it's a percentage bonus, e.g. 0.5%
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  incentiveRule IncentiveRule @relation(fields: [incentiveRuleId], references: [id], onDelete: Cascade)
 }
 
 model Staff {

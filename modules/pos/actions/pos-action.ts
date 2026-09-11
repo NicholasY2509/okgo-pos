@@ -2,9 +2,21 @@
 
 import { posCheckoutSchema, type PosCheckoutInput } from "../schemas/pos-schema";
 import { PosService } from "../services/pos-service";
+import { auth } from "@/modules/auth/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function createPosTransactionAction(values: PosCheckoutInput) {
   try {
+    const session = await auth();
+    if (session?.user?.id) {
+      const staffUser = await prisma.staffUser.findFirst({
+        where: { userId: session.user.id }
+      });
+      if (staffUser) {
+        values.cashierId = staffUser.staffId;
+      }
+    }
+
     const validatedFields = posCheckoutSchema.safeParse(values);
     if (!validatedFields.success) {
       console.error("ZOD VALIDATION ERROR in posCheckoutSchema:", JSON.stringify(validatedFields.error.flatten(), null, 2));

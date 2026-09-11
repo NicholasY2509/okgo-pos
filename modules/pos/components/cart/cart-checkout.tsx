@@ -2,7 +2,7 @@
 
 import { Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePosStoreSelector } from "../../stores/pos-store";
+import { usePosCart, usePosStoreSelector } from "../../stores/pos-store";
 
 interface CartCheckoutProps {
   onCheckout: () => void;
@@ -10,15 +10,21 @@ interface CartCheckoutProps {
 
 export function CartCheckout({ onCheckout }: CartCheckoutProps) {
   const hasItems = usePosStoreSelector((state) => state.items.length > 0);
+  const { amountDue } = usePosCart();
 
   return (
     <Button
-      className="w-full bg-primary text-primary-foreground py-4 text-base font-bold hover:bg-primary/90 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:shadow-none gap-2"
+      className="w-full bg-primary text-primary-foreground py-6 text-base font-bold hover:bg-primary/90 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:shadow-none flex justify-between items-center px-5 mt-2"
       onClick={onCheckout}
       disabled={!hasItems}
     >
-      <Receipt className="w-5 h-5" />
-      Proses Pembayaran
+      <div className="flex items-center gap-2">
+        <Receipt className="w-5 h-5" />
+        <span>Proses</span>
+      </div>
+      <div className="text-xl tracking-tight">
+        Rp {amountDue.toLocaleString('id-ID')}
+      </div>
     </Button>
   );
 }
