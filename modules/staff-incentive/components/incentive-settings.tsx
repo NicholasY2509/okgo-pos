@@ -93,7 +93,7 @@ export function IncentiveSettings({ workPositions, initialRules }: { workPositio
           <DialogHeader>
             <DialogTitle>{editingRule ? "Edit Aturan Insentif" : "Tambah Aturan Insentif"}</DialogTitle>
             <DialogDescription>
-              Atur nominal atau persentase komisi berdasarkan target penjualan atau layanan.
+              Atur nominal atau persentase Insentif berdasarkan target penjualan atau layanan.
             </DialogDescription>
           </DialogHeader>
 
@@ -128,7 +128,7 @@ function IncentiveRuleForm({ initialData, workPositions, onSuccess }: { initialD
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Nama Aturan</Label>
-          <Input {...form.register("name")} placeholder="Contoh: Komisi Terapis 10%" />
+          <Input {...form.register("name")} placeholder="Contoh: Insentif Terapis 10%" />
           {form.formState.errors.name && <p className="text-red-500 text-sm">{form.formState.errors.name.message}</p>}
         </div>
         <div className="space-y-2">
@@ -177,7 +177,7 @@ function IncentiveRuleForm({ initialData, workPositions, onSuccess }: { initialD
 
       {ruleType === "FIXED_AMOUNT" && (
         <div className="space-y-2">
-          <Label>Nominal Komisi (Rp)</Label>
+          <Label>Nominal Insentif (Rp)</Label>
           <Controller
             name="flatAmount"
             control={form.control}
@@ -200,7 +200,7 @@ function IncentiveRuleForm({ initialData, workPositions, onSuccess }: { initialD
 
       {ruleType === "SERVICE_PRICE_PERCENTAGE" && (
         <div className="space-y-2">
-          <Label>Persentase Komisi (%)</Label>
+          <Label>Persentase Insentif (%)</Label>
           <Input type="number" step="0.01" {...form.register("flatPercentage")} />
           <p className="text-xs text-gray-500">Dihitung dari harga layanan setelah diskon.</p>
         </div>
@@ -215,7 +215,7 @@ function IncentiveRuleForm({ initialData, workPositions, onSuccess }: { initialD
             </Button>
           </div>
 
-          {tiers.length === 0 && <p className="text-sm text-gray-500">Belum ada tier. Tambahkan tier untuk menghitung komisi.</p>}
+          {tiers.length === 0 && <p className="text-sm text-gray-500">Belum ada tier. Tambahkan tier untuk menghitung Insentif.</p>}
 
           {tiers.map((tier, index) => (
             <div key={index} className="grid grid-cols-5 gap-2 items-end border-b pb-4 mb-4">

@@ -12,6 +12,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { NumericFormat } from "react-number-format";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,7 +41,7 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
 
   let grossTitle = "Pendapatan Kotor";
   let grossDesc = "Total nilai transaksi atau layanan";
-  let incentiveTitle = "Komisi Diberikan";
+  let incentiveTitle = "Insentif Diberikan";
   let incentiveDesc = "Total insentif untuk staf";
   let countTitle = "Total Tindakan";
   let countDesc = "Jumlah layanan atau transaksi";
@@ -45,21 +53,21 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
       if (selectedRule.ruleType === "SERVICE_PRICE_PERCENTAGE") {
         grossTitle = "Pendapatan Kotor Layanan";
         grossDesc = "Total pendapatan dari layanan selesai";
-        incentiveTitle = "Komisi Terapis";
+        incentiveTitle = "Insentif Terapis";
         incentiveDesc = "Total insentif untuk terapis";
         countTitle = "Layanan Selesai";
         countDesc = "Jumlah layanan yang dikerjakan";
       } else if (selectedRule.ruleType === "VOUCHER_SALES_TIERED") {
         grossTitle = "Penjualan Paket Voucher";
         grossDesc = "Total pendapatan penjualan paket voucher";
-        incentiveTitle = "Komisi Kasir";
+        incentiveTitle = "Insentif Kasir";
         incentiveDesc = "Total insentif dari penjualan paket";
         countTitle = "Paket Terjual";
         countDesc = "Jumlah paket voucher yang terjual";
       } else {
         grossTitle = "Pendapatan Kotor Cabang";
         grossDesc = "Total seluruh pendapatan penjualan cabang";
-        incentiveTitle = "Komisi SPV / Ekstra";
+        incentiveTitle = "Insentif SPV / Ekstra";
         incentiveDesc = "Total insentif khusus";
         showCount = false;
       }
@@ -70,7 +78,7 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
     <Tabs defaultValue="list" className="space-y-6">
       <PageHeader
         title="Insentif Staf"
-        description="Kelola dan lihat daftar insentif serta aturan pembagian komisi."
+        description="Kelola dan lihat daftar insentif serta aturan pembagian Insentif."
       >
         <TabsList>
           <TabsTrigger value="list">Daftar Insentif</TabsTrigger>
@@ -127,62 +135,104 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
           {loading ? (
             <div className="p-8 text-center text-slate-500">Memuat data...</div>
           ) : (
-            <div className={`grid gap-4 ${showCount ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{grossTitle}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    <NumericFormat
-                      value={summary.totalGross}
-                      displayType="text"
-                      thousandSeparator="."
-                      decimalSeparator=","
-                      prefix="Rp "
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{grossDesc}</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{incentiveTitle}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    <NumericFormat
-                      value={summary.totalIncentive}
-                      displayType="text"
-                      thousandSeparator="."
-                      decimalSeparator=","
-                      prefix="Rp "
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{incentiveDesc}</p>
-                </CardContent>
-              </Card>
-
-              {showCount && (
+            <>
+              <div className={`grid gap-4 ${showCount ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">{countTitle}</CardTitle>
+                    <CardTitle className="text-sm font-medium">{grossTitle}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       <NumericFormat
-                        value={summary.totalCount}
+                        value={summary.totalGross}
                         displayType="text"
                         thousandSeparator="."
                         decimalSeparator=","
+                        prefix="Rp "
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{countDesc}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{grossDesc}</p>
                   </CardContent>
                 </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{incentiveTitle}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">
+                      <NumericFormat
+                        value={summary.totalIncentive}
+                        displayType="text"
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        prefix="Rp "
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{incentiveDesc}</p>
+                  </CardContent>
+                </Card>
+
+                {showCount && (
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">{countTitle}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        <NumericFormat
+                          value={summary.totalCount}
+                          displayType="text"
+                          thousandSeparator="."
+                          decimalSeparator=","
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{countDesc}</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {summary.branchBreakdowns && summary.branchBreakdowns.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-medium mb-4">Rincian per Cabang</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Cabang</TableHead>
+                        <TableHead className="text-right">Pendapatan Kotor</TableHead>
+                        <TableHead className="text-right">Insentif</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {summary.branchBreakdowns.map((b, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium">{b.branchName}</TableCell>
+                          <TableCell className="text-right">
+                            <NumericFormat
+                              value={b.gross}
+                              displayType="text"
+                              thousandSeparator="."
+                              decimalSeparator=","
+                              prefix="Rp "
+                            />
+                          </TableCell>
+                          <TableCell className="text-right text-green-600 font-medium">
+                            <NumericFormat
+                              value={b.incentive}
+                              displayType="text"
+                              thousandSeparator="."
+                              decimalSeparator=","
+                              prefix="Rp "
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </TabsContent>

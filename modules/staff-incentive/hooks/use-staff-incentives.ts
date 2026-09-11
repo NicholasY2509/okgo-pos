@@ -5,7 +5,12 @@ import { getIncentiveSummaryAction } from "../actions/staff-incentive-action";
 import { startOfMonth, endOfMonth } from "date-fns";
 
 export function useStaffIncentives(initialRules: any[] = []) {
-  const [summary, setSummary] = useState({ totalGross: 0, totalIncentive: 0, totalCount: 0 });
+  const [summary, setSummary] = useState<{
+    totalGross: number;
+    totalIncentive: number;
+    totalCount: number;
+    branchBreakdowns?: { branchName: string; gross: number; incentive: number; }[];
+  }>({ totalGross: 0, totalIncentive: 0, totalCount: 0, branchBreakdowns: [] });
   const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");

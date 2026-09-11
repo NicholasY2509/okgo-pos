@@ -37,7 +37,7 @@ export const getStaffIncentiveColumns = (): ColumnDef<any>[] => [
     cell: ({ row }) => {
       const type = row.original.type;
       if (type === "SERVICE_COMMISSION") {
-        return <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Komisi Terapis</span>;
+        return <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Insentif Terapis</span>;
       }
       if (type === "CASHIER_COMMISSION") {
         return <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Insentif Kasir</span>;
