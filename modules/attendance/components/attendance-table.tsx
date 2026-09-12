@@ -4,53 +4,64 @@ import React, { useTransition } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
 import { Badge } from "@/components/ui/badge"
-import { AttendanceStatusPicker } from "@/modules/attendance-status/components/attendance-status-picker"
-import { updateAttendanceStatusAction } from "../actions/attendance-action"
-import { toast } from "sonner"
-import { Lock } from "lucide-react"
+import { Lock, Logs, Paperclip } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import Image from "next/image"
 
 interface AttendanceTableProps {
   data: any[]
   statuses?: any[]
+  onRowClick?: (row: any) => void
 }
 
-function StatusCell({ row, statuses }: { row: any, statuses?: any[] }) {
-  const [isPending, startTransition] = useTransition()
+function StatusCell({ row, onRowClick }: { row: any, onRowClick?: (row: any) => void }) {
   const status = row.original.status
   const isManualOverride = row.original.isManualOverride
-  
-  const handleStatusChange = (newStatusId: string) => {
-    if (!newStatusId) return
-    startTransition(async () => {
-      const res = await updateAttendanceStatusAction(row.original.id, newStatusId)
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success("Status absensi berhasil diubah.")
-      }
-    })
-  }
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-32">
-        <AttendanceStatusPicker 
-          value={status?.id} 
-          onChange={handleStatusChange} 
-          statusList={statuses}
-          className="h-8"
-        />
-      </div>
-      {isManualOverride && (
-        <div title="Diubah secara manual (tidak akan dioverride otomatis)">
-          <Lock className="w-3 h-3 text-muted-foreground" />
-        </div>
-      )}
-    </div>
+    <Button
+      variant="outline"
+      size={'icon'}
+      onClick={() => onRowClick?.(row.original)}
+    >
+      <Logs />
+    </Button>
   )
 }
 
-export function AttendanceTable({ data, statuses }: AttendanceTableProps) {
+function AttachmentCell({ url }: { url: string | null }) {
+  if (!url) return <div className="text-muted-foreground">-</div>
+
+  const isImage = url.match(/\.(jpeg|jpg|gif|png|webp)$/i) != null || url.includes("image")
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="icon">
+          <Paperclip className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Lampiran</DialogTitle>
+        </DialogHeader>
+        <div className="relative w-full aspect-video bg-muted/20 rounded-md overflow-hidden flex items-center justify-center">
+          {isImage ? (
+            <Image src={url} alt="Lampiran" fill className="object-contain" />
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+              <Paperclip className="h-8 w-8" />
+              <span>{url.split('/').pop()}</span>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export function AttendanceTable({ data, statuses, onRowClick }: AttendanceTableProps) {
   const columns: ColumnDef<any>[] = [
     {
       accessorKey: "attendanceDate",
@@ -100,7 +111,20 @@ export function AttendanceTable({ data, statuses }: AttendanceTableProps) {
       accessorKey: "status.name",
       header: "Status",
       cell: ({ row }) => {
-        return <StatusCell row={row} statuses={statuses} />
+        return row.original.status.name
+      },
+    },
+    {
+      accessorKey: "attachmentUrl",
+      header: "Lampiran",
+      cell: ({ row }) => {
+        return <AttachmentCell url={row.original.attachmentUrl} />
+      },
+    },
+    {
+      header: "Action",
+      cell: ({ row }) => {
+        return <StatusCell row={row} onRowClick={onRowClick} />
       },
     },
   ]

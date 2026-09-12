@@ -1,9 +1,7 @@
 import { Metadata } from "next"
 import { PageHeader } from "@/components/page-header"
 import { AttendanceService } from "@/modules/attendance/services/attendance-service"
-import { AttendanceTable } from "@/modules/attendance/components/attendance-table"
-import { DataTablePagination } from "@/components/ui/data-table-pagination"
-import { AttendanceFilters } from "@/modules/attendance/components/attendance-filters"
+import { AttendanceDataClient } from "@/modules/attendance/components/attendance-data-client"
 import { AttendanceStatusService } from "@/modules/attendance-status/services/attendance-status-service"
 import { AttendanceCalculatorDialog } from "@/modules/attendance/components/attendance-calculator-dialog"
 
@@ -26,8 +24,12 @@ export default async function AttendanceDataPage({ searchParams }: AttendanceDat
   const endDateStr = typeof params.endDate === 'string' ? params.endDate : undefined;
   const statusId = typeof params.statusId === 'string' ? params.statusId : undefined;
 
-  const startDate = startDateStr ? new Date(startDateStr) : undefined;
-  const endDate = endDateStr ? new Date(endDateStr) : undefined;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const startDate = startDateStr ? new Date(startDateStr) : today;
+  let endDate = endDateStr ? new Date(endDateStr) : new Date(today);
+  endDate.setHours(23, 59, 59, 999);
 
   const data = await AttendanceService.getAttendances({ page, limit, search, startDate, endDate, statusId })
   const rawStatuses = await AttendanceStatusService.getAll()
@@ -47,9 +49,7 @@ export default async function AttendanceDataPage({ searchParams }: AttendanceDat
         <AttendanceCalculatorDialog />
       </PageHeader>
 
-      <AttendanceFilters statuses={statuses} />
-      <AttendanceTable data={data.attendances} statuses={statuses} />
-      <DataTablePagination metadata={data.metadata} />
+      <AttendanceDataClient data={data} statuses={statuses} />
     </div>
   )
 }

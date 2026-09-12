@@ -82,9 +82,10 @@ export const AttendanceRepository = {
           clockInMachine: true,
           clockOutMachine: true,
         },
-        orderBy: {
-          attendanceDate: "desc"
-        },
+        orderBy: [
+          { attendanceDate: "desc" },
+          { clockIn: "desc" }
+        ],
         skip,
         take: limit
       }),

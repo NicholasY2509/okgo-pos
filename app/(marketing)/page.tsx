@@ -184,7 +184,7 @@ export default function MarketingPage() {
               />
             </a>
           </div>
-          <div className="hidden md:flex space-x-12 font-medium text-sm text-muted-foreground tracking-wide">
+          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 space-x-12 font-medium text-sm text-muted-foreground tracking-wide">
             <button onClick={(e) => scrollTo(e, 'layanan')} className="hover:text-foreground transition-colors cursor-pointer">Layanan</button>
             <button onClick={(e) => scrollTo(e, 'voucher')} className="hover:text-foreground transition-colors cursor-pointer">Voucher</button>
             <button onClick={(e) => scrollTo(e, 'reservasi')} className="hover:text-foreground transition-colors cursor-pointer">Reservasi</button>
@@ -249,7 +249,7 @@ export default function MarketingPage() {
       </header>
 
       {/* PROMO BUNDLE VOUCHER */}
-      <section id="voucher" className="py-40 px-6 bg-muted/30">
+      {/* <section id="voucher" className="py-40 px-6 bg-muted/30">
         <div className="max-w-5xl mx-auto reveal-section">
           <div className="text-center mb-12">
             <h2 className="text-5xl font-display font-light text-foreground mb-4">Penawaran Eksklusif</h2>
@@ -320,7 +320,7 @@ export default function MarketingPage() {
             </div>
           )}
         </div>
-      </section>
+      </section> */}
 
       {/* LAYANAN REGULER */}
       <section id="layanan" className="py-40 px-6">

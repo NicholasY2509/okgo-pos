@@ -81,12 +81,13 @@ export class AttendanceService {
     return await AttendanceRepository.getAttendances(params)
   }
 
-  static async updateStatus(attendanceId: string, statusId: string) {
+  static async updateStatus(attendanceId: string, statusId: string, attachmentUrl?: string) {
     return await prisma.attendance.update({
       where: { id: attendanceId },
       data: {
         statusId: statusId,
         isManualOverride: true,
+        attachmentUrl: attachmentUrl || null,
       }
     })
   }

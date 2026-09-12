@@ -237,7 +237,7 @@ export const adminNav = [
         roles: ["Admin"],
       },
       {
-        title: "Daftar Insentif",
+        title: "Insentif",
         url: "/admin/incentives",
         icon: (<Banknote />),
         roles: ["Admin"],

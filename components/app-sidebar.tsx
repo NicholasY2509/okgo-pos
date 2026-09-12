@@ -12,12 +12,14 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 import { adminNav, branchNav } from "./app-sidebar-data"
 
 export function AppSidebar({ portalType = "branch", session, ...props }: React.ComponentProps<typeof Sidebar> & { portalType?: "admin" | "branch", session: any }) {
   const pathname = usePathname()
+  const { state } = useSidebar()
 
   const isAdminPortal = portalType === "admin"
   const navigationData = isAdminPortal ? adminNav : branchNav
@@ -40,14 +42,14 @@ export function AppSidebar({ portalType = "branch", session, ...props }: React.C
     <Sidebar variant="floating" collapsible="icon" {...props}>
       <SidebarHeader>
         {/* TeamSwitcher removed as requested */}
-        <div className="flex items-center gap-2 px-2 py-3 mt-1">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground shadow-sm">
-            N
-          </div>
-          <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-semibold text-sm">NYENYAK</span>
-            <span className="text-xs text-muted-foreground">{isAdminPortal ? "Admin Pusat" : "Cabang"}</span>
-          </div>
+        <div className="flex items-center justify-center gap-2 px-2 py-3 mt-1">
+          {state === "expanded" ? (
+            <div className="flex flex-col items-center justify-center -ml-3">
+              <img src="/logo-long.webp" alt="Nyenyak Logo" className="h-12 object-contain" />
+            </div>
+          ) : (
+            <img src="/logo-only.png" alt="Nyenyak Logo" className="h-4 object-contain" />
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent>

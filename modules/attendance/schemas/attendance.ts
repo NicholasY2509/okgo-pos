@@ -10,6 +10,7 @@ export const attendanceSchema = z.object({
   clockInMachineId: z.string().optional().nullable(),
   clockOutMachineId: z.string().optional().nullable(),
   attendanceWorkingHourId: z.string().optional().nullable(),
+  attachmentUrl: z.string().optional().nullable(),
 })
 
 export type AttendanceInput = z.infer<typeof attendanceSchema>

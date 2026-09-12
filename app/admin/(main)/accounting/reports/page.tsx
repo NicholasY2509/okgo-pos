@@ -5,6 +5,8 @@ import { ProfitLossTab } from "@/modules/accounting/components/reports/profit-lo
 import { BalanceSheetTab } from "@/modules/accounting/components/reports/balance-sheet-tab"
 import { TrialBalanceTab } from "@/modules/accounting/components/reports/trial-balance-tab"
 import { getDailyReportAction, getProfitAndLossAction, getBalanceSheetAction, getTrialBalanceAction } from "@/modules/accounting/actions/report-action"
+import { BranchRepository } from "@/modules/branch/repositories/branch-repository"
+import { ReportBranchFilter } from "@/modules/accounting/components/reports/report-branch-filter"
 
 export default async function AdminReportsPage({
   searchParams,
@@ -17,6 +19,7 @@ export default async function AdminReportsPage({
   const dateStr = typeof params.date === "string" ? params.date : undefined
   const startDateStr = typeof params.startDate === "string" ? params.startDate : undefined
   const endDateStr = typeof params.endDate === "string" ? params.endDate : undefined
+  const branchId = typeof params.branchId === "string" ? params.branchId : undefined
 
   // Base options for fetching
   const options = {
@@ -26,6 +29,9 @@ export default async function AdminReportsPage({
     asOfDate: dateStr ? new Date(dateStr) : new Date(), // Balance sheet usually uses a single "as of" date
   }
 
+  // Fetch branches
+  const branches = await BranchRepository.getAllBranches()
+
   // Fetch only the data needed for the active tab
   let dailyData = null
   let plData = null
@@ -34,19 +40,19 @@ export default async function AdminReportsPage({
   let error = undefined
 
   if (tab === "daily") {
-    const res = await getDailyReportAction(options.date)
+    const res = await getDailyReportAction(options.date, branchId)
     if (res.success) dailyData = res.data
     else error = res.error
   } else if (tab === "profit-loss") {
-    const res = await getProfitAndLossAction({ startDate: options.startDate, endDate: options.endDate })
+    const res = await getProfitAndLossAction({ startDate: options.startDate, endDate: options.endDate, branchId })
     if (res.success) plData = res.data
     else error = res.error
   } else if (tab === "balance-sheet") {
-    const res = await getBalanceSheetAction({ asOfDate: options.asOfDate })
+    const res = await getBalanceSheetAction({ asOfDate: options.asOfDate, branchId })
     if (res.success) bsData = res.data
     else error = res.error
   } else if (tab === "trial-balance") {
-    const res = await getTrialBalanceAction({ startDate: options.startDate, endDate: options.endDate })
+    const res = await getTrialBalanceAction({ startDate: options.startDate, endDate: options.endDate, branchId })
     if (res.success) tbData = res.data
     else error = res.error
   }
@@ -56,8 +62,10 @@ export default async function AdminReportsPage({
       <PageHeader
         title="Laporan Keuangan"
         description="Lihat laporan harian, laba/rugi, neraca, dan neraca saldo."
-      />
-      
+      >
+        <ReportBranchFilter branches={branches} selectedBranchId={branchId} />
+      </PageHeader>
+
       <ReportTabs>
         {tab === "daily" && <DailyReportTab data={dailyData as any} error={error} />}
         {tab === "profit-loss" && <ProfitLossTab data={plData as any} error={error} />}

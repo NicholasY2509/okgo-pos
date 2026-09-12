@@ -24,7 +24,6 @@ export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosC
   const cartItems = usePosStoreSelector((state) => state.items);
   const cartCustomerId = usePosStoreSelector((state) => state.customerId);
 
-  // Auto-recalculate discounts for items already in the cart
   useEffect(() => {
     cartItems.forEach(item => {
       if (item.type === "SERVICE" && !item.isVoucherRedemption) {
@@ -63,14 +62,13 @@ export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosC
     const unitPrice = Number(selectedProduct.price);
 
     if (selectedVoucherRedemption) {
-      // Add voucher redemption to cart
       addItem({
         type: "SERVICE",
         serviceId: selectedProduct.id,
-        quantity: 1, // Force to 1 as recommended
+        quantity: 1,
         staffId: staffId,
         roomId: roomId,
-        discountAmount: unitPrice, // Fully discounted via voucher
+        discountAmount: unitPrice,
         name: selectedProduct.name,
         unitPrice: unitPrice,
         staffName: staffMember?.firstName + " " + (staffMember?.lastName || ""),

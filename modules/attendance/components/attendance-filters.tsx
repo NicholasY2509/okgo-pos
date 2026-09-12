@@ -28,9 +28,14 @@ export function AttendanceFilters({ statuses }: AttendanceFiltersProps) {
   const [search, setSearch] = useState(searchParams.get("search") || "")
   const debouncedSearch = useDebounce(search, 500)
 
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: searchParams.get("startDate") ? new Date(searchParams.get("startDate") as string) : undefined,
-    to: searchParams.get("endDate") ? new Date(searchParams.get("endDate") as string) : undefined,
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const todayLocal = new Date()
+    todayLocal.setHours(0, 0, 0, 0)
+
+    return {
+      from: searchParams.get("startDate") ? new Date(searchParams.get("startDate") as string) : todayLocal,
+      to: searchParams.get("endDate") ? new Date(searchParams.get("endDate") as string) : todayLocal,
+    }
   })
 
   const createQueryString = useCallback(
@@ -98,8 +103,12 @@ export function AttendanceFilters({ statuses }: AttendanceFiltersProps) {
             setDate={(newDateRange) => {
               setDateRange(newDateRange)
 
-              let fromStr = undefined;
-              let toStr = undefined;
+              const today = new Date();
+              today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+              const todayStr = today.toISOString().split('T')[0];
+
+              let fromStr = todayStr;
+              let toStr = todayStr;
 
               if (newDateRange?.from) {
                 // Adjust to local date string to avoid UTC offset issues in URL
@@ -112,6 +121,8 @@ export function AttendanceFilters({ statuses }: AttendanceFiltersProps) {
                 const toDate = new Date(newDateRange.to);
                 toDate.setMinutes(toDate.getMinutes() - toDate.getTimezoneOffset());
                 toStr = toDate.toISOString().split('T')[0];
+              } else if (newDateRange?.from) {
+                toStr = fromStr;
               }
 
               router.push(`?${createMultiQueryString({

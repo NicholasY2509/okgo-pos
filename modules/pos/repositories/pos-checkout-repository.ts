@@ -122,6 +122,7 @@ export const PosCheckoutRepository = {
       let unitPrice = 0;
       let itemNameSnapshot = "";
       let cashierIncentiveAmount = 0;
+      let therapistIncentivePerUnit = 0;
 
       if (item.type === "SERVICE") {
         const product = await tx.product.findUnique({ where: { id: item.serviceId } });
@@ -130,8 +131,31 @@ export const PosCheckoutRepository = {
         unitPrice = Number(product.price);
         itemNameSnapshot = product.name;
 
-        const staff = await tx.staff.findUnique({ where: { id: item.staffId } });
+        const staff = await tx.staff.findUnique({
+          where: { id: item.staffId },
+          include: {
+            workPosition: {
+              include: {
+                incentiveRules: {
+                  where: { isActive: true }
+                }
+              }
+            }
+          }
+        });
         if (!staff || !staff.isActive) throw new Error(`Staf tidak valid: ${item.staffId}`);
+
+        if (staff.workPosition?.incentiveRules) {
+          for (const rule of staff.workPosition.incentiveRules) {
+            if (rule.ruleType === "SERVICE_PRICE_PERCENTAGE" && rule.flatPercentage) {
+              therapistIncentivePerUnit = (Number(rule.flatPercentage) / 100) * unitPrice;
+              break;
+            } else if (rule.ruleType === "FIXED_AMOUNT" && rule.flatAmount) {
+              therapistIncentivePerUnit = Number(rule.flatAmount);
+              break;
+            }
+          }
+        }
 
         const room = await tx.room.findUnique({ where: { id: item.roomId } });
         if (!room || !room.isActive) throw new Error(`Ruang tidak valid: ${item.roomId}`);
@@ -254,6 +278,8 @@ export const PosCheckoutRepository = {
         discountAmount: totalItemDiscount,
         subtotal: itemSubtotal,
         cashierIncentiveAmount,
+        therapistIncentivePerUnit,
+        staffId: item.type === "SERVICE" ? item.staffId : null,
         _tempType: item.type
       });
     }
@@ -436,7 +462,11 @@ export const PosCheckoutRepository = {
 
     for (const itemData of transactionItemsData) {
       const itemType = itemData._tempType;
+      const therapistIncentivePerUnit = itemData.therapistIncentivePerUnit;
+      const staffId = itemData.staffId;
       delete itemData._tempType;
+      delete itemData.therapistIncentivePerUnit;
+      delete itemData.staffId;
 
       const createdItem = await tx.transactionItem.create({
         data: {
@@ -455,6 +485,19 @@ export const PosCheckoutRepository = {
               transactionItemId: createdItem.id,
             }
           });
+
+          if (therapistIncentivePerUnit > 0) {
+            await tx.staffIncentive.create({
+              data: {
+                staffId: sessionData.staffId,
+                amount: therapistIncentivePerUnit,
+                type: "SERVICE_COMMISSION",
+                description: `Commission for service: ${itemData.itemNameSnapshot}`,
+                transactionItemId: createdItem.id,
+                serviceSessionId: createdSession.id,
+              }
+            });
+          }
 
           if (voucherRedemptionsData.length > 0) {
             for (const vr of voucherRedemptionsData) {
