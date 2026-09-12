@@ -15,30 +15,8 @@ export class ServiceSessionService {
     if (!session) throw new Error("Session not found")
 
     let commissionAmount = 0;
-    const brandSetting = await prisma.brandSetting.findFirst();
-
-    if (brandSetting) {
-      if (brandSetting.therapistIncentiveType === "FIXED") {
-        commissionAmount = Number(brandSetting.therapistIncentiveAmount);
-      } else if (brandSetting.therapistIncentiveType === "DURATION_BASED") {
-        // Fetch service duration
-        const product = await prisma.product.findUnique({ where: { id: session.serviceId } });
-        const duration = product?.duration || 60; // default to 60 if not set
-        const baseDuration = brandSetting.therapistIncentiveDuration || 60;
-
-        commissionAmount = (duration / baseDuration) * Number(brandSetting.therapistIncentiveAmount);
-      } else if (brandSetting.therapistIncentiveType === "PERCENTAGE") {
-        const percentage = Number(brandSetting.therapistIncentiveAmount);
-        let pricePerSession = 0;
-
-        if (session.transactionItem) {
-          const quantity = Math.max(session.transactionItem.quantity, 1);
-          pricePerSession = Number(session.transactionItem.subtotal) / quantity;
-        }
-
-        commissionAmount = Math.floor(pricePerSession * (percentage / 100));
-      }
-    }
+    // FIXME: Commission calculation needs to be updated to use IncentiveRule
+    // The previous BrandSetting properties (therapistIncentiveType, etc.) have been removed.
 
     return await ServiceSessionRepository.endSession(sessionId, commissionAmount, session.staffId)
   }
