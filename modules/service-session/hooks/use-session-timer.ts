@@ -18,12 +18,13 @@ export function useSessionTimer(actualStartTime: Date | null, expectedDurationMi
     return () => clearInterval(interval)
   }, [actualStartTime])
 
-  const runningMinutes = Math.floor(runningSeconds / 60)
+  const runningHours = Math.floor(runningSeconds / 3600)
+  const runningMinutes = Math.floor((runningSeconds % 3600) / 60)
   const remainingSeconds = runningSeconds % 60
   
-  const formattedRunningTime = `${String(runningMinutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
+  const formattedRunningTime = `${String(runningHours).padStart(2, '0')}:${String(runningMinutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
   
-  const isEarly = expectedDurationMinutes > 0 ? runningMinutes < expectedDurationMinutes : false
+  const isEarly = expectedDurationMinutes > 0 ? (runningHours * 60 + runningMinutes) < expectedDurationMinutes : false
   const earlyByMinutes = isEarly ? expectedDurationMinutes - runningMinutes : 0
 
   return {

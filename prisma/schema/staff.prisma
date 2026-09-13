@@ -40,8 +40,8 @@ model WorkPosition {
 }
 
 model IncentiveRule {
-  id                   String @id @default(cuid())
-  name                 String
+  id   String @id @default(cuid())
+  name String
 
   // e.g., "SERVICE_PRICE_PERCENTAGE", "VOUCHER_SALES_TIERED", "TOTAL_SALES_TIERED", "FIXED_AMOUNT"
   ruleType String
@@ -104,6 +104,7 @@ model Staff {
   staffSalaryComponents  StaffSalaryComponent[]
   payrolls               Payroll[]
   staffIncentives        StaffIncentive[]
+  requestedBookingItems  BookingItem[]
 }
 
 model StaffUser {

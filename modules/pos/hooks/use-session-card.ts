@@ -13,27 +13,31 @@ export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
   const [now, setNow] = useState(new Date());
 
   const cardRef = useRef<HTMLDivElement>(null);
-
-  // Dragging states
   const [isDragging, setIsDragging] = useState(false);
   const [isResizingLeft, setIsResizingLeft] = useState(false);
   const [isResizingRight, setIsResizingRight] = useState(false);
 
-  const [localStart, setLocalStart] = useState<Date>(new Date(session.startTime));
-  const [localEnd, setLocalEnd] = useState<Date>(
-    session.endTime ? new Date(session.endTime) : new Date(new Date(session.startTime).getTime() + 60 * 60 * 1000)
-  );
+  const getEffectiveStart = () => session.actualStartTime ? new Date(session.actualStartTime) : new Date(session.startTime);
+  const getEffectiveEnd = () => {
+    if (session.status === "COMPLETED" && session.actualEndTime) {
+      return new Date(session.actualEndTime);
+    }
+    const start = getEffectiveStart();
+    const scheduledStart = new Date(session.startTime);
+    const scheduledEnd = session.endTime ? new Date(session.endTime) : new Date(scheduledStart.getTime() + 60 * 60 * 1000);
+    const durationMs = scheduledEnd.getTime() - scheduledStart.getTime();
+    return new Date(start.getTime() + durationMs);
+  };
+
+  const [localStart, setLocalStart] = useState<Date>(getEffectiveStart());
+  const [localEnd, setLocalEnd] = useState<Date>(getEffectiveEnd());
 
   useEffect(() => {
     if (!isDragging && !isResizingLeft && !isResizingRight) {
-      setLocalStart(new Date(session.startTime));
-      setLocalEnd(
-        session.endTime
-          ? new Date(session.endTime)
-          : new Date(new Date(session.startTime).getTime() + 60 * 60 * 1000)
-      );
+      setLocalStart(getEffectiveStart());
+      setLocalEnd(getEffectiveEnd());
     }
-  }, [session.startTime, session.endTime, isDragging, isResizingLeft, isResizingRight]);
+  }, [session.startTime, session.endTime, session.actualStartTime, session.actualEndTime, session.status, isDragging, isResizingLeft, isResizingRight]);
 
   useEffect(() => {
     if (session.status === "COMPLETED") return;
@@ -44,7 +48,6 @@ export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
   const startHour = localStart.getHours() + localStart.getMinutes() / 60;
   const endHour = localEnd.getHours() + localEnd.getMinutes() / 60;
 
-  // Clamp to business hours for display
   const clampedStart = Math.max(businessHoursStart, Math.min(startHour, businessHoursEnd));
   const clampedEnd = Math.max(businessHoursStart, Math.min(endHour, businessHoursEnd));
 
@@ -53,18 +56,22 @@ export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
   const left = ((clampedStart - businessHoursStart) / totalHours) * 100;
   const width = ((clampedEnd - clampedStart) / totalHours) * 100;
 
-  // Calculate timer (Elapsed time instead of remaining)
+  const actualStart = session.actualStartTime ? new Date(session.actualStartTime) : localStart;
+
   let timerText = "";
   let timerColor = "text-muted-foreground";
 
   if (session.status === "IN_PROGRESS") {
-    if (now < localStart) {
-      const diffStr = getDiffString(localStart, now);
+    if (now < actualStart) {
+      const diffStr = getDiffString(actualStart, now);
       timerText = `Belum Mulai ${diffStr}`;
     } else {
-      const diffStr = getDiffString(localStart, now);
+      const diffStr = getDiffString(actualStart, now);
       timerText = `Berjalan ${diffStr}`;
-      timerColor = now > localEnd ? "text-red-500 font-bold" : "text-primary font-medium";
+
+      const durationMs = localEnd.getTime() - localStart.getTime();
+      const expectedActualEnd = new Date(actualStart.getTime() + durationMs);
+      timerColor = now > expectedActualEnd ? "text-red-500 font-bold" : "text-primary font-medium";
     }
   } else if (session.status === "SCHEDULED") {
     const diffStr = getDiffString(localStart, now);

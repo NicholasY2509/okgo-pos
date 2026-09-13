@@ -1,13 +1,16 @@
 import { prisma } from "@/lib/prisma"
 import { CreateStaffInput, UpdateStaffInput } from "../schemas/staff-schema"
+import { StaffAvailabilityService } from "../services/staff-availability-service"
+import { addMinutes } from "date-fns"
 
 export const StaffRepository = {
-  async getAllStaff(branchId?: string, serviceId?: string) {
-    const todayStr = new Date().toISOString().split('T')[0];
+  async getAllStaff(branchId?: string, serviceId?: string, excludeSessionId?: string, startTime?: Date) {
+    const todayStr = (startTime || new Date()).toISOString().split('T')[0];
     const todayStart = new Date(todayStr + "T00:00:00.000Z");
     const todayEnd = new Date(todayStr + "T23:59:59.999Z");
 
     let workPositionId: string | undefined = undefined;
+    let maxDuration = 60;
     if (serviceId) {
       const product = await prisma.product.findUnique({
         where: { id: serviceId },
@@ -15,6 +18,9 @@ export const StaffRepository = {
       });
       if (product?.category?.targetWorkPositionId) {
         workPositionId = product.category.targetWorkPositionId;
+      }
+      if (product?.duration) {
+        maxDuration = product.duration;
       }
     }
 
@@ -52,7 +58,27 @@ export const StaffRepository = {
       return aTime - bTime;
     });
 
-    return staffList;
+    const now = startTime || new Date();
+    const endTime = addMinutes(now, maxDuration);
+
+    const sessionWhereClause: any = {
+      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+      startTime: { lte: endTime },
+    };
+    if (branchId) {
+      sessionWhereClause.branchId = branchId;
+    }
+    if (excludeSessionId) {
+      sessionWhereClause.id = { not: excludeSessionId };
+    }
+
+    const existingSessions = await prisma.serviceSession.findMany({
+      where: sessionWhereClause,
+    });
+
+    const busyStaffIds = StaffAvailabilityService.getBusyStaffIds(existingSessions, now, endTime);
+
+    return staffList.filter((s: any) => !busyStaffIds.has(s.id));
   },
 
   async getActiveStaff(branchId: string) {

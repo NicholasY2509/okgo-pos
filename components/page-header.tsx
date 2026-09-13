@@ -1,5 +1,4 @@
 import React from "react"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "./ui/card"
 
 interface PageHeaderProps {
   title: React.ReactNode
@@ -9,14 +8,14 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, children }: PageHeaderProps) {
   return (
-    <Card className="flex flex-row flex-1 justify-between items-center">
-      <CardHeader className="flex-1">
-        <CardTitle className="text-3xl font-bold tracking-tight">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="flex flex-row flex-1 justify-between items-center">
+      <div className="flex-1 space-y-0.5d">
+        <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+        {description && <p className="text-smd text-muted-foreground">{description}</p>}
+      </div>
+      <div>
         {children}
-      </CardContent>
-    </Card >
+      </div>
+    </div>
   )
 }

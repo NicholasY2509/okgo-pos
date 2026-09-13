@@ -39,7 +39,7 @@ export function SessionList({ sessions, tenantSlug }: { sessions: any[], tenantS
             <div className="flex justify-between items-start mb-4">
               <div>
                 <p className="font-bold text-lg leading-none">{customerName}</p>
-                <p className="text-sm text-muted-foreground mt-1">Ruangan: {session.roomId}</p>
+                <p className="text-sm text-muted-foreground mt-1">Ruangan: {session.roomName || session.roomId}</p>
               </div>
               <span className="text-xs font-semibold px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
                 Menunggu

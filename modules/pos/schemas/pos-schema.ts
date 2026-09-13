@@ -35,6 +35,7 @@ export const posCheckoutSchema = z.object({
   isPayLater: z.boolean().default(false).optional().nullable(),
   loadedBookingId: z.string().optional().nullable(),
   loadedTransactionId: z.string().optional().nullable(),
+  isVipUpgrade: z.boolean().optional(),
   // Nominal voucher discount applied on the client (reduces the required payment amount)
   voucherNominalDiscount: z.number().nonnegative().default(0).optional(),
 

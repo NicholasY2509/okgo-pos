@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent } from "@/components/ui/card"
 
 export function CustomerVoucherFilters({ products }: { products: { id: string, name: string }[] }) {
   const router = useRouter()
@@ -36,52 +37,54 @@ export function CustomerVoucherFilters({ products }: { products: { id: string, n
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card border rounded-lg">
-      <div className="flex flex-col gap-2 flex-1">
-        <Label>Status</Label>
-        <Select value={status} onValueChange={(val) => updateParam("status", val)} disabled={isPending}>
-          <SelectTrigger>
-            <SelectValue placeholder="Semua Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Semua Status</SelectItem>
-            <SelectItem value="ACTIVE">Aktif</SelectItem>
-            <SelectItem value="USED_UP">Habis / Terpakai</SelectItem>
-            <SelectItem value="EXPIRED">Kedaluwarsa</SelectItem>
-            <SelectItem value="VOID">Batal (Void)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+    <Card>
+      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-2 flex-1">
+          <Label>Status</Label>
+          <Select value={status} onValueChange={(val) => updateParam("status", val)} disabled={isPending}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Semua Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Status</SelectItem>
+              <SelectItem value="ACTIVE">Aktif</SelectItem>
+              <SelectItem value="USED_UP">Habis / Terpakai</SelectItem>
+              <SelectItem value="EXPIRED">Kedaluwarsa</SelectItem>
+              <SelectItem value="VOID">Batal (Void)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="flex flex-col gap-2 flex-1">
-        <Label>Jenis Voucher</Label>
-        <Select value={type} onValueChange={(val) => updateParam("type", val)} disabled={isPending}>
-          <SelectTrigger>
-            <SelectValue placeholder="Semua Jenis" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Semua Jenis</SelectItem>
-            <SelectItem value="NOMINAL">Potongan Nominal (Rp)</SelectItem>
-            <SelectItem value="VISIT">Kunjungan/Layanan</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <div className="flex flex-col gap-2 flex-1">
+          <Label>Jenis Voucher</Label>
+          <Select value={type} onValueChange={(val) => updateParam("type", val)} disabled={isPending}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Semua Jenis" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Jenis</SelectItem>
+              <SelectItem value="NOMINAL">Potongan Nominal (Rp)</SelectItem>
+              <SelectItem value="VISIT">Kunjungan/Layanan</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="flex flex-col gap-2 flex-1">
-        <Label>Produk</Label>
-        <Select value={productId} onValueChange={(val) => updateParam("productId", val)} disabled={isPending}>
-          <SelectTrigger>
-            <SelectValue placeholder="Semua Produk" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Semua Produk</SelectItem>
-            <SelectItem value="NONE">Voucher Global (Tanpa Produk)</SelectItem>
-            {products.map(p => (
-              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+        <div className="flex flex-col gap-2 flex-1">
+          <Label>Produk</Label>
+          <Select value={productId} onValueChange={(val) => updateParam("productId", val)} disabled={isPending}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Semua Produk" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Produk</SelectItem>
+              <SelectItem value="NONE">Voucher Global (Tanpa Produk)</SelectItem>
+              {products.map(p => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

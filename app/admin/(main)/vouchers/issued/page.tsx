@@ -21,10 +21,10 @@ interface PageProps {
 
 export default async function IssuedVouchersPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  
+
   const page = Number(params.page || "1")
   const limit = Number(params.limit || "10")
-  
+
   const [result, rawProducts] = await Promise.all([
     CustomerVoucherService.getPaginated({
       page,
@@ -39,7 +39,7 @@ export default async function IssuedVouchersPage({ searchParams }: PageProps) {
   const products = rawProducts.products.map((p: any) => ({ id: p.id, name: p.name }));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Daftar Voucher"
         description="Lihat semua voucher yang telah diberikan kepada pelanggan beserta statusnya."
@@ -47,10 +47,8 @@ export default async function IssuedVouchersPage({ searchParams }: PageProps) {
 
       <CustomerVoucherFilters products={products} />
 
-      <div className="bg-card border rounded-lg overflow-hidden">
-        <CustomerVoucherList data={result.data as any} />
-        <DataTablePagination metadata={result.metadata} />
-      </div>
+      <CustomerVoucherList data={result.data as any} />
+      <DataTablePagination metadata={result.metadata} />
     </div>
   )
 }

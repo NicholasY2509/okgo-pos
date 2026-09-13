@@ -19,7 +19,6 @@ export const PosCheckoutRepository = {
       console.log("[CHECKOUT DEBUG] promotionId received:", input.promotionId, "appliedPromo raw:", JSON.stringify(input.promotionId));
 
       if (input.loadedTransactionId) {
-        // Hapus transaksi lama beserta item dan sesinya secara cascade.
         await tx.transaction.delete({
           where: { id: input.loadedTransactionId }
         });
@@ -72,6 +71,7 @@ export const PosCheckoutRepository = {
           paidAmount,
           changeAmount,
           status: input.isPayLater ? "PENDING" : "COMPLETED",
+          isVip: input.isVipUpgrade === true,
           payments: {
             create: transactionPaymentsData
           }
@@ -284,6 +284,24 @@ export const PosCheckoutRepository = {
       });
     }
 
+    if (input.isVipUpgrade) {
+      subtotal += 80000;
+      transactionItemsData.push({
+        type: "VIP_UPGRADE",
+        serviceId: "VIP_UPGRADE",
+        voucherPacketId: null,
+        itemNameSnapshot: "Upgrade VIP",
+        unitPrice: 80000,
+        quantity: 1,
+        discountAmount: 0,
+        subtotal: 80000,
+        cashierIncentiveAmount: 0,
+        therapistIncentivePerUnit: 0,
+        staffId: null,
+        _tempType: "VIP_UPGRADE"
+      });
+    }
+
     if (input.promotionId) {
       // Only service/visit voucher redemptions conflict with promo discounts.
       // Nominal credit vouchers used as a payment method are allowed alongside promos.
@@ -491,6 +509,7 @@ export const PosCheckoutRepository = {
               data: {
                 staffId: sessionData.staffId,
                 amount: therapistIncentivePerUnit,
+                gross: createdItem.unitPrice,
                 type: "SERVICE_COMMISSION",
                 description: `Commission for service: ${itemData.itemNameSnapshot}`,
                 transactionItemId: createdItem.id,
@@ -570,6 +589,7 @@ export const PosCheckoutRepository = {
           data: {
             staffId: transaction.cashierId,
             amount: itemData.cashierIncentiveAmount,
+            gross: createdItem.subtotal,
             type: "CASHIER_COMMISSION",
             description: `Cashier incentive for selling voucher packet`,
             transactionItemId: createdItem.id,

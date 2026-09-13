@@ -22,6 +22,7 @@ export class TimetableService {
 
     return {
       ...session,
+      isVip: !!session.transactionItem?.transaction?.isVip,
       itemName,
       paymentStatus,
       customerName,
@@ -74,7 +75,10 @@ export class TimetableService {
       throw new Error("Sesi tidak dapat diselesaikan karena pembayaran belum lunas.");
     }
 
-    return await TimetableRepository.updateSession(sessionId, { status: "COMPLETED", endTime: new Date() });
+    return await TimetableRepository.updateSession(sessionId, {
+      status: "COMPLETED",
+      actualEndTime: new Date()
+    });
   }
 
   static async startSession(sessionId: string) {
@@ -84,15 +88,9 @@ export class TimetableService {
     if (session.status !== "SCHEDULED") throw new Error("Sesi tidak dalam status terjadwal");
     if (!session.staffId) throw new Error("Terapis belum dipilih. Silakan pilih terapis terlebih dahulu.");
 
-    const now = new Date();
-    const durationMs = session.endTime && session.startTime
-      ? session.endTime.getTime() - session.startTime.getTime()
-      : 60 * 60 * 1000;
-
     return await TimetableRepository.updateSession(sessionId, {
       status: "IN_PROGRESS",
-      startTime: now,
-      endTime: new Date(now.getTime() + durationMs)
+      actualStartTime: new Date(),
     });
   }
 

@@ -36,10 +36,10 @@ interface PosState {
   appliedVoucher: any | null;
   loadedBookingId: string | null;
   loadedTransactionId: string | null;
-  // UI State
   isPaymentModalOpen: boolean;
   selectedProduct: any | null;
   selectedVoucherRedemption: any | null;
+  isVipUpgrade: boolean;
 }
 
 interface PosActions {
@@ -56,10 +56,10 @@ interface PosActions {
   setLoadedBookingId: (id: string | null) => void;
   setLoadedTransactionId: (id: string | null) => void;
   loadBookingIntoCart: (booking: any) => void;
-  // UI Actions
   setIsPaymentModalOpen: (isOpen: boolean) => void;
   setSelectedProduct: (product: any | null) => void;
   setSelectedVoucherRedemption: (voucher: any | null) => void;
+  setIsVipUpgrade: (isVip: boolean) => void;
 }
 
 export type PosStore = PosState & PosActions;
@@ -77,6 +77,7 @@ export const createPosStore = () => {
         isPaymentModalOpen: false,
         selectedProduct: null,
         selectedVoucherRedemption: null,
+        isVipUpgrade: false,
         setCustomerId: (customerId) => set({ customerId }),
         addItem: (item) =>
           set((state) => ({
@@ -117,6 +118,7 @@ export const createPosStore = () => {
         setIsPaymentModalOpen: (isOpen) => set({ isPaymentModalOpen: isOpen }),
         setSelectedProduct: (product) => set({ selectedProduct: product }),
         setSelectedVoucherRedemption: (voucher) => set({ selectedVoucherRedemption: voucher }),
+        setIsVipUpgrade: (isVipUpgrade) => set({ isVipUpgrade }),
         loadBookingIntoCart: (booking) => {
           const items: CartItem[] = [];
 
@@ -175,6 +177,7 @@ export const createPosStore = () => {
             loadedBookingId: booking.id,
             loadedTransactionId: booking.transactions?.[0]?.id || null, // Assuming first transaction if any
             appliedPromo: null,
+            isVipUpgrade: false,
           });
         },
       }),
@@ -234,6 +237,7 @@ export function usePosStoreActions() {
     setIsPaymentModalOpen: useStore(store, (s) => s.setIsPaymentModalOpen),
     setSelectedProduct: useStore(store, (s) => s.setSelectedProduct),
     setSelectedVoucherRedemption: useStore(store, (s) => s.setSelectedVoucherRedemption),
+    setIsVipUpgrade: useStore(store, (s) => s.setIsVipUpgrade),
   };
 }
 
@@ -263,8 +267,11 @@ export function usePosCart() {
   const isPaymentModalOpen = useStore(store, (s) => s.isPaymentModalOpen);
   const selectedProduct = useStore(store, (s) => s.selectedProduct);
   const selectedVoucherRedemption = useStore(store, (s) => s.selectedVoucherRedemption);
+  const isVipUpgrade = useStore(store, (s) => s.isVipUpgrade);
+  const setIsVipUpgrade = useStore(store, (s) => s.setIsVipUpgrade);
 
-  const subtotal = items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
+  let subtotal = items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
+  if (isVipUpgrade) subtotal += 80000;
   const itemDiscountTotal = items.reduce((acc, item) => acc + item.discountAmount, 0);
   const promoDiscountTotal = appliedPromo ? appliedPromo.discountAmount : 0;
   const discountTotal = itemDiscountTotal + promoDiscountTotal;
@@ -300,5 +307,7 @@ export function usePosCart() {
     isPaymentModalOpen,
     selectedProduct,
     selectedVoucherRedemption,
+    isVipUpgrade,
+    setIsVipUpgrade,
   };
 }

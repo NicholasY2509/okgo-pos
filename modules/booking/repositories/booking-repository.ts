@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { BookingInput } from "../schemas/booking";
 import { startOfDay, endOfDay, addMinutes, isBefore, addHours, format } from "date-fns";
+import { StaffAvailabilityService } from "../../staff/services/staff-availability-service";
 
 export const BookingRepository = {
   async getBranches() {
@@ -155,7 +156,7 @@ export const BookingRepository = {
       }
 
       const roomSessionCounts = new Map<string, number>();
-      const busyStaffIds = new Set<string>();
+      const busyStaffIds = StaffAvailabilityService.getBusyStaffIds(existingSessions, slotStart, slotEnd);
 
       for (const session of existingSessions) {
         if (!session.startTime) continue;
@@ -164,9 +165,6 @@ export const BookingRepository = {
 
         if (slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
-          if (session.staffId) {
-            busyStaffIds.add(session.staffId);
-          }
         }
       }
 
@@ -336,7 +334,7 @@ export const BookingRepository = {
       });
 
       const roomSessionCounts = new Map<string, number>();
-      const busyStaffIds = new Set<string>();
+      const busyStaffIds = StaffAvailabilityService.getBusyStaffIds(existingSessions, slotStart, slotEnd);
 
       for (const session of existingSessions) {
         if (!session.startTime) continue;
@@ -345,9 +343,6 @@ export const BookingRepository = {
 
         if (slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
-          if (session.staffId) {
-            busyStaffIds.add(session.staffId);
-          }
         }
       }
 
@@ -487,7 +482,7 @@ export const BookingRepository = {
           estimatedDuration: maxDuration,
           guestCount: (data.selections || []).length > 0 ? data.selections!.length : 1,
           ...(data.appliedVoucherId ? { appliedVoucher: { connect: { id: data.appliedVoucherId } } } : {}),
-          isAssignedToTimetable: transactionItems.length === (data.selections || []).length && (data.selections || []).length > 0,
+          isAssignedToTimetable: false,
           items: transactionItems.length > 0 ? {
             create: transactionItems.map(item => ({
               serviceId: item.serviceId,
@@ -495,6 +490,7 @@ export const BookingRepository = {
               unitPrice: item.unitPrice,
               subtotal: item.subtotal,
               quantity: item.quantity,
+              requestedStaffId: item._assignedStaffId || undefined,
               ...(item._appliedVoucherId ? { appliedVoucher: { connect: { id: item._appliedVoucherId } } } : {})
             }))
           } : undefined
@@ -502,29 +498,7 @@ export const BookingRepository = {
         include: { items: { include: { appliedVoucher: { include: { voucherPacket: { include: { product: true } } } } } } }
       });
 
-      const createdSessions = [];
-      for (let i = 0; i < transactionItems.length; i++) {
-        const itemSpec = transactionItems[i];
-
-        const sessionSlotEnd = addMinutes(slotStart, itemSpec._duration);
-
-        const session = await tx.serviceSession.create({
-          data: {
-            bookingId: booking.id,
-            customerId: customer.id,
-            serviceId: itemSpec.serviceId,
-            staffId: itemSpec._assignedStaffId || undefined,
-            roomId: itemSpec._assignedRoomId,
-            branchId: data.branchId,
-            status: "SCHEDULED",
-            startTime: slotStart,
-            endTime: sessionSlotEnd,
-          }
-        });
-        createdSessions.push(session);
-      }
-
-      return { booking, serviceSessions: createdSessions };
+      return { booking, serviceSessions: [] };
     });
   },
 
@@ -587,7 +561,7 @@ export const BookingRepository = {
       });
 
       const roomSessionCounts = new Map<string, number>();
-      const busyStaffIds = new Set<string>();
+      const busyStaffIds = StaffAvailabilityService.getBusyStaffIds(existingSessions, slotStart, slotEnd);
 
       for (const session of existingSessions) {
         if (!session.startTime) continue;
@@ -596,9 +570,6 @@ export const BookingRepository = {
 
         if (slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
-          if (session.staffId) {
-            busyStaffIds.add(session.staffId);
-          }
         }
       }
 
@@ -734,6 +705,7 @@ export const BookingRepository = {
           estimatedDuration: maxDuration,
           scheduledStartTime: slotStart,
           ...(data.appliedVoucherId ? { appliedVoucher: { connect: { id: data.appliedVoucherId } } } : { appliedVoucher: { disconnect: true } }),
+          isAssignedToTimetable: false,
           items: {
             create: transactionItems.map((item: any) => ({
               serviceId: item.serviceId,
@@ -741,39 +713,18 @@ export const BookingRepository = {
               unitPrice: item.unitPrice,
               subtotal: item.subtotal,
               quantity: item.quantity,
+              requestedStaffId: item._assignedStaffId || undefined,
               ...(item._appliedVoucherId ? { appliedVoucher: { connect: { id: item._appliedVoucherId } } } : {})
             }))
           }
         }
       });
 
-      const createdSessions = [];
-      for (let i = 0; i < transactionItems.length; i++) {
-        const itemSpec = transactionItems[i];
-
-        const sessionSlotEnd = addMinutes(slotStart, itemSpec._duration);
-
-        const session = await tx.serviceSession.create({
-          data: {
-            bookingId: booking.id,
-            customerId: customer.id,
-            serviceId: itemSpec.serviceId,
-            staffId: itemSpec._assignedStaffId || undefined,
-            roomId: itemSpec._assignedRoomId,
-            branchId: data.branchId,
-            status: "SCHEDULED",
-            startTime: slotStart,
-            endTime: sessionSlotEnd,
-          }
-        });
-        createdSessions.push(session);
-      }
-
-      return { booking, serviceSessions: createdSessions };
+      return { booking, serviceSessions: [] };
     });
   },
 
-  async assignBookingToTimetable(bookingId: string, selections: { serviceId: string; staffId?: string }[]) {
+  async assignBookingToTimetable(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
     return await prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
@@ -783,7 +734,7 @@ export const BookingRepository = {
       if (!booking) throw new Error("Booking tidak ditemukan");
       if (booking.isAssignedToTimetable) throw new Error("Booking sudah ditugaskan ke jadwal");
 
-      const slotStart = booking.scheduledStartTime || new Date();
+      const slotStart = startTime;
 
       const services = await tx.product.findMany({
         where: { id: { in: selections.map(s => s.serviceId) } }
@@ -819,7 +770,7 @@ export const BookingRepository = {
       });
 
       const roomSessionCounts = new Map<string, number>();
-      const busyStaffIds = new Set<string>();
+      const busyStaffIds = StaffAvailabilityService.getBusyStaffIds(existingSessions, slotStart, slotEnd);
 
       for (const session of existingSessions) {
         if (!session.startTime) continue;
@@ -828,9 +779,6 @@ export const BookingRepository = {
 
         if (slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
-          if (session.staffId) {
-            busyStaffIds.add(session.staffId);
-          }
         }
       }
 
@@ -952,6 +900,7 @@ export const BookingRepository = {
           status: "PROCESSED",
           totalAmount: subtotal,
           estimatedDuration: maxDuration,
+          scheduledStartTime: startTime,
           guestCount: selections.length,
           items: {
             create: transactionItems.map(item => ({

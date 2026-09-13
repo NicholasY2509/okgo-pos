@@ -1,5 +1,6 @@
 "use client"
 
+import { Badge } from "@/components/ui/badge"
 import { format, differenceInMinutes } from "date-fns"
 
 export function HistoryList({ sessions }: { sessions: any[] }) {
@@ -16,7 +17,7 @@ export function HistoryList({ sessions }: { sessions: any[] }) {
       {sessions.map((session) => {
         const customerName = session.transactionItem?.transaction?.customer?.name || session.booking?.customer?.name || "Customer Umum"
         const serviceName = session.transactionItem?.itemNameSnapshot || session.booking?.items?.[0]?.itemNameSnapshot || "Layanan"
-        
+
         const startTime = session.actualStartTime ? new Date(session.actualStartTime) : (session.startTime ? new Date(session.startTime) : null)
         const endTime = session.actualEndTime ? new Date(session.actualEndTime) : null
 
@@ -29,11 +30,9 @@ export function HistoryList({ sessions }: { sessions: any[] }) {
                 <p className="font-bold text-lg leading-none">{customerName}</p>
                 <p className="text-sm text-muted-foreground mt-1">{serviceName}</p>
               </div>
-              <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                Selesai
-              </span>
+              <Badge variant="default">Selesai</Badge>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t text-sm">
               <div>
                 <p className="text-muted-foreground text-xs uppercase tracking-wider">Waktu</p>

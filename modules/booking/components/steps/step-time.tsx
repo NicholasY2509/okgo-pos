@@ -85,23 +85,29 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
 
         if (isBefore(slotStart, minTime)) continue;
 
-        let activeRoomSessions = 0;
-        dailySchedule.roomSessions.forEach((sess: any) => {
-          if (sess.startTime && sess.endTime) {
-            const sStart = new Date(sess.startTime);
-            const sEnd = new Date(sess.endTime);
-            if (slotStart < sEnd && slotEnd > sStart) {
-              activeRoomSessions++;
+        let busyStaffIds = new Set<string>();
+        if (dailySchedule.staffSchedules) {
+          dailySchedule.staffSchedules.forEach((staff: any) => {
+            if (staff.sessions) {
+              staff.sessions.forEach((sess: any) => {
+                if (sess.startTime && sess.endTime) {
+                  const sStart = new Date(sess.startTime);
+                  const sEnd = new Date(sess.endTime);
+                  if (slotStart < sEnd && slotEnd > sStart) {
+                    busyStaffIds.add(staff.id);
+                  }
+                }
+              });
             }
-          }
-        });
+          });
+        }
 
-        const availableRooms = Math.max(0, dailySchedule.totalCapacity - activeRoomSessions);
+        const availableStaff = dailySchedule.staffSchedules ? dailySchedule.staffSchedules.length - busyStaffIds.size : 0;
 
         slots.push({
           timeString: slotStart.toISOString(),
           label: slotStart.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-          availableRooms
+          availableStaff
         });
       }
     }
@@ -156,8 +162,8 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-[300px] overflow-y-auto pr-2 pb-2">
               {timeSlots.map(slot => {
                 const isSelected = selectedTime === slot.timeString;
-                const requiredRooms = Math.max(1, (selections || []).length);
-                const isFull = slot.availableRooms < requiredRooms;
+                const requiredStaff = Math.max(1, (selections || []).length);
+                const isFull = slot.availableStaff < requiredStaff;
                 return (
                   <div
                     key={slot.timeString}
@@ -170,7 +176,7 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
                   >
                     <span className="text-lg">{slot.label}</span>
                     <span className={`text-[10px] mt-1 font-normal ${isSelected ? 'text-primary-foreground/80' : isFull ? 'text-destructive' : 'text-muted-foreground'}`}>
-                      {isFull ? 'Penuh' : `${slot.availableRooms} Ruang Tersedia`}
+                      {isFull ? 'Penuh' : `${slot.availableStaff} Slot`}
                     </span>
                   </div>
                 )

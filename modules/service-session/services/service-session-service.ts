@@ -18,7 +18,9 @@ export class ServiceSessionService {
     // FIXME: Commission calculation needs to be updated to use IncentiveRule
     // The previous BrandSetting properties (therapistIncentiveType, etc.) have been removed.
 
-    return await ServiceSessionRepository.endSession(sessionId, commissionAmount, session.staffId)
+    const gross = session.transactionItem?.unitPrice ? Number(session.transactionItem.unitPrice) : 0;
+
+    return await ServiceSessionRepository.endSession(sessionId, commissionAmount, session.staffId, gross)
   }
 
   static async getDailyReviewableSessions(tenantId: string) {

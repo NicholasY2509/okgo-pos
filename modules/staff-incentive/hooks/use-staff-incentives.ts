@@ -10,7 +10,8 @@ export function useStaffIncentives(initialRules: any[] = []) {
     totalIncentive: number;
     totalCount: number;
     branchBreakdowns?: { branchName: string; gross: number; incentive: number; }[];
-  }>({ totalGross: 0, totalIncentive: 0, totalCount: 0, branchBreakdowns: [] });
+    staffBreakdowns?: { staffName: string; gross: number; incentive: number; count: number; }[];
+  }>({ totalGross: 0, totalIncentive: 0, totalCount: 0, branchBreakdowns: [], staffBreakdowns: [] });
   const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,7 +19,7 @@ export function useStaffIncentives(initialRules: any[] = []) {
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
   });
-  const [incentiveRuleId, setIncentiveRuleId] = useState<string>("ALL");
+  const [incentiveRuleId, setIncentiveRuleId] = useState<string>("");
 
   const fetchSummary = async (ruleType?: string) => {
     setLoading(true);
@@ -44,6 +45,12 @@ export function useStaffIncentives(initialRules: any[] = []) {
 
   useEffect(() => {
     const handler = setTimeout(() => {
+      if (!incentiveRuleId) {
+        setSummary({ totalGross: 0, totalIncentive: 0, totalCount: 0, branchBreakdowns: [], staffBreakdowns: [] });
+        setLoading(false);
+        return;
+      }
+
       let mappedType = "ALL";
       if (incentiveRuleId !== "ALL") {
         const selectedRule = initialRules.find(r => r.id === incentiveRuleId);
@@ -65,7 +72,7 @@ export function useStaffIncentives(initialRules: any[] = []) {
       from: startOfMonth(new Date()),
       to: endOfMonth(new Date()),
     });
-    setIncentiveRuleId("ALL");
+    setIncentiveRuleId("");
   };
 
   return {

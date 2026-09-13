@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { ProductCombobox } from "@/modules/product/components/product-combobox";
 import { StaffCombobox } from "@/modules/staff/components/staff-combobox";
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { assignBookingToTimetableAction } from "@/modules/booking/actions/booking-actions";
 import { useTimetableStore } from "../../stores/timetable-store";
 import { toast } from "sonner";
@@ -17,9 +19,11 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
 const assignSchema = z.object({
+  date: z.date({ message: "Tanggal harus diisi" }),
+  time: z.string().min(1, "Waktu harus diisi"),
   selections: z.array(z.object({
     serviceId: z.string().min(1, "Layanan harus dipilih"),
-    staffId: z.string().optional()
+    staffId: z.string().min(1, "Terapis harus dipilih")
   })).min(1, "Minimal pilih 1 layanan")
 });
 
@@ -38,6 +42,8 @@ export function AssignBookingModal() {
   const form = useForm<AssignInput>({
     resolver: zodResolver(assignSchema),
     defaultValues: {
+      date: undefined,
+      time: "",
       selections: []
     }
   });
@@ -49,9 +55,25 @@ export function AssignBookingModal() {
 
   useEffect(() => {
     if (selectedBookingForAssignment) {
-      const count = selectedBookingForAssignment.guestCount || 1;
-      const defaults = Array(count).fill({ serviceId: "", staffId: undefined });
-      form.reset({ selections: defaults });
+      const scheduledDate = new Date(selectedBookingForAssignment.scheduledStartTime);
+      const timeStr = format(scheduledDate, "HH:mm");
+
+      if (selectedBookingForAssignment.items && selectedBookingForAssignment.items.length > 0) {
+        const count = selectedBookingForAssignment.guestCount || 1;
+        const defaults = selectedBookingForAssignment.items.map((item: any) => ({
+          serviceId: item.serviceId,
+          staffId: item.requestedStaffId || ""
+        }));
+        // pad with empty selections if less than guest count
+        while (defaults.length < count) {
+          defaults.push({ serviceId: "", staffId: "" });
+        }
+        form.reset({ date: scheduledDate, time: timeStr, selections: defaults });
+      } else {
+        const count = selectedBookingForAssignment.guestCount || 1;
+        const defaults = Array(count).fill({ serviceId: "", staffId: "" });
+        form.reset({ date: scheduledDate, time: timeStr, selections: defaults });
+      }
     }
   }, [selectedBookingForAssignment, form]);
 
@@ -60,7 +82,9 @@ export function AssignBookingModal() {
     setIsSubmitting(true);
     
     try {
-      const res = await assignBookingToTimetableAction(selectedBookingForAssignment.id, values.selections);
+      const dateStr = format(values.date, "yyyy-MM-dd");
+      const startTime = new Date(`${dateStr}T${values.time}:00`);
+      const res = await assignBookingToTimetableAction(selectedBookingForAssignment.id, startTime, values.selections);
       if (res.success) {
         toast.success("Booking berhasil ditugaskan ke jadwal");
         fetchPendingBookings();
@@ -99,6 +123,35 @@ export function AssignBookingModal() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4 border-b border-border/50 pb-6">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tanggal</FormLabel>
+                    <FormControl>
+                      <DatePicker date={field.value} setDate={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Waktu</FormLabel>
+                    <FormControl>
+                      <TimePicker value={field.value} onChange={field.onChange} variant="minutes" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h4 className="text-sm font-medium">Layanan yang Dipilih ({fields.length} orang)</h4>
@@ -106,7 +159,7 @@ export function AssignBookingModal() {
                   type="button" 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => append({ serviceId: "", staffId: undefined })}
+                  onClick={() => append({ serviceId: "", staffId: "" })}
                 >
                   <Plus className="w-4 h-4 mr-1" /> Tambah Orang
                 </Button>
@@ -147,13 +200,23 @@ export function AssignBookingModal() {
                       name={`selections.${index}.staffId`}
                       render={({ field }) => {
                         const selectedServiceId = form.watch(`selections.${index}.serviceId`);
+                        const dateVal = form.watch("date");
+                        const timeVal = form.watch("time");
+                        
+                        let selectedStartTime: Date | undefined;
+                        if (dateVal && timeVal) {
+                          const dateStr = format(dateVal, "yyyy-MM-dd");
+                          selectedStartTime = new Date(`${dateStr}T${timeVal}:00`);
+                        }
+
                         return (
                         <FormItem>
-                          <FormLabel>Terapis (Opsional)</FormLabel>
+                          <FormLabel>Terapis</FormLabel>
                           <FormControl>
                             <StaffCombobox
                               branchId={branchId!}
                               serviceId={selectedServiceId}
+                              startTime={selectedStartTime}
                               value={field.value || ""}
                               onChange={(val) => field.onChange(val || undefined)}
                             />

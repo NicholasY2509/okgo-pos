@@ -85,6 +85,7 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
       promotionId: cart.appliedPromo?.promoId,
       loadedBookingId: cart.loadedBookingId,
       loadedTransactionId: cart.loadedTransactionId,
+      isVipUpgrade: cart.isVipUpgrade,
       voucherNominalDiscount: cart.voucherNominalDiscount ?? 0,
       items: cart.items.map((i: any) => ({
         type: i.type,

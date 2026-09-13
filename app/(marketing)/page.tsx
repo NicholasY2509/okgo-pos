@@ -189,7 +189,7 @@ export default function MarketingPage() {
             <button onClick={(e) => scrollTo(e, 'voucher')} className="hover:text-foreground transition-colors cursor-pointer">Voucher</button>
             <button onClick={(e) => scrollTo(e, 'reservasi')} className="hover:text-foreground transition-colors cursor-pointer">Reservasi</button>
           </div>
-          <div className="w-auto md:w-[250px] flex justify-end ml-auto z-20">
+          <div className="w-auto md:w-62.5 flex justify-end ml-auto z-20">
             <motion.button
               initial={false}
               animate={{ opacity: isScrolled ? 1 : 0, y: isScrolled ? 0 : -10 }}

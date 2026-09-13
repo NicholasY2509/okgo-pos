@@ -28,12 +28,43 @@ export function useCreateWorkPosition(onSuccess?: () => void) {
     setError(null)
     const result = await createWorkPositionAction(values)
 
-    if (result.error) {
+    if (result?.error) {
       setError(result.error)
       toast.error(result.error)
     } else {
       toast.success("Posisi kerja berhasil dibuat!")
       form.reset()
+      onSuccess?.()
+    }
+
+    return result
+  }
+
+  return {
+    form,
+    onSubmit: form.handleSubmit(onSubmit),
+    isSubmitting: form.formState.isSubmitting,
+    error,
+  }
+}
+
+export function useUpdateWorkPosition(initialData: UpdateWorkPositionInput, onSuccess?: () => void) {
+  const [error, setError] = useState<string | null>(null)
+
+  const form = useForm<UpdateWorkPositionInput>({
+    resolver: zodResolver(updateWorkPositionSchema),
+    defaultValues: initialData,
+  })
+
+  async function onSubmit(values: UpdateWorkPositionInput) {
+    setError(null)
+    const result = await updateWorkPositionAction(values)
+
+    if (result?.error) {
+      setError(result.error)
+      toast.error(result.error)
+    } else {
+      toast.success("Posisi kerja berhasil diperbarui!")
       onSuccess?.()
     }
 

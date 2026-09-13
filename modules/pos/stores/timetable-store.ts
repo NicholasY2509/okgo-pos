@@ -44,6 +44,7 @@ interface TimetableState {
   handleUpdateSessionTime: (sessionId: string, newStart: Date, newEnd: Date) => Promise<void>;
   handleProcessBooking: (bookingId: string) => Promise<void>;
   handleUpdateSessionStaff: (sessionId: string, staffId: string) => Promise<void>;
+  handleUpdateSessionRoom: (sessionId: string, roomId: string) => Promise<void>;
 }
 
 export const useTimetableStore = create<TimetableState>((set, get) => ({
@@ -193,7 +194,6 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
       set({ selectedSessionForInfo: { ...selectedSessionForInfo, staffId } });
     }
 
-    // Assuming updateSessionStaffAction is imported, I need to add it to the imports
     const { updateSessionStaffAction } = await import("../actions/timetable-action");
     const res = await updateSessionStaffAction(sessionId, staffId);
     if (res.success) {
@@ -201,6 +201,23 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
       fetchSessions();
     } else {
       toast.error(res.error || "Gagal mengubah terapis");
+    }
+  },
+
+  handleUpdateSessionRoom: async (sessionId: string, roomId: string) => {
+    const { fetchSessions, selectedSessionForInfo } = get();
+
+    if (selectedSessionForInfo && selectedSessionForInfo.id === sessionId) {
+      set({ selectedSessionForInfo: { ...selectedSessionForInfo, roomId } });
+    }
+
+    const { updateSessionRoomAction } = await import("../actions/timetable-action");
+    const res = await updateSessionRoomAction(sessionId, roomId);
+    if (res.success) {
+      toast.success("Ruangan berhasil dipindahkan");
+      fetchSessions();
+    } else {
+      toast.error(res.error || "Gagal memindahkan ruangan");
     }
   }
 }));

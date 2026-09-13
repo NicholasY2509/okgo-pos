@@ -99,7 +99,7 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
               </h3>
 
               {!activeCategories[field.id] ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 animate-in fade-in zoom-in-95 duration-300">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-4 animate-in fade-in zoom-in-95 duration-300">
                   {categories.map((cat) => (
                     <button
                       key={cat.id}
@@ -170,7 +170,7 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                       {(() => {
                         const selectedStaffId = form.watch(`selections.${index}.staffId`);
                         const selectedService = services.find(s => s.id === selectedServiceId);
-                        
+
                         let eligibleStaffList = staffList;
                         if (selectedService && selectedService.category && selectedService.category.targetWorkPositionId) {
                           eligibleStaffList = staffList.filter(s => s.workPositionId === selectedService.category.targetWorkPositionId);
@@ -194,9 +194,9 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                             </div>
 
                             {eligibleStaffList.length === 0 && (
-                               <div className="snap-center shrink-0 w-40 h-28 p-2 border border-dashed border-border/50 rounded-2xl flex flex-col items-center justify-center text-center">
-                                  <p className="text-[10px] text-muted-foreground">Tidak ada staf dengan role yang sesuai.</p>
-                               </div>
+                              <div className="snap-center shrink-0 w-40 h-28 p-2 border border-dashed border-border/50 rounded-2xl flex flex-col items-center justify-center text-center">
+                                <p className="text-[10px] text-muted-foreground">Tidak ada staf dengan role yang sesuai.</p>
+                              </div>
                             )}
 
                             {eligibleStaffList.map((staff: any) => {

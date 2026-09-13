@@ -34,7 +34,7 @@ export class BookingService {
     return await BookingRepository.validateVoucher(code);
   }
 
-  static async assignBookingToTimetable(bookingId: string, selections: { serviceId: string; staffId?: string }[]) {
-    return await BookingRepository.assignBookingToTimetable(bookingId, selections);
+  static async assignBookingToTimetable(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
+    return await BookingRepository.assignBookingToTimetable(bookingId, startTime, selections);
   }
 }

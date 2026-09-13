@@ -74,6 +74,7 @@ export const StaffIncentiveRepository = {
     let totalGross = 0;
     let totalCount = 0;
     const branchBreakdowns: { branchName: string, gross: number, incentive: number }[] = [];
+    const staffBreakdowns: { staffName: string, gross: number, incentive: number, count: number }[] = [];
 
     // 1. TERAPIS (SERVICE_COMMISSION) - Static via StaffIncentive table
     if (!type || type === "ALL" || type === "SERVICE_COMMISSION") {
@@ -91,6 +92,34 @@ export const StaffIncentiveRepository = {
       totalIncentive += Number(agg._sum.amount || 0);
       totalGross += Number(agg._sum.gross || 0);
       totalCount += agg._count.id || 0;
+
+      if (type === "SERVICE_COMMISSION") {
+        const staffAgg = await prisma.staffIncentive.groupBy({
+          by: ['staffId'],
+          where,
+          _sum: { amount: true, gross: true },
+          _count: { id: true }
+        });
+
+        if (staffAgg.length > 0) {
+          const staffs = await prisma.staff.findMany({
+            where: { id: { in: staffAgg.map(s => s.staffId) } },
+            select: { id: true, firstName: true, lastName: true }
+          });
+
+          for (const s of staffAgg) {
+            const staffInfo = staffs.find(st => st.id === s.staffId);
+            staffBreakdowns.push({
+              staffName: staffInfo ? `${staffInfo.firstName} ${staffInfo.lastName}`.trim() : "Staf Tidak Diketahui",
+              gross: Number(s._sum.gross || 0),
+              incentive: Number(s._sum.amount || 0),
+              count: s._count.id || 0
+            });
+          }
+
+          staffBreakdowns.sort((a, b) => b.incentive - a.incentive);
+        }
+      }
     }
 
     // 2. KASIR (CASHIER_COMMISSION) - Dynamic calculation per cashier
@@ -201,6 +230,7 @@ export const StaffIncentiveRepository = {
       totalGross,
       totalCount,
       branchBreakdowns,
+      staffBreakdowns,
     };
   }
 };

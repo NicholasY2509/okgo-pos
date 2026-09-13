@@ -76,9 +76,9 @@ export async function updateBookingAction(bookingId: string, values: BookingInpu
   }
 }
 
-export async function assignBookingToTimetableAction(bookingId: string, selections: { serviceId: string; staffId?: string }[]) {
+export async function assignBookingToTimetableAction(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
   try {
-    const result = await BookingService.assignBookingToTimetable(bookingId, selections);
+    const result = await BookingService.assignBookingToTimetable(bookingId, startTime, selections);
     return { success: true, data: JSON.parse(JSON.stringify(result)) };
   } catch (error: any) {
     return { error: error.message || "Gagal menugaskan booking ke jadwal" };

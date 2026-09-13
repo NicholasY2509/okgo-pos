@@ -5,6 +5,8 @@ import { Clock, CheckCircle2, Play, User, Activity, Receipt, CreditCard } from "
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { StaffCombobox } from "@/modules/staff/components/staff-combobox";
+import { MapPin } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useTimetableStore } from "../../stores/timetable-store";
 
@@ -23,7 +25,7 @@ export function SessionInfoDialog({
   onPayNow,
   staff,
 }: SessionInfoDialogProps) {
-  const { handleStart, handleComplete, handleProcessBooking, handleUpdateSessionStaff, branchId } = useTimetableStore();
+  const { handleStart, handleComplete, handleProcessBooking, handleUpdateSessionStaff, handleUpdateSessionRoom, branchId, rooms } = useTimetableStore();
   if (!session) return null;
 
   const isCompleted = session.status === "COMPLETED";
@@ -75,7 +77,42 @@ export function SessionInfoDialog({
                 onChange={(val) => handleUpdateSessionStaff(session.id, val)}
                 branchId={branchId || session.branchId}
                 serviceId={session.serviceId}
+                excludeSessionId={session.id}
               />
+            )}
+          </div>
+
+          {/* Room Selection/Display */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5" />
+              Ruangan
+            </label>
+            {isCompleted ? (
+              <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 font-medium text-sm text-zinc-700 dark:text-zinc-300">
+                {rooms.find(r => r.id === session.roomId)?.name || "-"}
+              </div>
+            ) : (
+              <Select value={session.roomId} onValueChange={(val) => handleUpdateSessionRoom(session.id, val)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih Ruangan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rooms.map(room => {
+                    const isDisabled = !session.isVip && room.isVip;
+                    return (
+                      <SelectItem 
+                        key={room.id} 
+                        value={room.id}
+                        disabled={isDisabled}
+                      >
+                        {room.name} {room.isVip ? "(VIP)" : ""}
+                        {isDisabled && " - Tidak tersedia untuk layanan reguler"}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             )}
           </div>
 
@@ -84,22 +121,24 @@ export function SessionInfoDialog({
             <div className="space-y-2 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800/80 shadow-sm transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-900">
               <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
-                Mulai
+                Mulai {(session.actualStartTime || session.status === "COMPLETED") ? "(Aktual)" : "(Estimasi)"}
               </div>
               <div className="font-semibold text-zinc-700 dark:text-zinc-200">
-                {new Date(session.startTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                {new Date(session.actualStartTime || session.startTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
               </div>
             </div>
 
             <div className="space-y-2 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800/80 shadow-sm transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-900">
               <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
-                {isCompleted ? "Selesai" : "Estimasi"}
+                {isCompleted ? "Selesai (Aktual)" : "Estimasi Selesai"}
               </div>
               <div className="font-semibold text-zinc-700 dark:text-zinc-200">
-                {session.endTime
-                  ? new Date(session.endTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
-                  : "-"}
+                {(isCompleted && session.actualEndTime)
+                  ? new Date(session.actualEndTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+                  : session.endTime
+                    ? new Date(session.endTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+                    : "-"}
               </div>
             </div>
           </div>

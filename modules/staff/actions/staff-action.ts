@@ -11,9 +11,9 @@ import {
 
 // --- Staff Actions ---
 
-export async function getStaffListAction(branchId?: string, serviceId?: string) {
+export async function getStaffListAction(branchId?: string, serviceId?: string, excludeSessionId?: string, startTime?: Date) {
   try {
-    const staff = await StaffService.getAllStaff(branchId, serviceId)
+    const staff = await StaffService.getAllStaff(branchId, serviceId, excludeSessionId, startTime)
     return { success: true, data: staff }
   } catch (error) {
     console.error("Failed to fetch staff list:", error)

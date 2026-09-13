@@ -47,6 +47,21 @@ export async function updateSessionStaffAction(sessionId: string, staffId: strin
   }
 }
 
+export async function updateSessionRoomAction(sessionId: string, roomId: string) {
+  try {
+    const { TimetableRepository } = await import("../repositories/timetable-repository");
+    
+    const session = await TimetableRepository.getSessionById(sessionId);
+    if (!session) throw new Error("Session not found");
+    if (session.status === "COMPLETED") throw new Error("Sesi sudah selesai");
+
+    await TimetableRepository.updateSession(sessionId, { roomId });
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "Gagal memindahkan ruangan" };
+  }
+}
+
 export async function startSessionAction(sessionId: string) {
   try {
     await TimetableService.startSession(sessionId);

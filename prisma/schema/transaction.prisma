@@ -52,6 +52,7 @@ model Transaction {
   changeAmount  Decimal @default(0)
 
   status TransactionStatus @default(PENDING)
+  isVip  Boolean           @default(false)
 
   customer           Customer?            @relation(fields: [customerId], references: [id])
   promotionId        String?

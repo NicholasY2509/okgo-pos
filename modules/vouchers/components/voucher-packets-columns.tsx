@@ -22,7 +22,7 @@ export type VoucherPacketTableData = {
   id: string
   name: string
   codeSuffix: string | null
-  price: any 
+  price: any
   totalVisitCount: number | null
   totalCreditAmount: any
   validityDays: number | null
@@ -124,7 +124,7 @@ function ActionsCell({ packet }: { packet: VoucherPacketTableData }) {
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-fit">
           <DropdownMenuLabel>Aksi</DropdownMenuLabel>
           <GenerateVouchersDialog
             packetId={packet.id}

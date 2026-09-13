@@ -41,7 +41,7 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
       <div className="flex-1 bg-card p-6 md:p-8 rounded-2xl shadow-sm border border-border overflow-y-auto flex flex-col">
         <Tabs defaultValue="services" className="w-full">
           <div className="flex items-center justify-between mb-6">
-            <TabsList className="grid w-[400px] grid-cols-2">
+            <TabsList className="grid w-100 grid-cols-2">
               <TabsTrigger value="services">Layanan</TabsTrigger>
               <TabsTrigger value="vouchers">Paket Voucher</TabsTrigger>
             </TabsList>
@@ -68,7 +68,7 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
         </Tabs>
       </div>
 
-      <div className="w-[400px] shrink-0 flex flex-col sticky top-20 h-[calc(100vh-8rem)] min-h-[500px]">
+      <div className="w-100 shrink-0 flex flex-col sticky top-20 h-[calc(100vh-8rem)] min-h-[500px]">
         <PosCart
           onCheckout={() => setIsPaymentModalOpen(true)}
           branchId={branchId}
@@ -85,6 +85,7 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
         }}
         staff={staff}
         rooms={rooms}
+        branchId={branchId}
         onAddServiceToCart={handleAddServiceToCart}
       />
 

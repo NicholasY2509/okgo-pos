@@ -119,7 +119,7 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
             />
           </div>
 
-          {(searchTerm || incentiveRuleId !== "ALL") && (
+          {(searchTerm || incentiveRuleId !== "") && (
             <Button
               variant="ghost"
               onClick={handleResetFilter}
@@ -132,7 +132,9 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
         </div>
 
         <div>
-          {loading ? (
+          {!incentiveRuleId ? (
+            <div className="p-8 text-center text-slate-500">Silakan pilih aturan insentif untuk melihat data.</div>
+          ) : loading ? (
             <div className="p-8 text-center text-slate-500">Memuat data...</div>
           ) : (
             <>
@@ -220,6 +222,45 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
                           <TableCell className="text-right text-green-600 font-medium">
                             <NumericFormat
                               value={b.incentive}
+                              displayType="text"
+                              thousandSeparator="."
+                              decimalSeparator=","
+                              prefix="Rp "
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+              {summary.staffBreakdowns && summary.staffBreakdowns.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-medium mb-4">Rincian per Staf</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Staf</TableHead>
+                        <TableHead className="text-right">Pendapatan Kotor</TableHead>
+                        <TableHead className="text-right">Insentif Diberikan</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {summary.staffBreakdowns.map((s, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium">{s.staffName}</TableCell>
+                          <TableCell className="text-right">
+                            <NumericFormat
+                              value={s.gross}
+                              displayType="text"
+                              thousandSeparator="."
+                              decimalSeparator=","
+                              prefix="Rp "
+                            />
+                          </TableCell>
+                          <TableCell className="text-right text-green-600 font-medium">
+                            <NumericFormat
+                              value={s.incentive}
                               displayType="text"
                               thousandSeparator="."
                               decimalSeparator=","

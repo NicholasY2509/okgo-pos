@@ -20,6 +20,7 @@ export const TimetableRepository = {
                 paidAmount: true,
                 subtotal: true,
                 discountTotal: true,
+                isVip: true,
                 customer: {
                   select: { name: true }
                 }
@@ -66,6 +67,7 @@ export const TimetableRepository = {
                 paidAmount: true,
                 subtotal: true,
                 discountTotal: true,
+                isVip: true,
                 customer: {
                   select: { name: true }
                 },
@@ -173,5 +175,5 @@ export const TimetableRepository = {
         scheduledStartTime: 'asc'
       }
     });
-  }
+  },
 };

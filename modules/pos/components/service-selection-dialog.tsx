@@ -12,10 +12,11 @@ interface ServiceSelectionDialogProps {
   onClose: () => void;
   staff: any[];
   rooms: any[];
+  branchId: string;
   onAddServiceToCart: (staffId: string, roomId: string) => void;
 }
 
-export function ServiceSelectionDialog({ selectedProduct, onClose, staff, rooms, onAddServiceToCart }: ServiceSelectionDialogProps) {
+export function ServiceSelectionDialog({ selectedProduct, onClose, staff, rooms, branchId, onAddServiceToCart }: ServiceSelectionDialogProps) {
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
 
@@ -50,6 +51,7 @@ export function ServiceSelectionDialog({ selectedProduct, onClose, staff, rooms,
                 serviceId={selectedProduct?.id}
                 value={selectedStaffId}
                 onChange={setSelectedStaffId}
+                branchId={branchId}
                 className=""
               />
             </div>
