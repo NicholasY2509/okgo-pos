@@ -19,10 +19,9 @@ export function CartCheckout({ onCheckout }: CartCheckoutProps) {
       disabled={!hasItems}
     >
       <div className="flex items-center gap-2">
-        <Receipt className="w-5 h-5" />
         <span>Proses</span>
       </div>
-      <div className="text-xl tracking-tight">
+      <div className="text-2xl tracking-tight">
         Rp {amountDue.toLocaleString('id-ID')}
       </div>
     </Button>

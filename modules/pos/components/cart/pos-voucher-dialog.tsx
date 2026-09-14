@@ -10,9 +10,10 @@ import { usePosVoucherDialog } from "../../hooks/use-pos-voucher-dialog";
 
 interface PosVoucherDialogProps {
   onRedeemVoucher: (voucher: any) => void;
+  disabled?: boolean;
 }
 
-export function PosVoucherDialog({ onRedeemVoucher }: PosVoucherDialogProps) {
+export function PosVoucherDialog({ onRedeemVoucher, disabled }: PosVoucherDialogProps) {
   const {
     open,
     handleOpen,
@@ -32,7 +33,7 @@ export function PosVoucherDialog({ onRedeemVoucher }: PosVoucherDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full justify-between items-center bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary group">
+        <Button variant="outline" className="w-full justify-between items-center bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary group" disabled={disabled}>
           <div className="flex items-center gap-2">
             <Ticket className="w-4 h-4" />
             {appliedVoucher ? "Voucher Digunakan" : "Gunakan Voucher"}
@@ -92,7 +93,7 @@ export function PosVoucherDialog({ onRedeemVoucher }: PosVoucherDialogProps) {
               <div className="border-t border-border pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-semibold flex items-center gap-2">
-                    <User className="w-4 h-4" /> Voucher Dimiliki ({ownedVouchers.length})
+                    Voucher Dimiliki ({ownedVouchers.length})
                   </div>
                 </div>
 

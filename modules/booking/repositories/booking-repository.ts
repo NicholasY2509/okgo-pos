@@ -106,7 +106,8 @@ export const BookingRepository = {
     let services: any[] = [];
     if (serviceIds.length > 0) {
       services = await prisma.product.findMany({
-        where: { id: { in: serviceIds } }
+        where: { id: { in: serviceIds } },
+        include: { category: true }
       });
       for (const service of services) {
         if (service.duration && service.duration > maxDuration) {
@@ -134,7 +135,8 @@ export const BookingRepository = {
         isAssignedToTimetable: false,
         status: { in: ["PENDING"] },
         scheduledStartTime: { gte: start, lte: end }
-      }
+      },
+      include: { items: true }
     });
 
     const businessStart = 8;
@@ -176,6 +178,12 @@ export const BookingRepository = {
         if (slotStart < bkgEnd && slotEnd > bkgStart) {
           const assignedCount = existingSessions.filter(s => s.bookingId === bkg.id && s.startTime && slotStart < (s.endTime || addMinutes(s.startTime, 60)) && slotEnd > s.startTime).length;
           unassignedCountInSlot += Math.max(0, (bkg.guestCount || 1) - assignedCount);
+
+          for (const item of bkg.items || []) {
+            if (item.requestedStaffId) {
+              busyStaffIds.add(item.requestedStaffId);
+            }
+          }
         }
       }
 
@@ -218,6 +226,35 @@ export const BookingRepository = {
       if (availableVipRooms < vipServicesCount || availableStandardRooms < standardServicesCount) continue;
 
       let canFulfillAll = true;
+
+      const requiredPositions: string[] = [];
+      for (const sel of selections) {
+        if (sel.serviceId) {
+          const svc = services.find(s => s.id === sel.serviceId);
+          if (svc?.category?.targetWorkPositionId) {
+            requiredPositions.push(svc.category.targetWorkPositionId);
+          } else {
+            requiredPositions.push("ANY");
+          }
+        }
+      }
+
+      if (requiredPositions.length > 0) {
+        const requiredCounts: Record<string, number> = {};
+        requiredPositions.forEach(pos => {
+          requiredCounts[pos] = (requiredCounts[pos] || 0) + 1;
+        });
+
+        for (const pos in requiredCounts) {
+          if (pos !== "ANY") {
+            const availableForPos = availableStaff.filter(s => s.workPositionId === pos).length;
+            if (availableForPos < requiredCounts[pos]) {
+              canFulfillAll = false;
+              break;
+            }
+          }
+        }
+      }
 
       for (const sel of selections) {
         if (sel.staffId) {
@@ -355,7 +392,8 @@ export const BookingRepository = {
             gte: startOfDay(slotStart),
             lte: endOfDay(slotStart)
           }
-        }
+        },
+        include: { items: true }
       });
       let unassignedCountInSlot = 0;
       for (const bkg of unassignedBookings) {
@@ -365,6 +403,12 @@ export const BookingRepository = {
         if (slotStart < bkgEnd && slotEnd > bkgStart) {
           const assignedCount = existingSessions.filter(s => s.bookingId === bkg.id && s.startTime && slotStart < (s.endTime || addMinutes(s.startTime, 60)) && slotEnd > s.startTime).length;
           unassignedCountInSlot += Math.max(0, (bkg.guestCount || 1) - assignedCount);
+
+          for (const item of bkg.items || []) {
+            if (item.requestedStaffId) {
+              busyStaffIds.add(item.requestedStaffId);
+            }
+          }
         }
       }
 
@@ -406,6 +450,32 @@ export const BookingRepository = {
         if (availableVipRooms < vipServicesCount || availableStandardRooms < standardServicesCount || availableStaff.length < activeSelections.length) {
           throw new Error("Kapasitas ruangan/terapis tidak mencukupi untuk waktu ini.");
         }
+
+        const requiredPositions: string[] = [];
+        for (const sel of activeSelections) {
+          const svc = services.find(s => s.id === sel.serviceId);
+          if (svc?.category?.targetWorkPositionId) {
+            requiredPositions.push(svc.category.targetWorkPositionId);
+          } else {
+            requiredPositions.push("ANY");
+          }
+        }
+
+        if (requiredPositions.length > 0) {
+          const requiredCounts: Record<string, number> = {};
+          requiredPositions.forEach(pos => {
+            requiredCounts[pos] = (requiredCounts[pos] || 0) + 1;
+          });
+
+          for (const pos in requiredCounts) {
+            if (pos !== "ANY") {
+              const availableForPos = availableStaff.filter(s => s.workPositionId === pos).length;
+              if (availableForPos < requiredCounts[pos]) {
+                throw new Error("Kapasitas terapis dengan role yang dibutuhkan tidak mencukupi untuk waktu ini.");
+              }
+            }
+          }
+        }
       }
 
       let subtotal = 0;
@@ -423,15 +493,25 @@ export const BookingRepository = {
         let assignedRoom = availableRooms.splice(assignedRoomIndex, 1)[0];
         let assignedStaff;
 
+        const targetWorkPositionId = service.category?.targetWorkPositionId;
+
         if (sel.staffId) {
-          const staffIndex = availableStaff.findIndex(s => s.id === sel.staffId);
+          const staffIndex = availableStaff.findIndex(s => s.id === sel.staffId && (!targetWorkPositionId || s.workPositionId === targetWorkPositionId));
           if (staffIndex === -1) {
-            throw new Error("Terapis yang dipilih tidak tersedia di waktu ini.");
+            throw new Error("Terapis yang dipilih tidak tersedia atau tidak memiliki role yang sesuai.");
           }
           assignedStaff = availableStaff[staffIndex];
           availableStaff.splice(staffIndex, 1);
         } else {
           assignedStaff = null;
+          // Note: we've already validated capacity above, so we know there's enough staff
+          // and we let the timetable automatically assign the appropriate staff later.
+          // BUT we must "reserve" an available staff member from availableStaff to prevent 
+          // overbooking the same role. We will remove the first one that matches.
+          const anyStaffIndex = availableStaff.findIndex(s => !targetWorkPositionId || s.workPositionId === targetWorkPositionId);
+          if (anyStaffIndex !== -1) {
+            availableStaff.splice(anyStaffIndex, 1); // reserve capacity
+          }
         }
 
         if (!assignedRoom) {
@@ -578,11 +658,13 @@ export const BookingRepository = {
           branchId: data.branchId,
           isAssignedToTimetable: false,
           status: { in: ["PENDING"] },
+          id: { not: bookingId },
           scheduledStartTime: {
             gte: startOfDay(slotStart),
             lte: endOfDay(slotStart)
           }
-        }
+        },
+        include: { items: true }
       });
       let unassignedCountInSlot = 0;
       for (const bkg of unassignedBookings) {
@@ -592,6 +674,12 @@ export const BookingRepository = {
         if (slotStart < bkgEnd && slotEnd > bkgStart) {
           const assignedCount = existingSessions.filter(s => s.bookingId === bkg.id && s.startTime && slotStart < (s.endTime || addMinutes(s.startTime, 60)) && slotEnd > s.startTime).length;
           unassignedCountInSlot += Math.max(0, (bkg.guestCount || 1) - assignedCount);
+
+          for (const item of bkg.items || []) {
+            if (item.requestedStaffId) {
+              busyStaffIds.add(item.requestedStaffId);
+            }
+          }
         }
       }
 
@@ -795,7 +883,8 @@ export const BookingRepository = {
             gte: startOfDay(slotStart),
             lte: endOfDay(slotStart)
           }
-        }
+        },
+        include: { items: true }
       });
       let unassignedCountInSlot = 0;
       for (const bkg of unassignedBookings) {
@@ -805,6 +894,12 @@ export const BookingRepository = {
         if (slotStart < bkgEnd && slotEnd > bkgStart) {
           const assignedCount = existingSessions.filter(s => s.bookingId === bkg.id && s.startTime && slotStart < (s.endTime || addMinutes(s.startTime, 60)) && slotEnd > s.startTime).length;
           unassignedCountInSlot += Math.max(0, (bkg.guestCount || 1) - assignedCount);
+
+          for (const item of bkg.items || []) {
+            if (item.requestedStaffId) {
+              busyStaffIds.add(item.requestedStaffId);
+            }
+          }
         }
       }
 

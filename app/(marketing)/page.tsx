@@ -162,8 +162,6 @@ export default function MarketingPage() {
 
   return (
     <div ref={container} className="bg-background text-foreground font-sans min-h-screen selection:bg-primary/20">
-
-      {/* NAVBAR */}
       <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -174,8 +172,7 @@ export default function MarketingPage() {
           }`}
       >
         <div className="max-w-7xl mx-auto px-8 flex justify-between items-center h-12 relative">
-          <div className={`flex items-center transition-all duration-700 ease-in-out z-10 md:w-[250px] md:relative md:left-auto md:translate-x-0 ${isScrolled ? 'absolute left-8 translate-x-0' : 'absolute left-1/2 -translate-x-1/2'
-            }`}>
+          <div className="flex items-center transition-all duration-700 ease-in-out z-10 md:w-[250px]">
             <a href="#" className="flex items-center">
               <img
                 src="/logo-long.webp"
@@ -184,11 +181,11 @@ export default function MarketingPage() {
               />
             </a>
           </div>
-          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 space-x-12 font-medium text-sm text-muted-foreground tracking-wide">
+          {/* <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 space-x-12 font-medium text-sm text-muted-foreground tracking-wide">
             <button onClick={(e) => scrollTo(e, 'layanan')} className="hover:text-foreground transition-colors cursor-pointer">Layanan</button>
             <button onClick={(e) => scrollTo(e, 'voucher')} className="hover:text-foreground transition-colors cursor-pointer">Voucher</button>
             <button onClick={(e) => scrollTo(e, 'reservasi')} className="hover:text-foreground transition-colors cursor-pointer">Reservasi</button>
-          </div>
+          </div> */}
           <div className="w-auto md:w-62.5 flex justify-end ml-auto z-20">
             <motion.button
               initial={false}
@@ -206,45 +203,49 @@ export default function MarketingPage() {
       </motion.nav>
 
       {/* HERO SECTION */}
-      <header className="hero-section relative pt-44 pb-32 px-6 flex flex-col items-center justify-center min-h-[90vh]">
-        <motion.div
-          variants={heroVariants}
-          initial="hidden"
-          animate="show"
-          className="relative z-10 text-center max-w-4xl mx-auto flex flex-col items-center"
-        >
-          <motion.div variants={itemVariants} className="inline-flex items-center gap-2 text-muted-foreground text-xs font-medium uppercase tracking-[0.3em] mb-10">
+      <header className="hero-section relative min-h-screen flex items-center w-full">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0 overflow-hidden bg-background">
+          <div
+            className="hero-img absolute inset-[-5%] bg-cover bg-center md:bg-position-[90%_center]"
+            style={{ backgroundImage: `url('/${bgImage}')` }}
+          >
+            <div className="absolute inset-0 bg-background/60 md:bg-transparent bg-linear-to-r from-background from-20% via-background/80 via-50% to-transparent" />
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-8 w-full relative z-10">
+          <motion.div
+            variants={heroVariants}
+            initial="hidden"
+            animate="show"
+            className="max-w-2xl text-left pt-0 sm:pt-20"
+          >
+            {/* <motion.div variants={itemVariants} className="inline-flex items-center gap-2 text-muted-foreground text-xs font-medium uppercase tracking-[0.3em] mb-10">
             Deep Relaxation & Sleep Therapy
-          </motion.div>
-          <motion.h1 variants={itemVariants} className="text-6xl md:text-8xl font-display font-light leading-[1.1] tracking-tight mb-8 text-foreground">
-            Lepas Lelah<br />
-            Tidur Lebih <span className="text-primary italic font-light">Nyenyak</span>
-          </motion.h1>
-          <motion.p variants={itemVariants} className="text-muted-foreground text-base md:text-xl font-light max-w-2xl mx-auto mb-14 leading-relaxed">
-            Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.
-          </motion.p>
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-8 w-full sm:w-auto items-center">
-            <motion.button
-              onClick={(e) => scrollTo(e, 'reservasi')}
-              className="group flex items-center justify-center gap-3 border border-foreground/20 text-foreground px-10 py-4 rounded-full font-light tracking-wide hover:border-primary hover:text-primary transition-colors cursor-pointer w-full sm:w-auto"
-            >
-              Booking Jadwal <ChevronRight className="w-4 h-4 text-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-            </motion.button>
-            <motion.button
+          </motion.div> */}
+            <motion.h1 variants={itemVariants} className="text-6xl md:text-6xl font-display font-light text-center sm:text-start leading-[1.1] tracking-tight mb-6 text-foreground">
+              Lepas Lelah<br />
+              Tidur Lebih <span className="text-primary italic font-light">Nyenyak</span>
+            </motion.h1>
+            <motion.p variants={itemVariants} className="text-foreground/80 md:text-muted-foreground text-xs sm:text-base text-center sm:text-start font-light mb-10 leading-relaxed max-w-xl">
+              Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.
+            </motion.p>
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-8 items-center sm:items-start">
+              <motion.button
+                onClick={(e) => scrollTo(e, 'reservasi')}
+                className="group inline-flex items-center justify-center gap-4 border border-foreground/30 text-foreground px-10 py-4 rounded-full text-xs uppercase tracking-[0.2em] font-light hover:bg-foreground hover:text-background transition-all duration-500 cursor-pointer"
+              >
+                Booking Jadwal <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300 stroke-[1]" />
+              </motion.button>
+              {/* <motion.button
               onClick={(e) => scrollTo(e, 'voucher')}
-              className="flex items-center justify-center text-muted-foreground uppercase text-xs tracking-[0.2em] font-light hover:text-primary transition-colors cursor-pointer"
+              className="flex items-center justify-center text-muted-foreground uppercase text-xs tracking-[0.2em] font-light hover:text-primary transition-colors cursor-pointer pt-3 sm:pt-0"
             >
               Lihat Penawaran Khusus
-            </motion.button>
+            </motion.button> */}
+            </motion.div>
           </motion.div>
-        </motion.div>
-
-        {/* Minimalist Image Reveal */}
-        <div className="absolute inset-0 z-0 overflow-hidden opacity-30 pointer-events-none">
-          <div
-            className="hero-img absolute inset-[-10%] bg-cover bg-center grayscale"
-            style={{ backgroundImage: `url('/${bgImage}')` }}
-          />
         </div>
       </header>
 

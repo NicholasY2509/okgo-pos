@@ -9,9 +9,10 @@ interface StepTimeProps {
   brandSetting?: any;
   loading: boolean;
   services?: any[];
+  staffList?: any[];
 }
 
-export function StepTime({ form, dailySchedule, brandSetting, loading, services = [] }: StepTimeProps) {
+export function StepTime({ form, dailySchedule, brandSetting, loading, services = [], staffList = [] }: StepTimeProps) {
   const selectedTime = form.watch("startTime");
   const selectedDate = form.watch("date");
 
@@ -102,7 +103,57 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
           });
         }
 
-        const availableStaff = dailySchedule.staffSchedules ? dailySchedule.staffSchedules.length - busyStaffIds.size : 0;
+        const requiredPositions: string[] = [];
+        (selections || []).forEach(sel => {
+          if (sel.serviceId) {
+            const svc = services?.find(s => s.id === sel.serviceId);
+            if (svc?.category?.targetWorkPositionId) {
+              requiredPositions.push(svc.category.targetWorkPositionId);
+            } else {
+              requiredPositions.push("ANY");
+            }
+          }
+        });
+
+        const availableStaffArr = (dailySchedule.staffSchedules || []).filter((s: any) => !busyStaffIds.has(s.id));
+        let availableStaff = availableStaffArr.length;
+
+        if (staffList && staffList.length > 0) {
+          const availableDetailedStaff = staffList.filter((s: any) => availableStaffArr.some((a: any) => a.id === s.id));
+
+          if (requiredPositions.length > 0) {
+            const requiredCounts: Record<string, number> = {};
+            requiredPositions.forEach(pos => {
+              requiredCounts[pos] = (requiredCounts[pos] || 0) + 1;
+            });
+
+            let canFulfill = true;
+            for (const pos in requiredCounts) {
+              if (pos !== "ANY") {
+                const availableForPos = availableDetailedStaff.filter((s: any) => s.workPositionId === pos).length;
+                if (availableForPos < requiredCounts[pos]) {
+                  canFulfill = false;
+                  break;
+                }
+              }
+            }
+
+            if (!canFulfill) {
+              availableStaff = 0;
+            }
+          } else {
+            const validWorkPositions = new Set(
+              (services || []).map(s => s.category?.targetWorkPositionId).filter(Boolean)
+            );
+            const hasAnyService = (services || []).some(s => !s.category?.targetWorkPositionId);
+
+            if (hasAnyService) {
+              availableStaff = availableDetailedStaff.length;
+            } else {
+              availableStaff = availableDetailedStaff.filter(s => validWorkPositions.has(s.workPositionId)).length;
+            }
+          }
+        }
 
         slots.push({
           timeString: slotStart.toISOString(),
@@ -123,8 +174,8 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
 
       <div className="space-y-8">
         <div className="space-y-3">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2 mb-1">Pilih Tanggal</label>
-          <div className="flex overflow-x-auto gap-3 pb-4 snap-x scroll-smooth px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2 mb-2">Pilih Tanggal</label>
+          <div className="flex overflow-x-auto gap-3 mt-1 pb-4 snap-x scroll-smooth px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {dates.map(dateStr => {
               const d = new Date(dateStr);
               const dayName = d.toLocaleDateString('id-ID', { weekday: 'short' });

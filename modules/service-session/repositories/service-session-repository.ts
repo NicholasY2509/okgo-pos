@@ -19,6 +19,7 @@ export const ServiceSessionRepository = {
       },
       orderBy: { createdAt: "asc" },
       include: {
+        staff: true,
         transactionItem: {
           include: {
             transaction: {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { endServiceSessionAction } from "../actions/service-session-action"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
+import { io } from "socket.io-client"
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,15 @@ export function ActiveSessionView({ session, tenantSlug }: { session: any, tenan
       toast.error(result.error)
     } else {
       toast.success("Sesi layanan selesai!")
+
+      // Extract names
+      const serviceName = session.transactionItem?.itemNameSnapshot || session.booking?.items?.[0]?.itemNameSnapshot || "Layanan";
+      const staffName = session.staff ? `${session.staff.firstName} ${session.staff.lastName || ""}`.trim() : "Terapis";
+
+      // Notify POS and other clients
+      const socket = io(process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined);
+      socket.emit("service_status_changed", { sessionId: session.id, action: "end", serviceName, staffName });
+      setTimeout(() => socket.disconnect(), 1000);
     }
     setLoading(false)
   }

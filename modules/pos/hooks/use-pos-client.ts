@@ -57,6 +57,12 @@ export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosC
   const handleAddServiceToCart = async (staffId: string, roomId: string) => {
     if (!selectedProduct || !staffId || !roomId) return;
 
+    const hasVoucherPacket = cartItems.some(i => i.type === "VOUCHER_PACKET");
+    if (hasVoucherPacket) {
+      toast.error("Tidak bisa menggabungkan layanan dengan pembelian paket voucher.");
+      return;
+    }
+
     const staffMember = staff.find(s => s.id === staffId);
     const room = rooms.find(r => r.id === roomId);
     const unitPrice = Number(selectedProduct.price);
@@ -99,6 +105,12 @@ export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosC
   };
 
   const handleVoucherPacketClick = (packet: any) => {
+    const hasService = cartItems.some(i => i.type === "SERVICE");
+    if (hasService) {
+      toast.error("Tidak bisa menggabungkan pembelian paket voucher dengan layanan.");
+      return;
+    }
+
     addItem({
       type: "VOUCHER_PACKET",
       voucherPacketId: packet.id,

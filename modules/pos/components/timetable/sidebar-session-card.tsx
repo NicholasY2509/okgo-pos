@@ -2,37 +2,50 @@ import { format } from "date-fns";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTimetableStore } from "../../stores/timetable-store";
 
 interface SidebarSessionCardProps {
   session: any;
 }
 
 export function SidebarSessionCard({ session }: SidebarSessionCardProps) {
+  const { setSelectedSessionForInfo } = useTimetableStore();
+
   return (
-    <Card className="cursor-pointer hover:bg-muted/50 transition-colors py-1">
+    <Card
+      className="cursor-pointer hover:bg-muted/50 transition-colors py-1"
+      onClick={() => setSelectedSessionForInfo(session)}
+    >
       <CardContent className="p-3">
         <div className="flex justify-between items-start mb-1 gap-2">
           <span className="font-semibold text-sm line-clamp-1">
             {session.itemName}
           </span>
-          <Badge
-            variant={
-              session.status === "COMPLETED"
-                ? "secondary"
+          <div className="flex flex-col items-end gap-1">
+            <Badge
+              variant={
+                session.status === "COMPLETED"
+                  ? "secondary"
+                  : session.status === "IN_PROGRESS"
+                    ? "default"
+                    : "outline"
+              }
+              className="text-[10px] whitespace-nowrap"
+            >
+              {session.status === "COMPLETED"
+                ? "Selesai"
                 : session.status === "IN_PROGRESS"
-                  ? "default"
-                  : "outline"
-            }
-            className="text-[10px] whitespace-nowrap"
-          >
-            {session.status === "COMPLETED"
-              ? "Selesai"
-              : session.status === "IN_PROGRESS"
-                ? "Berlangsung"
-                : session.status === "CANCELLED"
-                  ? "Dibatalkan"
-                  : "Terjadwal"}
-          </Badge>
+                  ? "Berlangsung"
+                  : session.status === "CANCELLED"
+                    ? "Dibatalkan"
+                    : "Terjadwal"}
+            </Badge>
+            {session.paymentStatus === "PENDING" && (
+              <Badge variant="destructive" className="text-[10px] whitespace-nowrap">
+                Belum dibayar
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="text-xs text-muted-foreground flex flex-col gap-1">
           <div className="flex items-center gap-1">

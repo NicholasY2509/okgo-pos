@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { bookingSchema, type BookingInput } from "../schemas/booking";
 import { createBookingAction } from "../actions/booking-actions";
+import { io } from "socket.io-client";
 
 export function useBooking() {
   const [step, setStep] = useState(1);
@@ -125,6 +126,13 @@ export function useBooking() {
       form.reset();
       setStep(1);
       localStorage.removeItem("booking_draft");
+
+      const socket = io(process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined);
+      socket.emit("new_booking", { 
+        branchId: values.branchId, 
+        customerName: values.customerName 
+      });
+      setTimeout(() => socket.disconnect(), 1000);
     }
   }
 

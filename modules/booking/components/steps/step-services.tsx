@@ -25,7 +25,14 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
 
   const categories = Array.from(
     new Map(
-      services.map((s) => [s.category?.id || "other", { id: s.category?.id || "other", name: s.category?.name || "Lainnya" }])
+      services.map((s) => [
+        s.category?.id || "other",
+        {
+          id: s.category?.id || "other",
+          name: s.category?.name || "Lainnya",
+          targetWorkPositionId: s.category?.targetWorkPositionId || null
+        }
+      ])
     ).values()
   ).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -100,19 +107,34 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
 
               {!activeCategories[field.id] ? (
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-4 animate-in fade-in zoom-in-95 duration-300">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => handleCategoryChange(field.id, cat.id)}
-                      className="p-6 cursor-pointer transition-all rounded-2xl border border-border/50 bg-muted/10 hover:bg-muted/30 hover:border-primary/50 text-left flex flex-col justify-center items-center gap-3 group"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                        <span className="font-display text-xl font-light">{cat.name.charAt(0)}</span>
-                      </div>
-                      <span className="font-medium text-foreground text-lg text-center">{cat.name}</span>
-                    </button>
-                  ))}
+                  {categories.map((cat) => {
+                    let eligibleStaff = staffList;
+                    if (cat.targetWorkPositionId) {
+                      eligibleStaff = staffList.filter(s => s.workPositionId === cat.targetWorkPositionId);
+                    }
+                    const itemStartTime = selectedTime ? new Date(selectedTime) : new Date();
+                    const itemEndTime = addMinutes(itemStartTime, 60);
+                    const availableCount = eligibleStaff.filter(s => !checkStaffBusy(s.id, itemStartTime, itemEndTime)).length;
+
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => handleCategoryChange(field.id, cat.id)}
+                        className="p-6 cursor-pointer transition-all rounded-2xl border border-border/50 bg-muted/10 hover:bg-muted/30 hover:border-primary/50 text-left flex flex-col justify-center items-center gap-3 group relative"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                          <span className="font-display text-xl font-light">{cat.name.charAt(0)}</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="font-light text-foreground text-lg text-center">{cat.name}</span>
+                          <span className="text-xs text-center text-muted-foreground px-2 py-0.5 rounded-full">
+                            {availableCount} Terapis Tersedia
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <>
@@ -121,7 +143,11 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleCategoryChange(field.id, "")}
+                      onClick={() => {
+                        handleCategoryChange(field.id, "");
+                        form.setValue(`selections.${index}.serviceId`, "", { shouldValidate: true });
+                        form.setValue(`selections.${index}.staffId`, undefined, { shouldValidate: true });
+                      }}
                       className="rounded-full text-xs px-0"
                     >
                       <ChevronLeft className="h-2 w-2" />
@@ -132,7 +158,7 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[350px] overflow-y-auto pr-2 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-87.5 overflow-y-auto pr-2 animate-in fade-in slide-in-from-top-4 duration-300">
                     {services
                       .filter((service) => {
                         const activeCatId = activeCategories[field.id];
@@ -141,7 +167,7 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                       .map((service) => (
                         <div
                           key={service.id}
-                          className={`p-4 cursor-pointer transition-all rounded-2xl border flex flex-col justify-center ${selectedServiceId === service.id
+                          className={`p-3 cursor-pointer transition-all rounded-2xl border flex flex-col justify-center ${selectedServiceId === service.id
                             ? "border-primary bg-primary/5 shadow-sm"
                             : "border-border/50 bg-muted/10 hover:bg-muted/30"
                             }`}
@@ -153,7 +179,7 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                             )
                           }
                         >
-                          <div className="font-medium text-foreground text-base mb-1">{service.name}</div>
+                          <div className="font-light text-foreground text-base mb-1">{service.name}</div>
                           <div className="text-[10px] text-muted-foreground font-light flex justify-between uppercase tracking-widest">
                             <span>{service.duration} mnt</span>
                             <span className="font-medium text-primary">

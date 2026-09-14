@@ -48,6 +48,7 @@ interface PosActions {
   removeItem: (cartId: string) => void;
   updateQuantity: (cartId: string, quantity: number) => void;
   updateItemDiscount: (cartId: string, discountAmount: number) => void;
+  updateItem: (cartId: string, updates: Partial<CartItem>) => void;
   clearCart: () => void;
   applyPromo: (promo: AppliedPromo) => void;
   removePromo: () => void;
@@ -106,6 +107,11 @@ export const createPosStore = () => {
         updateItemDiscount: (cartId, discountAmount) =>
           set((state) => ({
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, discountAmount } : i)),
+            appliedPromo: null,
+          })),
+        updateItem: (cartId, updates) =>
+          set((state) => ({
+            items: state.items.map((i) => (i.cartId === cartId ? { ...i, ...updates } : i)),
             appliedPromo: null,
           })),
         clearCart: () => set({ items: [], customerId: undefined, appliedPromo: null, appliedVoucher: null, loadedBookingId: null, loadedTransactionId: null }),
@@ -226,6 +232,7 @@ export function usePosStoreActions() {
     removeItem: useStore(store, (s) => s.removeItem),
     updateQuantity: useStore(store, (s) => s.updateQuantity),
     updateItemDiscount: useStore(store, (s) => s.updateItemDiscount),
+    updateItem: useStore(store, (s) => s.updateItem),
     clearCart: useStore(store, (s) => s.clearCart),
     applyPromo: useStore(store, (s) => s.applyPromo),
     removePromo: useStore(store, (s) => s.removePromo),
@@ -254,6 +261,7 @@ export function usePosCart() {
   const removeItem = useStore(store, (s) => s.removeItem);
   const updateQuantity = useStore(store, (s) => s.updateQuantity);
   const updateItemDiscount = useStore(store, (s) => s.updateItemDiscount);
+  const updateItem = useStore(store, (s) => s.updateItem);
   const clearCart = useStore(store, (s) => s.clearCart);
   const appliedPromo = useStore(store, (s) => s.appliedPromo);
   const applyPromo = useStore(store, (s) => s.applyPromo);
@@ -276,7 +284,9 @@ export function usePosCart() {
   const promoDiscountTotal = appliedPromo ? appliedPromo.discountAmount : 0;
   const discountTotal = itemDiscountTotal + promoDiscountTotal;
   const totalAmount = subtotal - discountTotal;
-  const voucherNominalDiscount = appliedVoucher?.remainingCreditAmount ? Math.min(Number(appliedVoucher.remainingCreditAmount), totalAmount) : 0;
+
+  const firstItemTotal = items.length > 0 ? (items[0].unitPrice * items[0].quantity) - items[0].discountAmount : 0;
+  const voucherNominalDiscount = appliedVoucher?.remainingCreditAmount ? Math.min(Number(appliedVoucher.remainingCreditAmount), firstItemTotal) : 0;
   const amountDue = totalAmount - voucherNominalDiscount;
 
   return {
@@ -287,6 +297,7 @@ export function usePosCart() {
     removeItem,
     updateQuantity,
     updateItemDiscount,
+    updateItem,
     clearCart,
     appliedPromo,
     applyPromo,

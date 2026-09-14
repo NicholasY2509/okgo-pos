@@ -72,18 +72,18 @@ export function ServiceList({ products, onProductClick }: ServiceListProps) {
           <div
             key={p.id}
             onClick={() => onProductClick(p)}
-            className="group relative flex flex-col bg-card border border-border rounded-xl p-3 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/50 hover:ring-1 hover:ring-primary/20"
+            className="group relative flex flex-col bg-card shadow-sm border border-border rounded-xl cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/50 hover:ring-1 hover:ring-primary/20 overflow-hidden"
           >
-            <div className="bg-muted aspect-video mb-3 rounded-lg flex items-center justify-center text-muted-foreground transition-colors">
+            <div className="bg-muted aspect-video relative flex items-center justify-center text-muted-foreground transition-colors overflow-hidden">
               {p.image ? (
-                <img src={p.image} alt={p.name} className="w-full h-full object-cover rounded-lg" />
+                <img src={p.image} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
               ) : (
                 <ImageIcon className="w-8 h-8 opacity-50 group-hover:text-primary transition-colors" />
               )}
             </div>
-            <div className="flex flex-col flex-1 justify-between">
+            <div className="flex flex-col flex-1 justify-between p-3.5">
               <div>
-                <h4 className="font-semibold text-foreground text-sm line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                <h4 className="font-bold text-foreground text-sm line-clamp-2 leading-tight group-hover:text-primary transition-colors">
                   {p.name}
                 </h4>
                 {p.category?.name && (
@@ -92,7 +92,7 @@ export function ServiceList({ products, onProductClick }: ServiceListProps) {
                   </p>
                 )}
               </div>
-              <p className="text-primary font-bold mt-2">
+              <p className="text-base text-end font-medium tracking-tighter text-primary">
                 Rp {Number(p.price).toLocaleString('id-ID')}
               </p>
             </div>

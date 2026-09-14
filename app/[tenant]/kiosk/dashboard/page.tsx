@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HistoryList } from "@/modules/service-session/components/history-list"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { List } from "lucide-react"
+import { KioskNotificationListener } from "@/modules/service-session/components/kiosk-notification-listener"
 
 export default async function KioskDashboardPage({
   params,
@@ -41,6 +42,7 @@ export default async function KioskDashboardPage({
 
   return (
     <div className="w-full h-screen p-6 bg-muted/20 flex flex-col">
+      <KioskNotificationListener staffId={staff.id} />
       <header className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <img src="/logo-only.png" alt="Logo" className="h-8 object-contain" />
@@ -98,10 +100,20 @@ export default async function KioskDashboardPage({
         <div className="h-full flex flex-col bg-background rounded-2xl shadow-sm border overflow-y-auto">
           {inProgressSession ? (
             <ActiveSessionView session={inProgressSession} tenantSlug={resolvedParams.tenant} />
+          ) : scheduledSessions.length > 0 ? (
+            <div className="flex flex-col h-full items-center justify-center space-y-8 p-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl font-light">Layanan Menunggu</h2>
+                <p className="text-muted-foreground">Silakan mulai layanan untuk pelanggan Anda.</p>
+              </div>
+              <div className="w-full max-w-lg bg-card border rounded-2xl shadow-sm overflow-hidden p-4">
+                <SessionList sessions={scheduledSessions} tenantSlug={resolvedParams.tenant} />
+              </div>
+            </div>
           ) : (
             <div className="flex flex-col h-full items-center justify-center text-muted-foreground space-y-4 p-6">
               <p className="text-xl">Tidak ada layanan yang sedang berjalan.</p>
-              <p className="text-sm">Pilih layanan dari antrean untuk memulai.</p>
+              <p className="text-sm">Anda belum memiliki antrean layanan saat ini.</p>
             </div>
           )}
         </div>

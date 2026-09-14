@@ -22,74 +22,81 @@ export function CartItems() {
   return (
     <div className="flex-1 overflow-y-auto pr-1 space-y-2 min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
       {items.map((item) => (
-        <div key={item.cartId} className="p-3 border border-border rounded-lg bg-background shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
-          {/* Type indicator bar */}
-          <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.type === 'VOUCHER_PACKET' ? 'bg-primary/60' : item.isVoucherRedemption ? 'bg-green-500' : 'bg-primary'}`}></div>
+        <div key={item.cartId} className="p-3 border shadow-sm border-border/60 rounded-xl bg-background hover:bg-card hover:border-border transition-colors group relative overflow-hidden flex flex-col gap-3">
+          <div className="flex justify-between items-start">
+            <div className="flex-1 min-w-0 px-2">
+              <h4 className="font-semibold text-base tracking-tight text-foreground leading-tight mb-1 line-clamp-2">{item.name}</h4>
 
-          <div className="flex justify-between items-start mb-2 pl-2">
-            <div className="pr-4">
-              <h4 className="font-semibold text-sm text-foreground leading-tight">{item.name}</h4>
               {item.type === "SERVICE" && (
-                <div className="flex flex-col gap-0.5 mt-1">
-                  <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                    <span className="font-medium text-foreground">Terapis:</span> {item.staffName}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                    <span className="font-medium text-foreground">Ruang:</span> {item.roomName}
-                  </p>
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
+                  <span className="truncate max-w-[110px]">{item.staffName}</span>
+                  <span className="w-1 h-1 rounded-full bg-border shrink-0"></span>
+                  <span className="truncate max-w-[80px]">{item.roomName}</span>
                 </div>
               )}
-              {item.type === "VOUCHER_PACKET" && (
-                <span className="inline-block mt-1.5 text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm tracking-wide uppercase">
-                  Voucher
-                </span>
-              )}
-              {item.isVoucherRedemption && (
-                <span className="inline-block mt-1.5 text-[10px] font-bold bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded-sm tracking-wide uppercase">
-                  Voucher: {item.voucherCode}
-                </span>
+
+              {(item.type === "VOUCHER_PACKET" || item.isVoucherRedemption) && (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {item.type === "VOUCHER_PACKET" && (
+                    <span className="inline-block text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider">
+                      Paket
+                    </span>
+                  )}
+                  {item.isVoucherRedemption && (
+                    <span className="inline-block text-[9px] font-semibold bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider">
+                      Vch: {item.voucherCode}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
+
             <button
               onClick={() => removeItem(item.cartId)}
-              className="text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 p-1.5 rounded-md transition-colors"
+              className="text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 p-1.5 rounded-md transition-all shrink-0 -mt-1 -mr-1"
             >
-              <Trash2 size={18} />
+              <Trash2 size={15} />
             </button>
           </div>
 
           <div className="flex justify-between items-end pl-2">
-            <div className="flex items-center border border-border rounded-md bg-muted/50 shadow-sm overflow-hidden scale-90 origin-left">
-              <button
-                disabled={item.quantity <= 1 || item.type === "SERVICE"}
-                onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
-                className="p-1.5 hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-foreground/70"
-              >
-                <Minus size={14} />
-              </button>
-              <span className="px-3 text-sm font-bold text-foreground w-8 text-center bg-background py-1">
-                {item.quantity}
-              </span>
-              <button
-                disabled={item.type === "SERVICE"}
-                onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
-                className="p-1.5 hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-foreground/70"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
-            <span className="font-bold text-primary flex flex-col items-end">
+            {item.type !== "SERVICE" ? (
+              <div className="flex items-center border border-border/80 rounded-md bg-muted/20 overflow-hidden h-7">
+                <button
+                  disabled={item.quantity <= 1}
+                  onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
+                  className="px-2.5 hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-foreground/70 h-full flex items-center justify-center"
+                >
+                  <Minus size={12} strokeWidth={2.5} />
+                </button>
+                <span className="px-1 text-[13px] font-semibold text-foreground w-6 text-center h-full flex items-center justify-center">
+                  {item.quantity}
+                </span>
+                <button
+                  onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
+                  className="px-2.5 hover:bg-muted transition-colors text-foreground/70 h-full flex items-center justify-center"
+                >
+                  <Plus size={12} strokeWidth={2.5} />
+                </button>
+              </div>
+            ) : (
+              <div /> // Spacer for flex-between
+            )}
+
+            <div className="flex flex-col items-end leading-none">
               {item.isVoucherRedemption ? (
                 <>
-                  <span className="text-xs line-through text-muted-foreground opacity-70">
+                  <span className="text-[10px] line-through text-muted-foreground/60 mb-0.5">
                     Rp {(item.unitPrice * item.quantity).toLocaleString('id-ID')}
                   </span>
-                  <span className="text-green-600">Rp 0</span>
+                  <span className="font-light text-base tracking-tight text-green-600">Rp 0</span>
                 </>
               ) : (
-                <>Rp {(item.unitPrice * item.quantity).toLocaleString('id-ID')}</>
+                <span className="font-light text-base tracking-tight text-foreground">
+                  Rp {(item.unitPrice * item.quantity).toLocaleString('id-ID')}
+                </span>
               )}
-            </span>
+            </div>
           </div>
         </div>
       ))}

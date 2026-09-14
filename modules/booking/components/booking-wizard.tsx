@@ -54,11 +54,11 @@ export function BookingWizard() {
     <div className="">
       <div className="flex items-center gap-4 mb-8">
         {step > 1 && (
-          <Button type="button" variant="outline" onClick={prevStep} className="rounded-full w-10 h-10 p-0 shrink-0 border-border/50 hover:bg-muted/30 z-10 bg-background shadow-sm cursor-pointer">
+          <Button type="button" variant="outline" onClick={prevStep} size={'icon-sm'}>
             <ChevronLeft className="w-5 h-5 text-muted-foreground" />
           </Button>
         )}
-        <div className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="text-xs font-light uppercase tracking-[0.2em] text-muted-foreground">
           Langkah {step} dari 4
         </div>
       </div>
@@ -68,7 +68,7 @@ export function BookingWizard() {
         {step === 1 && <StepIdentity form={form} branches={branches} loadingBranches={loadingBranches} />}
 
         {/* STEP 2: Date & Time */}
-        {step === 2 && <StepTime form={form} dailySchedule={dailySchedule} brandSetting={brandSetting} loading={loading} services={services} />}
+        {step === 2 && <StepTime form={form} dailySchedule={dailySchedule} brandSetting={brandSetting} loading={loading} services={services} staffList={staffList} />}
 
         {/* STEP 3: Services & Staff */}
         {step === 3 && <StepServices form={form} services={services} staffList={staffList} dailySchedule={dailySchedule} loading={loading} />}

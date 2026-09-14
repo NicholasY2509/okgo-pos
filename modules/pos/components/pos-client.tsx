@@ -10,6 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { PosBookingDialog } from "./pos-booking-dialog";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { io } from "socket.io-client";
+import { toast } from "sonner";
 
 interface PosClientProps {
   branchId: string;

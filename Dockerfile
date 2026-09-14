@@ -41,6 +41,7 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/socket-server.js ./socket-server.js
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
@@ -60,6 +61,8 @@ COPY --chown=nextjs:nodejs <<'EOF' /app/start.sh
 #!/bin/sh
 echo "Syncing Prisma schema to database..."
 npx prisma db push --accept-data-loss
+echo "Starting Socket.io server..."
+node socket-server.js &
 echo "Starting Next.js server..."
 exec node server.js
 EOF

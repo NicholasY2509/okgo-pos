@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { createPosTransactionAction } from "../actions/pos-action";
+import { io } from "socket.io-client";
 
 export function usePosPayment(cart: any, branchId: string, paymentMethods: any[], onSuccess: () => void) {
   const [payment, setPayment] = useState({
@@ -62,7 +63,7 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
       if (voucherPm) {
         paymentsArray.push({
           paymentMethodId: voucherPm.id,
-          amount: Math.min(Number(cart.appliedVoucher.remainingCreditAmount), cart.totalAmount),
+          amount: cart.voucherNominalDiscount,
           voucherCode: cart.appliedVoucher.code
         });
       }
@@ -111,6 +112,19 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
       toast.error(res.error);
     } else {
       toast.success("Transaksi berhasil disimpan!");
+
+      // Notify kiosks
+      const socket = io(process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined);
+      cart.items.forEach((item: any) => {
+        if (item.staffId) {
+          socket.emit("service_assigned", {
+            staffId: item.staffId,
+            serviceName: item.name || "Layanan"
+          });
+        }
+      });
+      setTimeout(() => socket.disconnect(), 1000);
+
       onSuccess();
     }
   };

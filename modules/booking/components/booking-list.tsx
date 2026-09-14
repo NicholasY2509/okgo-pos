@@ -11,10 +11,10 @@ import { getBookingColumns } from "./booking-columns";
 import { BookingDetailDialog } from "./booking-detail-dialog";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-export function BookingList({ 
+export function BookingList({
   initialBookings,
-  initialFilters 
-}: { 
+  initialFilters
+}: {
   initialBookings: any[];
   initialFilters: { search: string; from?: Date; to?: Date; isHistory: boolean }
 }) {
@@ -118,10 +118,10 @@ export function BookingList({
               <Button type="button" variant="outline" onClick={handleResetFilter} title="Reset Filter">
                 <FilterX className="w-4 h-4" />
               </Button>
-              <Button 
-                type="button" 
-                variant={isHistory ? "default" : "outline"} 
-                onClick={() => setIsHistory(!isHistory)} 
+              <Button
+                type="button"
+                variant={isHistory ? "default" : "outline"}
+                onClick={() => setIsHistory(!isHistory)}
                 title={isHistory ? "Tampilkan Booking Aktif" : "Tampilkan Riwayat Booking"}
               >
                 {isHistory ? <LayoutList className="w-4 h-4 mr-2" /> : <History className="w-4 h-4 mr-2" />}

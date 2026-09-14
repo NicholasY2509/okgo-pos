@@ -7,7 +7,7 @@ export function usePosVoucherDialog(onRedeemVoucher: (voucher: any) => void) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [code, setCode] = useState("");
-  const { customerId, appliedVoucher, applyVoucher, removeVoucher } = usePosCart();
+  const { customerId, appliedVoucher, applyVoucher, removeVoucher, items: cartItems, updateItem } = usePosCart();
   const { setCustomerId } = usePosStoreActions();
 
   const [ownedVouchers, setOwnedVouchers] = useState<any[]>([]);
@@ -51,10 +51,22 @@ export function usePosVoucherDialog(onRedeemVoucher: (voucher: any) => void) {
     const isServiceVoucher = !!voucher.voucherPacket?.productId;
 
     if (isServiceVoucher) {
-      if (voucher.remainingVisitCount != null && voucher.remainingVisitCount > 0) {
-        // Service voucher -> trigger redemption flow (ServiceSelectionDialog)
-        onRedeemVoucher(voucher);
-        setOpen(false);
+      const timesApplied = cartItems.filter(item => item.customerVoucherId === voucher.id).length;
+
+      if (voucher.remainingVisitCount != null && voucher.remainingVisitCount > timesApplied) {
+        const matchingItem = cartItems.find(item => item.serviceId === voucher.voucherPacket.productId && !item.isVoucherRedemption);
+        if (matchingItem) {
+          updateItem(matchingItem.cartId, {
+            discountAmount: matchingItem.unitPrice,
+            isVoucherRedemption: true,
+            customerVoucherId: voucher.id,
+            voucherCode: voucher.code
+          });
+          toast.success("Voucher layanan berhasil diterapkan!");
+          setOpen(false);
+        } else {
+          toast.error("Layanan untuk voucher ini tidak ada di keranjang atau sudah menggunakan voucher.");
+        }
       } else {
         toast.error("Kuota kunjungan voucher ini sudah habis.");
       }
@@ -103,6 +115,15 @@ export function usePosVoucherDialog(onRedeemVoucher: (voucher: any) => void) {
     setOpen(false);
   };
 
+  const filteredOwnedVouchers = ownedVouchers.filter(v => {
+    if (!v.voucherPacket?.productId) return true;
+
+    const eligibleItems = cartItems.filter(item => item.serviceId === v.voucherPacket.productId && !item.isVoucherRedemption);
+    const timesApplied = cartItems.filter(item => item.customerVoucherId === v.id).length;
+
+    return eligibleItems.length > 0 && (v.remainingVisitCount == null || v.remainingVisitCount > timesApplied);
+  });
+
   return {
     open,
     handleOpen,
@@ -112,7 +133,7 @@ export function usePosVoucherDialog(onRedeemVoucher: (voucher: any) => void) {
     customerId,
     setCustomerId,
     appliedVoucher,
-    ownedVouchers,
+    ownedVouchers: filteredOwnedVouchers,
     isLoadingVouchers,
     handleUseVoucher,
     handleApplyByCode,

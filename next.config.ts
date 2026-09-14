@@ -10,6 +10,14 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
   output: "standalone",
   allowedDevOrigins: ["192.168.1.76"],
+  async rewrites() {
+    return [
+      {
+        source: '/socket.io/:path*',
+        destination: 'http://127.0.0.1:3001/socket.io/:path*',
+      },
+    ]
+  },
 } as any
 
 export default withSerwist(nextConfig)

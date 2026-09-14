@@ -9,7 +9,8 @@ import { CartCheckout } from "./cart/cart-checkout";
 import { PosPromoDialog } from "./cart/pos-promo-dialog";
 import { PosVoucherDialog } from "./cart/pos-voucher-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { usePosCart } from "../stores/pos-store";
+import { usePosCart, usePosStoreSelector } from "../stores/pos-store";
+import { useEffect } from "react";
 
 interface PosCartProps {
   onCheckout: () => void;
@@ -18,7 +19,16 @@ interface PosCartProps {
 }
 
 export function PosCart({ onCheckout, branchId, onRedeemVoucher }: PosCartProps) {
-  const { isVipUpgrade, setIsVipUpgrade } = usePosCart();
+  const { isVipUpgrade, setIsVipUpgrade, appliedPromo, removePromo } = usePosCart();
+  const cartItems = usePosStoreSelector((state) => state.items);
+  const hasVoucherPacket = cartItems.some(i => i.type === "VOUCHER_PACKET");
+
+  useEffect(() => {
+    if (hasVoucherPacket) {
+      if (isVipUpgrade) setIsVipUpgrade(false);
+      if (appliedPromo) removePromo();
+    }
+  }, [hasVoucherPacket, isVipUpgrade, appliedPromo, setIsVipUpgrade, removePromo]);
   
   return (
     <div className="flex-1 bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col h-full relative overflow-hidden">
@@ -30,18 +40,19 @@ export function PosCart({ onCheckout, branchId, onRedeemVoucher }: PosCartProps)
 
       <div className="border-t border-border pt-3 mt-2 bg-card relative z-10 shrink-0 space-y-3">
         <div className="flex flex-col gap-1">
-          <PosPromoDialog branchId={branchId} />
-          <PosVoucherDialog onRedeemVoucher={onRedeemVoucher} />
+          <PosPromoDialog branchId={branchId} disabled={hasVoucherPacket} />
+          <PosVoucherDialog onRedeemVoucher={onRedeemVoucher} disabled={hasVoucherPacket} />
           
           <div className="flex items-center space-x-2 mt-2 px-2">
             <Checkbox 
               id="vip-upgrade" 
               checked={isVipUpgrade} 
               onCheckedChange={(checked) => setIsVipUpgrade(checked === true)} 
+              disabled={hasVoucherPacket}
             />
             <label
               htmlFor="vip-upgrade"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-amber-600"
+              className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${hasVoucherPacket ? "text-muted-foreground" : "cursor-pointer text-amber-600"}`}
             >
               Upgrade ke VIP (+ Rp 80.000)
             </label>

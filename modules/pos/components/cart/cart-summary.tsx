@@ -7,10 +7,10 @@ export function CartSummary() {
 
   return (
     <div className="space-y-1.5 mb-3">
-      <div className="flex justify-between text-sm font-medium">
+      {/* <div className="flex justify-between text-sm font-medium">
         <span className="text-muted-foreground">Subtotal</span>
         <span className="text-foreground">Rp {subtotal.toLocaleString('id-ID')}</span>
-      </div>
+      </div> */}
       {discountTotal > 0 && (
         <div className="flex justify-between text-sm font-medium text-primary bg-primary/5 p-1.5 rounded-md px-2 -mx-2">
           <span>Promo / Diskon Item</span>

@@ -11,9 +11,10 @@ import { Badge } from "@/components/ui/badge";
 
 interface PosPromoDialogProps {
   branchId: string;
+  disabled?: boolean;
 }
 
-export function PosPromoDialog({ branchId }: PosPromoDialogProps) {
+export function PosPromoDialog({ branchId, disabled }: PosPromoDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [eligiblePromos, setEligiblePromos] = useState<any[]>([]);
@@ -58,7 +59,7 @@ export function PosPromoDialog({ branchId }: PosPromoDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full justify-between items-center bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary group">
+        <Button variant="outline" className="w-full justify-between items-center bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary group" disabled={disabled}>
           <div className="flex items-center gap-2">
             <BadgePercent className="w-4 h-4" />
             {appliedPromo ? "Promo Digunakan" : "Gunakan Promo"}

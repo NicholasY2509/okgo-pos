@@ -2,6 +2,8 @@ import { Store, Box, Users, Calculator, ReceiptText, CalendarClock, LogOut, Chev
 import { PosStoreProvider } from "@/modules/pos/stores/pos-store";
 import Link from "next/link";
 import { TenantLogoutButton } from "@/components/tenant-logout-button";
+import { BranchService } from "@/modules/branch/services/branch-service";
+import { GlobalNotificationListener } from "@/components/global-notification-listener";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +19,11 @@ export default async function TenantLayout({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant } = await params;
+  const branch = await BranchService.getBranchBySubdomain(tenant);
+
   return (
     <div className="flex min-h-screen flex-col bg-muted/20">
+      {branch && <GlobalNotificationListener branchId={branch.id} />}
       <header className="bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 border-b border-border w-full">
         <div className="flex h-16 items-center px-6 gap-8">
           <div className="flex items-center gap-2.5">

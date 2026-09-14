@@ -7,11 +7,12 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
+     * - socket.io (WebSocket connections)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - static files with extensions (e.g., .webp, .png, .jpg)
      */
-    '/((?!api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|favicon.ico|sitemap.xml|robots.txt).*)',
+    '/((?!api|socket\\.io|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
 }
 
