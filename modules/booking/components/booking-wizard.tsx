@@ -31,7 +31,7 @@ export function BookingWizard() {
   if (isSuccess) {
     return (
       <div className="flex flex-col items-center justify-center py-32 px-6 text-center animate-in fade-in duration-1000">
-        <h2 className="text-2xl  md:text-4xl font-display font-light tracking-[0.2em] uppercase text-foreground mb-4">
+        <h2 className="text-xl  md:text-4xl font-light tracking-[0.2em] uppercase text-foreground mb-4">
           Booking Berhasil
         </h2>
         <p className="text-muted-foreground font-light max-w-sm text-xs md:text-sm leading-loose mb-12">

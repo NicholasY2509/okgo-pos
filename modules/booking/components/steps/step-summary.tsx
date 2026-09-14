@@ -141,7 +141,7 @@ export function StepSummary({ form, services, staffList, branches }: StepSummary
             <div>
               <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-1 md:mb-2">Pemesan</div>
               <div className="font-light text-foreground text-base md:text-xl">{data.customerName}</div>
-              <div className="text-[10px] md:text-xs text-muted-foreground font-light mt-0.5 md:mt-1">{data.customerPhone}</div>
+              <div className="text-xs md:text-xs text-muted-foreground font-light mt-0.5 md:mt-1">{data.customerPhone}</div>
             </div>
             <div className="md:mt-8">
               <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-1 md:mb-2">Cabang</div>
@@ -151,12 +151,11 @@ export function StepSummary({ form, services, staffList, branches }: StepSummary
 
           <div className="md:col-span-1">
             <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-1 md:mb-2">Waktu Kunjungan</div>
-            <div className="font-light text-foreground text-lg md:text-2xl tracking-wide">
-              {format(parsedDate, "EEEE, d MMMM yyyy", { locale: id })}
-            </div>
-            <div className="text-base md:text-lg font-light text-primary mt-1 flex items-center gap-1.5 md:gap-2">
-              <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 opacity-70" />
+            <div className="text-xl text-foreground font-light flex items-center gap-1.5 md:gap-2">
               {timeString}
+            </div>
+            <div className="text-base text-muted-foreground font-light">
+              {format(parsedDate, "EEEE, d MMMM yyyy", { locale: id })}
             </div>
           </div>
         </div>

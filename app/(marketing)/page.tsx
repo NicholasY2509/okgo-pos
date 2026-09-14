@@ -224,7 +224,7 @@ export default function MarketingPage() {
             {/* <motion.div variants={itemVariants} className="inline-flex items-center gap-2 text-muted-foreground text-xs font-medium uppercase tracking-[0.3em] mb-10">
             Deep Relaxation & Sleep Therapy
           </motion.div> */}
-            <motion.h1 variants={itemVariants} className="text-6xl md:text-6xl font-display font-light text-center sm:text-start leading-[1.1] tracking-tight mb-6 text-foreground">
+            <motion.h1 variants={itemVariants} className="text-6xl md:text-7xl font-display font-light text-center sm:text-start leading-[1.1] tracking-tight mb-6 text-foreground">
               Lepas Lelah<br />
               Tidur Lebih <span className="text-primary italic font-light">Nyenyak</span>
             </motion.h1>
@@ -327,33 +327,37 @@ export default function MarketingPage() {
       <section id="layanan" className="py-40 px-6">
         <div className="max-w-6xl mx-auto reveal-section">
           <div className="text-center mb-24">
-            <h2 className="text-5xl font-display font-light text-foreground mb-6">Menu Layanan</h2>
-            <p className="text-muted-foreground max-w-md mx-auto font-light text-lg">Pilihan perawatan terbaik untuk relaksasi tubuh dan pikiran Anda.</p>
+            <h2 className="text-6xl font-display font-light text-foreground mb-3">Menu Layanan</h2>
+            <p className="text-muted-foreground max-w-lg mx-auto font-light text-base">Pilihan perawatan terbaik untuk relaksasi tubuh dan pikiran Anda.</p>
           </div>
 
-          <div className="max-w-4xl mx-auto flex flex-col gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-w-7xl mx-auto">
             {featuredServices.length === 0 ? (
-              <div className="w-full text-center py-20 bg-muted/20 rounded-[2rem] border border-dashed border-border/50">
+              <div className="w-full col-span-full text-center py-20 bg-muted/20 border border-dashed border-border/50">
                 <p className="text-muted-foreground font-light text-lg">Belum ada layanan yang ditambahkan.</p>
               </div>
             ) : (
               featuredServices.map((service, i) => (
                 <motion.div
                   key={i}
-                  whileHover={{ scale: 1.02 }}
-                  className="group flex flex-col md:flex-row justify-between items-start md:items-center p-8 md:p-10 rounded-[2rem] border border-border/40 hover:border-primary/50 bg-background hover:bg-muted/10 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 cursor-pointer"
+                  whileHover={{ y: -4 }}
+                  className="group relative flex flex-col justify-between overflow-hidden bg-black shadow-lg hover:shadow-2xl transition-all duration-700 cursor-pointer min-h-[550px]"
                 >
-                  <div className="flex-1 pr-0 md:pr-12">
-                    <div className="flex items-start md:items-center gap-4 mb-4">
-                      <span className="text-primary/50 font-mono text-sm pt-1 md:pt-0">{(i + 1).toString().padStart(2, '0')}</span>
-                      <h3 className="text-2xl md:text-3xl font-display font-light text-foreground group-hover:text-primary transition-colors">{service.title}</h3>
-                    </div>
-                    <p className="text-muted-foreground text-base leading-relaxed font-light pl-0 md:pl-9 mb-6 md:mb-0">{service.desc}</p>
+                  <img
+                    src={service.img}
+                    alt={service.title}
+                    className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
+                  />
+                  <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/80 to-transparent"></div>
+                  <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/90 to-transparent"></div>
+
+                  <div className="relative p-8 z-10 w-full transform group-hover:translate-y-1 transition-transform duration-700 ease-out">
+                    <h3 className="text-3xl md:text-2xl font-display font-light text-white/90 group-hover:text-white tracking-wide">{service.title}</h3>
+                    <div className="w-8 h-[1px] bg-white/30 mt-6 group-hover:w-16 group-hover:bg-white/80 transition-all duration-700 ease-out"></div>
                   </div>
 
-                  <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto border-t md:border-t-0 border-border/50 pt-6 md:pt-0 min-w-[150px]">
-                    <span className="text-xl md:text-2xl font-light text-foreground mb-0 md:mb-3">{service.price}</span>
-                    <span className="text-muted-foreground text-xs uppercase tracking-widest flex items-center gap-2"><Clock className="w-3 h-3 stroke-1" /> {service.time}</span>
+                  <div className="relative p-8 z-10 w-full flex items-end justify-between transform group-hover:-translate-y-1 transition-transform duration-700 ease-out">
+                    <span className="text-xl md:text-2xl font-light text-white/80 tracking-widest">{service.price}</span>
                   </div>
                 </motion.div>
               ))
@@ -388,11 +392,15 @@ export default function MarketingPage() {
       {/* FOOTER */}
       <footer className="bg-background py-24 px-6 border-t border-border/30 text-center relative">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-          <p className="font-display text-2xl font-light text-foreground mb-8 tracking-[0.2em]">NYENYAK</p>
-          <div className="flex flex-col md:flex-row gap-8 md:gap-16 text-xs uppercase tracking-widest text-muted-foreground mb-16">
-            <span className="flex items-center justify-center gap-3"><MapPin className="w-4 h-4 stroke-1" /> Medan, Indonesia</span>
-            <span className="flex items-center justify-center gap-3"><Clock className="w-4 h-4 stroke-1" /> 10.00 - 22.00</span>
-            <span className="flex items-center justify-center gap-3"><Phone className="w-4 h-4 stroke-1" /> +62 812 3456 7890</span>
+          <p className="text-2xl font-extralight text-foreground mb-8 tracking-[0.2em]">NYENYAK</p>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-xs uppercase tracking-widest text-muted-foreground mb-16">
+            <span>Medan, Indonesia</span>
+            <span className="hidden md:inline-block text-muted-foreground/40">•</span>
+            <span className="block md:hidden w-4 h-[1px] bg-muted-foreground/20"></span>
+            <span>09.00 - 22.00</span>
+            <span className="hidden md:inline-block text-muted-foreground/40">•</span>
+            <span className="block md:hidden w-4 h-[1px] bg-muted-foreground/20"></span>
+            <span>+62 812 3456 7890</span>
           </div>
           <p className="text-muted-foreground/60 text-xs font-light">&copy; {new Date().getFullYear()} Nyenyak. All Rights Reserved.</p>
         </div>
