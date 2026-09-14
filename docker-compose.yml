@@ -12,6 +12,8 @@ services:
       - CRON_SECRET=${CRON_SECRET:-okgo-secret-cron-key-123}
     ports:
       - "3000:3000"
+    volumes:
+      - ./uploads:/app/public/uploads
     depends_on:
       - db
     networks:
