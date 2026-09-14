@@ -9,6 +9,9 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  images: {
+    unoptimized: true,
+  },
   allowedDevOrigins: ["192.168.1.76"],
   async rewrites() {
     return [
