@@ -31,8 +31,22 @@ const fontDisplay = Cormorant_Garamond({
   display: "swap",
 })
 
-export const metadata = {
-  title: "Nyenyak",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s | Nyenyak Healing Point",
+    default: "Nyenyak Healing Point",
+  },
+  description: "Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.",
+  keywords: ["Nyenyak Healing Point", "spa", "massage", "relaksasi", "terapi tidur", "medan"],
+  openGraph: {
+    title: "Nyenyak Healing Point",
+    description: "Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda.",
+    type: "website",
+    locale: "id_ID",
+    siteName: "Nyenyak Healing Point",
+  },
 };
 
 export const viewport = {
