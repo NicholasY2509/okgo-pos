@@ -61,6 +61,7 @@ export default NextAuth(authConfig).auth((req) => {
     }
     // Rewrite admin.localhost:3000/ to /admin/
     const rewriteUrl = req.nextUrl.clone()
+    rewriteUrl.host = hostname // Force the rewrite to stay on the requested subdomain
     rewriteUrl.pathname = `/admin${url.pathname}`
     return NextResponse.rewrite(rewriteUrl)
   }
@@ -86,6 +87,7 @@ export default NextAuth(authConfig).auth((req) => {
   // Rewrite to the branch app directory, passing the subdomain
   // e.g., downtown.localhost:3000/login -> /[tenant]/login
   const rewriteUrl = req.nextUrl.clone()
+  rewriteUrl.host = hostname // Force the rewrite to stay on the requested subdomain
   rewriteUrl.pathname = `/${subdomain}${url.pathname}`
   return NextResponse.rewrite(rewriteUrl)
 })
