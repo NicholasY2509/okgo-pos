@@ -295,14 +295,14 @@ export default function MarketingPage() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                    className={`w-full ${textWidth} flex flex-col justify-center p-12 bg-white/[0.02]`}
+                    className={`w-full ${textWidth} flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white/[0.02]`}
                   >
-                    <h3 className="text-4xl md:text-6xl font-display font-light text-foreground mb-6">{service.title}</h3>
-                    <p className="text-muted-foreground text-lg mb-8 leading-relaxed font-light">{service.desc}</p>
-                    <div className="flex items-center gap-6 mt-auto md:mt-0">
-                      <span className="text-2xl font-light text-foreground tracking-widest">{service.price}</span>
+                    <h3 className="text-3xl sm:text-4xl lg:text-6xl font-display font-light text-foreground mb-4 md:mb-6">{service.title}</h3>
+                    <p className="text-muted-foreground text-sm sm:text-base lg:text-lg mb-6 md:mb-8 leading-relaxed font-light">{service.desc}</p>
+                    <div className="flex items-center gap-4 md:gap-6 mt-auto md:mt-0">
+                      <span className="text-xl lg:text-2xl font-light text-foreground tracking-widest">{service.price}</span>
                       <div className="h-[1px] flex-1 bg-border/50"></div>
-                      <span className="text-sm text-muted-foreground uppercase tracking-widest">{service.time}</span>
+                      <span className="text-[10px] sm:text-xs md:text-sm text-muted-foreground uppercase tracking-widest">{service.time}</span>
                     </div>
                   </motion.div>
                 </div>
