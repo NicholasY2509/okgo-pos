@@ -81,13 +81,35 @@ export default NextAuth(authConfig).auth((req) => {
     // Authenticated users should not access login
     if (isAuth) {
       const redirectUrl = req.nextUrl.clone()
-      redirectUrl.pathname = subdomain && subdomain !== "www" ? "/pos" : "/"
-
+      if (subdomain === "admin") {
+        // / will be caught by the admin block below and rewritten to /admin/
+        redirectUrl.pathname = "/"
+      } else if (subdomain && subdomain !== "www") {
+        redirectUrl.pathname = "/pos"
+      } else {
+        redirectUrl.pathname = "/"
+      }
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Unauthenticated users can access the global login page
-    return NextResponse.next()
+    /*
+     * There is no root app/login/page.tsx.
+     * Login pages live under app/[tenant]/login and app/admin/login.
+     * Rewrite /login to the correct location based on the subdomain.
+     */
+    if (subdomain && subdomain !== "www") {
+      // tenant subdomain  → /[tenant]/login
+      // admin subdomain   → /admin/login
+      const loginRewriteUrl = req.nextUrl.clone()
+      loginRewriteUrl.pathname =
+        subdomain === "admin"
+          ? "/admin/login"
+          : `/${subdomain}/login`
+      return NextResponse.rewrite(loginRewriteUrl)
+    }
+
+    // Root domain has no login page — redirect to marketing home
+    return NextResponse.redirect(new URL("/", req.nextUrl.origin))
   }
 
   /*
