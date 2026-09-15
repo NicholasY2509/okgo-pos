@@ -28,7 +28,14 @@ export default NextAuth(authConfig).auth((req) => {
   //   admin.nyenyak.com
   //   nyenyak.com
   //   localhost:3000
-  const hostname = req.headers.get("host") || ""
+  // Cloudflare (and other proxies) preserve the original public hostname
+  // in the `x-forwarded-host` header while overwriting `host` with the
+  // origin server address.  Prefer `x-forwarded-host` when it is present
+  // so subdomain detection works correctly behind Cloudflare.
+  const hostname =
+    req.headers.get("x-forwarded-host") ||
+    req.headers.get("host") ||
+    ""
 
   let subdomain = ""
 
