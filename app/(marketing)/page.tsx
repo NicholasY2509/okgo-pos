@@ -31,7 +31,7 @@ export default function MarketingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [offers, setOffers] = useState<(MarketingOfferInput & { id: string })[]>([]);
   const [featuredServices, setFeaturedServices] = useState<any[]>([]);
-  const [bgImage, setBgImage] = useState("bg-1.webp");
+  const [bgImage, setBgImage] = useState("bg-3.webp");
 
   useEffect(() => {
     // setTheme("light");
@@ -61,9 +61,6 @@ export default function MarketingPage() {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     handleScroll();
-
-    const bgs = ["bg-1.webp", "bg-2.webp", "bg-3.webp"];
-    setBgImage(bgs[Math.floor(Math.random() * bgs.length)]);
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, [setTheme]);
@@ -191,12 +188,10 @@ export default function MarketingPage() {
               initial={false}
               animate={{ opacity: isScrolled ? 1 : 0, y: isScrolled ? 0 : -10 }}
               transition={{ duration: 0.3 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
               onClick={(e) => scrollTo(e, 'reservasi')}
-              className={`bg-foreground text-background px-5 py-1.5 rounded-full text-xs font-medium tracking-wide cursor-pointer hover:bg-foreground/90 transition-colors ${isScrolled ? "pointer-events-auto" : "pointer-events-none"}`}
+              className={`group inline-flex items-center justify-center border border-foreground/30 hover:bg-foreground hover:text-background px-6 py-2.5 rounded-none gap-2 text-foreground text-xs uppercase tracking-[0.2em] font-medium cursor-pointer transition-all duration-500 ${isScrolled ? "pointer-events-auto" : "pointer-events-none"}`}
             >
-              Pesan Sekarang
+              Booking Jadwal
             </motion.button>
           </div>
         </div>
@@ -224,19 +219,19 @@ export default function MarketingPage() {
             {/* <motion.div variants={itemVariants} className="inline-flex items-center gap-2 text-muted-foreground text-xs font-medium uppercase tracking-[0.3em] mb-10">
             Deep Relaxation & Sleep Therapy
           </motion.div> */}
-            <motion.h1 variants={itemVariants} className="text-6xl md:text-7xl font-display font-light text-center sm:text-start leading-[1.1] tracking-tight mb-6 text-foreground">
+            <motion.h1 variants={itemVariants} className="text-6xl md:text-7xl font-display font-light text-center sm:text-start leading-[1.1] tracking-tight mb-2 text-foreground">
               Lepas Lelah<br />
               Tidur Lebih <span className="text-primary italic font-light">Nyenyak</span>
             </motion.h1>
             <motion.p variants={itemVariants} className="text-foreground/80 md:text-muted-foreground text-xs sm:text-base text-center sm:text-start font-light mb-10 leading-relaxed max-w-xl">
-              Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.
+              Relaksasi mendalam oleh terapis profesional
             </motion.p>
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-8 items-center sm:items-start">
               <motion.button
                 onClick={(e) => scrollTo(e, 'reservasi')}
-                className="group inline-flex items-center justify-center gap-4 border border-foreground/30 text-foreground px-10 py-4 rounded-full text-xs uppercase tracking-[0.2em] font-light hover:bg-foreground hover:text-background transition-all duration-500 cursor-pointer"
+                className="group relative inline-flex items-center justify-center gap-3 text-foreground text-sm md:text-base uppercase tracking-[0.2em] font-light pb-3 cursor-pointer after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-12 after:bg-foreground/50 hover:after:w-full hover:after:bg-foreground after:transition-all after:duration-500 after:ease-out"
               >
-                Booking Jadwal <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300 stroke-[1]" />
+                Booking Jadwal <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-500 ease-out stroke-1" />
               </motion.button>
               {/* <motion.button
               onClick={(e) => scrollTo(e, 'voucher')}
@@ -249,142 +244,94 @@ export default function MarketingPage() {
         </div>
       </header>
 
-      {/* PROMO BUNDLE VOUCHER */}
-      {/* <section id="voucher" className="py-40 px-6 bg-muted/30">
-        <div className="max-w-5xl mx-auto reveal-section">
-          <div className="text-center mb-12">
-            <h2 className="text-5xl font-display font-light text-foreground mb-4">Penawaran Eksklusif</h2>
-            <p className="text-muted-foreground max-w-md mx-auto font-light text-lg">Hadiahkan relaksasi premium untuk diri sendiri atau orang terkasih.</p>
-          </div>
-          {offers.length === 0 ? (
-            <div className="bg-background rounded-[2rem] p-12 shadow-sm border border-border/50 max-w-4xl mx-auto text-center">
-              <p className="text-muted-foreground leading-relaxed font-light text-lg">
-                Tidak ada penawaran sekarang, terus pantau website Nyenyak untuk penawaran menarik!
-              </p>
-            </div>
-          ) : (
-            <div className="max-w-4xl mx-auto relative group">
-              <Carousel
-                opts={{ align: "center", loop: true }}
-                plugins={[
-                  Autoplay({
-                    delay: 5000,
-                  }),
-                ]}
-                className="w-full"
-              >
-                <CarouselContent>
-                  {offers.map((offer) => (
-                    <CarouselItem key={offer.id}>
-                      <div className="bg-background rounded-[2rem] p-1 shadow-sm border border-border/50 flex flex-col md:flex-row mx-2 h-full">
-                        <div className="p-12 md:w-3/5 flex flex-col justify-center">
-                          <h3 className="text-5xl font-display font-light text-foreground mb-6">{offer.title}</h3>
-                          {offer.description && (
-                            <p className="text-muted-foreground leading-relaxed font-light mb-10 whitespace-pre-wrap">
-                              {offer.description}
-                            </p>
-                          )}
-                          <ul className="space-y-4 text-sm text-foreground/80 font-light">
-                            {offer.features?.split('\n').filter(Boolean).map((item, i) => (
-                              <li key={i} className="flex items-start">
-                                <CheckCircle2 className="w-5 h-5 text-primary/60 mr-4 shrink-0 stroke-1" /> {item.trim()}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="p-12 md:w-2/5 flex flex-col justify-center items-center text-center bg-muted/20 rounded-[1.8rem] m-2">
-                          <p className="text-muted-foreground text-xs tracking-[0.2em] mb-2 uppercase">Harga Spesial</p>
-                          {offer.normalPrice && (
-                            <p className="text-muted-foreground line-through mb-8">Rp {Number(offer.normalPrice).toLocaleString('id-ID')}</p>
-                          )}
-                          <p className="text-5xl font-light text-foreground font-display mb-4">Rp {Number(offer.discountPrice).toLocaleString('id-ID')}</p>
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={orderVoucher}
-                            className="w-full bg-foreground text-background font-medium tracking-wide py-4 px-6 rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer mt-8"
-                          >
-                            Beli Sekarang
-                          </motion.button>
-                        </div>
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                {offers.length > 1 && (
-                  <div className="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <CarouselPrevious className="-left-6 md:-left-12 border-border/50 text-foreground/70 hover:text-foreground hover:bg-background/80 bg-background/50 backdrop-blur-md" />
-                    <CarouselNext className="-right-6 md:-right-12 border-border/50 text-foreground/70 hover:text-foreground hover:bg-background/80 bg-background/50 backdrop-blur-md" />
-                  </div>
-                )}
-              </Carousel>
-            </div>
-          )}
+      {/* TENTANG KAMI */}
+      <section id="tentang" className="py-40 px-6 bg-background">
+        <div className="max-w-5xl mx-auto reveal-section text-center">
+          <h2 className="text-4xl md:text-6xl font-display font-light text-foreground mb-10 leading-[1.2]">
+            Kembalikan <span className="italic text-primary">Keseimbangan</span> Anda.
+          </h2>
+          <div className="w-12 h-[1px] bg-border mx-auto mb-10"></div>
+          <p className="text-muted-foreground font-light text-lg md:text-xl leading-relaxed max-w-3xl mx-auto">
+            Di Nyenyak, kami percaya bahwa istirahat yang berkualitas adalah pondasi untuk hidup yang lebih baik. Melalui sentuhan terapis profesional, teknik pijat tradisional yang disempurnakan, dan suasana yang menenangkan, kami menghadirkan pengalaman relaksasi yang memulihkan energi Anda sepenuhnya.
+          </p>
         </div>
-      </section> */}
+      </section>
 
       {/* LAYANAN REGULER */}
-      <section id="layanan" className="py-40 px-6">
-        <div className="max-w-6xl mx-auto reveal-section">
+      <section id="layanan" className="py-40">
+        <div className="max-w-6xl mx-auto reveal-section px-6">
           <div className="text-center mb-24">
-            <h2 className="text-6xl font-display font-light text-foreground mb-3">Menu Layanan</h2>
+            <h2 className="text-5xl font-display font-light text-foreground mb-3">Menu Layanan</h2>
             <p className="text-muted-foreground max-w-lg mx-auto font-light text-base">Pilihan perawatan terbaik untuk relaksasi tubuh dan pikiran Anda.</p>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-w-7xl mx-auto">
-            {featuredServices.length === 0 ? (
-              <div className="w-full col-span-full text-center py-20 bg-muted/20 border border-dashed border-border/50">
-                <p className="text-muted-foreground font-light text-lg">Belum ada layanan yang ditambahkan.</p>
-              </div>
-            ) : (
-              featuredServices.map((service, i) => (
-                <motion.div
-                  key={i}
-                  whileHover={{ y: -4 }}
-                  className="group relative flex flex-col justify-between overflow-hidden bg-black shadow-lg hover:shadow-2xl transition-all duration-700 cursor-pointer min-h-[550px]"
-                >
-                  <img
-                    src={service.img}
-                    alt={service.title}
-                    className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out"
-                  />
-                  <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/80 to-transparent"></div>
-                  <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/90 to-transparent"></div>
+        <div className="flex flex-col w-full">
+          {featuredServices.length === 0 ? (
+            <div className="w-full max-w-7xl mx-auto text-center py-20 bg-muted/20 border border-dashed border-border/50 px-6">
+              <p className="text-muted-foreground font-light text-lg">Belum ada layanan yang ditambahkan.</p>
+            </div>
+          ) : (
+            featuredServices.map((service, i) => {
+              const isEven = i % 2 === 0;
 
-                  <div className="relative p-8 z-10 w-full transform group-hover:translate-y-1 transition-transform duration-700 ease-out">
-                    <h3 className="text-3xl md:text-2xl font-display font-light text-white/90 group-hover:text-white tracking-wide">{service.title}</h3>
-                    <div className="w-8 h-[1px] bg-white/30 mt-6 group-hover:w-16 group-hover:bg-white/80 transition-all duration-700 ease-out"></div>
-                  </div>
+              // A consistent 55/45 split keeps it asymmetrical but visually balanced
+              const imageWidth = 'md:w-[55%]';
+              const textWidth = 'md:w-[45%]';
 
-                  <div className="relative p-8 z-10 w-full flex items-end justify-between transform group-hover:-translate-y-1 transition-transform duration-700 ease-out">
-                    <span className="text-xl md:text-2xl font-light text-white/80 tracking-widest">{service.price}</span>
-                  </div>
-                </motion.div>
-              ))
-            )}
-          </div>
+              return (
+                <div key={i} className={`flex flex-col md:flex-row ${!isEven ? 'md:flex-row-reverse' : ''} w-full min-h-[500px] overflow-hidden group`}>
+                  <motion.div
+                    initial={{ opacity: 0, x: isEven ? -100 : 100 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className={`w-full ${imageWidth} relative min-h-[400px] md:min-h-full`}
+                  >
+                    <img
+                      src={service.img}
+                      alt={service.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, x: isEven ? 100 : -100 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                    className={`w-full ${textWidth} flex flex-col justify-center p-12 bg-white/[0.02]`}
+                  >
+                    <h3 className="text-4xl md:text-6xl font-display font-light text-foreground mb-6">{service.title}</h3>
+                    <p className="text-muted-foreground text-lg mb-8 leading-relaxed font-light">{service.desc}</p>
+                    <div className="flex items-center gap-6 mt-auto md:mt-0">
+                      <span className="text-2xl font-light text-foreground tracking-widest">{service.price}</span>
+                      <div className="h-[1px] flex-1 bg-border/50"></div>
+                      <span className="text-sm text-muted-foreground uppercase tracking-widest">{service.time}</span>
+                    </div>
+                  </motion.div>
+                </div>
+              );
+            })
+          )}
         </div>
       </section>
 
       {/* FORM RESERVASI */}
-      <section id="reservasi" className="py-40 px-6 bg-primary/5">
-        <div className="max-w-3xl mx-auto reveal-section">
-          <div className="bg-background p-10 md:p-16 rounded-[2rem] shadow-sm border border-border/50">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-display font-light text-foreground mb-4">Reservasi Jadwal</h2>
-              <p className="text-muted-foreground font-light">Amankan jadwal relaksasi Anda sekarang. Konfirmasi instan via WhatsApp.</p>
-            </div>
+      <section id="reservasi" className="py-40 flex items-center justify-center bg-background border-t border-white/[0.02]">
+        <div className="max-w-4xl mx-auto reveal-section text-center px-6">
+          <div className="text-center mb-24">
+            <h2 className="text-5xl font-display font-light text-foreground mb-3">Mulai Perjalanan Anda</h2>
+            <p className="text-muted-foreground max-w-lg mx-auto font-light text-base">Amankan waktu relaksasi Anda hari ini. Nikmati pengalaman premium dan konfirmasi instan langsung.</p>
+          </div>
 
-            <div className="flex justify-center mt-12">
-              <motion.a
-                href="/booking"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="group flex items-center justify-center gap-3 border border-foreground/20 text-foreground px-10 py-4 rounded-full font-light tracking-wide hover:border-primary hover:text-primary transition-colors cursor-pointer w-full sm:w-auto"
-              >
-                Buat Reservasi <ChevronRight className="w-5 h-5" />
-              </motion.a>
-            </div>
+          <div className="flex justify-center">
+            <motion.a
+              href="/booking"
+              className="group inline-flex items-center justify-center border border-foreground/30 hover:bg-foreground hover:text-background px-12 py-5 rounded-none text-foreground text-sm md:text-base uppercase tracking-[0.2em] font-medium cursor-pointer transition-all duration-500"
+            >
+              Buat Reservasi
+            </motion.a>
           </div>
         </div>
       </section>
@@ -392,7 +339,7 @@ export default function MarketingPage() {
       {/* FOOTER */}
       <footer className="bg-background py-24 px-6 border-t border-border/30 text-center relative">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-          <p className="text-2xl font-extralight text-foreground mb-8 tracking-[0.2em]">NYENYAK</p>
+          <p className="text-2xl font-extralight text-foreground mb-8 tracking-[0.2em] text-primary">NYENYAK</p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-xs uppercase tracking-widest text-muted-foreground mb-16">
             <span>Medan, Indonesia</span>
             <span className="hidden md:inline-block text-muted-foreground/40">•</span>
