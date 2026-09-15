@@ -60,7 +60,14 @@ export default NextAuth(authConfig).auth((req) => {
       return NextResponse.next()
     }
     // Rewrite admin.localhost:3000/ to /admin/
-    return NextResponse.rewrite(new URL(`/admin${url.pathname}`, req.url))
+    const protocol = req.headers.get("x-forwarded-proto") || "https"
+    const rewriteUrl = req.nextUrl.clone()
+
+    rewriteUrl.protocol = protocol
+    rewriteUrl.host = hostname
+    rewriteUrl.port = ""
+    rewriteUrl.pathname = `/admin${url.pathname}`
+    return NextResponse.rewrite(rewriteUrl)
   }
 
   // If there is no subdomain (or it's www), route normally (marketing site - public)
@@ -82,6 +89,11 @@ export default NextAuth(authConfig).auth((req) => {
   }
 
   // Rewrite to the branch app directory, passing the subdomain
-  // e.g., downtown.localhost:3000/login -> /[tenant]/login
-  return NextResponse.rewrite(new URL(`/${subdomain}${url.pathname}`, req.url))
+  const protocol = req.headers.get("x-forwarded-proto") || "https"
+  const rewriteUrl = req.nextUrl.clone()
+  rewriteUrl.protocol = protocol
+  rewriteUrl.host = hostname
+  rewriteUrl.port = ""
+  rewriteUrl.pathname = `/${subdomain}${url.pathname}`
+  return NextResponse.rewrite(rewriteUrl)
 })
