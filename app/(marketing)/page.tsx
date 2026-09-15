@@ -178,18 +178,13 @@ export default function MarketingPage() {
               />
             </a>
           </div>
-          {/* <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 space-x-12 font-medium text-sm text-muted-foreground tracking-wide">
-            <button onClick={(e) => scrollTo(e, 'layanan')} className="hover:text-foreground transition-colors cursor-pointer">Layanan</button>
-            <button onClick={(e) => scrollTo(e, 'voucher')} className="hover:text-foreground transition-colors cursor-pointer">Voucher</button>
-            <button onClick={(e) => scrollTo(e, 'reservasi')} className="hover:text-foreground transition-colors cursor-pointer">Reservasi</button>
-          </div> */}
-          <div className="w-auto md:w-62.5 flex justify-end ml-auto z-20">
+          <div className="w-auto md:w-62.5 flex items-center justify-end ml-auto z-20">
             <motion.button
               initial={false}
-              animate={{ opacity: isScrolled ? 1 : 0, y: isScrolled ? 0 : -10 }}
+              animate={{ opacity: isScrolled ? 1 : 0 }}
               transition={{ duration: 0.3 }}
               onClick={(e) => scrollTo(e, 'reservasi')}
-              className={`group inline-flex items-center justify-center border border-foreground/30 hover:bg-foreground hover:text-background px-6 py-2.5 rounded-none gap-2 text-foreground text-xs uppercase tracking-[0.2em] font-medium cursor-pointer transition-all duration-500 ${isScrolled ? "pointer-events-auto" : "pointer-events-none"}`}
+              className={`group inline-flex items-center justify-center border border-foreground/30 hover:bg-foreground hover:text-background px-4 py-2 md:px-6 md:py-2.5 rounded-none gap-2 text-foreground text-[10px] md:text-xs uppercase tracking-[0.2em] font-medium cursor-pointer transition-all duration-500 ${isScrolled ? "pointer-events-auto" : "pointer-events-none"}`}
             >
               Booking Jadwal
             </motion.button>
@@ -205,7 +200,7 @@ export default function MarketingPage() {
             className="hero-img absolute inset-[-5%] bg-cover bg-center md:bg-position-[90%_center]"
             style={{ backgroundImage: `url('/${bgImage}')` }}
           >
-            <div className="absolute inset-0 bg-background/60 md:bg-transparent bg-linear-to-r from-background from-20% via-background/80 via-50% to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-b from-background/90 via-background/60 to-background/90 md:bg-linear-to-r md:from-background md:from-20% md:via-background/80 md:via-50% md:to-transparent" />
           </div>
         </div>
 
@@ -229,7 +224,7 @@ export default function MarketingPage() {
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-8 items-center sm:items-start">
               <motion.button
                 onClick={(e) => scrollTo(e, 'reservasi')}
-                className="group relative inline-flex items-center justify-center gap-3 text-foreground text-sm md:text-base uppercase tracking-[0.2em] font-light pb-3 cursor-pointer after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-12 after:bg-foreground/50 hover:after:w-full hover:after:bg-foreground after:transition-all after:duration-500 after:ease-out"
+                className="group relative inline-flex items-center justify-center gap-3 text-foreground text-sm md:text-base uppercase tracking-[0.2em] font-light pb-3 cursor-pointer after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 sm:after:left-0 sm:after:translate-x-0 after:h-[1px] after:w-12 after:bg-foreground/50 hover:after:w-full hover:after:bg-foreground after:transition-all after:duration-500 after:ease-out"
               >
                 Booking Jadwal <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-500 ease-out stroke-1" />
               </motion.button>
@@ -251,7 +246,7 @@ export default function MarketingPage() {
             Kembalikan <span className="italic text-primary">Keseimbangan</span> Anda.
           </h2>
           <div className="w-12 h-[1px] bg-border mx-auto mb-10"></div>
-          <p className="text-muted-foreground font-light text-lg md:text-xl leading-relaxed max-w-3xl mx-auto">
+          <p className="text-muted-foreground font-light text-sm md:text-xl leading-relaxed max-w-3xl mx-auto">
             Di Nyenyak, kami percaya bahwa istirahat yang berkualitas adalah pondasi untuk hidup yang lebih baik. Melalui sentuhan terapis profesional, teknik pijat tradisional yang disempurnakan, dan suasana yang menenangkan, kami menghadirkan pengalaman relaksasi yang memulihkan energi Anda sepenuhnya.
           </p>
         </div>
