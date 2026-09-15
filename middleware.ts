@@ -98,17 +98,18 @@ export default NextAuth(authConfig).auth((req) => {
     /*
      * There is no root app/login/page.tsx.
      * Login pages live under app/[tenant]/login and app/admin/login.
-     * Rewrite /login to the correct location based on the subdomain.
+     * Rewrite /login → /{subdomain}/login so Next.js file-system router
+     * finds the correct page.
+     * Use req.nextUrl.clone() so the rewrite is always same-origin.
      */
     if (subdomain && subdomain !== "www") {
-      const loginPath =
-        subdomain === "admin"
-          ? "/admin/login"
-          : `/${subdomain}/login`
-      return NextResponse.rewrite(new URL(loginPath, baseUrl))
+      const loginRewrite = req.nextUrl.clone()
+      loginRewrite.pathname =
+        subdomain === "admin" ? "/admin/login" : `/${subdomain}/login`
+      return NextResponse.rewrite(loginRewrite)
     }
 
-    // Root domain has no login page — redirect to marketing home
+    // Root domain has no login page — send to marketing home
     return NextResponse.redirect(new URL("/", baseUrl))
   }
 
@@ -149,7 +150,9 @@ export default NextAuth(authConfig).auth((req) => {
      *        ↓
      * /admin/users
      */
-    return NextResponse.rewrite(new URL(`/admin${url.pathname}`, baseUrl))
+    const adminRewrite = req.nextUrl.clone()
+    adminRewrite.pathname = `/admin${url.pathname}`
+    return NextResponse.rewrite(adminRewrite)
   }
 
   /*
@@ -195,5 +198,7 @@ export default NextAuth(authConfig).auth((req) => {
    *        ↓
    * /juanda/orders
    */
-  return NextResponse.rewrite(new URL(`/${subdomain}${url.pathname}`, baseUrl))
+  const tenantRewrite = req.nextUrl.clone()
+  tenantRewrite.pathname = `/${subdomain}${url.pathname}`
+  return NextResponse.rewrite(tenantRewrite)
 })
