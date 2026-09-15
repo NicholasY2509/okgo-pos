@@ -34,9 +34,16 @@ const fontDisplay = Cormorant_Garamond({
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.nyenyak.com"),
   title: {
     template: "%s | Nyenyak Healing Point",
     default: "Nyenyak Healing Point",
+  },
+  applicationName: "Nyenyak",
+  appleWebApp: {
+    title: "Nyenyak",
+    statusBarStyle: "default",
+    capable: true,
   },
   description: "Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.",
   keywords: ["Nyenyak Healing Point", "spa", "massage", "relaksasi", "terapi tidur", "medan"],
@@ -45,7 +52,7 @@ export const metadata: Metadata = {
     description: "Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda.",
     type: "website",
     locale: "id_ID",
-    siteName: "Nyenyak Healing Point",
+    siteName: "Nyenyak",
   },
 };
 
@@ -70,6 +77,18 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, fontSans.variable, fontHeading.variable, fontDisplay.variable, "font-sans")}
     >
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Nyenyak",
+              "alternateName": ["Nyenyak Healing Point", "Nyenyak Spa"],
+              "url": "https://www.nyenyak.com/"
+            })
+          }}
+        />
         <NextTopLoader color="#efb100" />
         <SessionProvider>
           <ThemeProvider>
