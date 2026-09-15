@@ -80,12 +80,8 @@ export default NextAuth(authConfig).auth((req) => {
   if (url.pathname.startsWith("/login")) {
     // Authenticated users should not access login
     if (isAuth) {
-      const redirectUrl = new URL(
-        subdomain && subdomain !== "www"
-          ? "/pos"
-          : "/",
-        req.url
-      )
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = subdomain && subdomain !== "www" ? "/pos" : "/"
 
       return NextResponse.redirect(redirectUrl)
     }
@@ -106,7 +102,8 @@ export default NextAuth(authConfig).auth((req) => {
   if (subdomain === "admin") {
     // Protect admin routes
     if (!isAuth) {
-      const loginUrl = new URL("/login", req.url)
+      const loginUrl = req.nextUrl.clone()
+      loginUrl.pathname = "/login"
 
       return NextResponse.redirect(loginUrl)
     }
@@ -133,9 +130,9 @@ export default NextAuth(authConfig).auth((req) => {
      *        ↓
      * /admin/users
      */
-    return NextResponse.rewrite(
-      new URL(`/admin${url.pathname}`, req.url)
-    )
+    const adminRewriteUrl = req.nextUrl.clone()
+    adminRewriteUrl.pathname = `/admin${url.pathname}`
+    return NextResponse.rewrite(adminRewriteUrl)
   }
 
   /*
@@ -163,7 +160,8 @@ export default NextAuth(authConfig).auth((req) => {
 
   // Protect tenant routes
   if (!isAuth) {
-    const loginUrl = new URL("/login", req.url)
+    const loginUrl = req.nextUrl.clone()
+    loginUrl.pathname = "/login"
 
     return NextResponse.redirect(loginUrl)
   }
@@ -183,7 +181,7 @@ export default NextAuth(authConfig).auth((req) => {
    *        ↓
    * /juanda/orders
    */
-  return NextResponse.rewrite(
-    new URL(`/${subdomain}${url.pathname}`, req.url)
-  )
+  const tenantRewriteUrl = req.nextUrl.clone()
+  tenantRewriteUrl.pathname = `/${subdomain}${url.pathname}`
+  return NextResponse.rewrite(tenantRewriteUrl)
 })
