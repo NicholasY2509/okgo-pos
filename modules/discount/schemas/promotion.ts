@@ -40,6 +40,7 @@ export const promotionSchema = z.object({
   schedules: z.array(promotionScheduleSchema).min(1, "Minimal 1 jadwal wajib diisi"),
   conditions: promotionConditionSchema,
   reward: promotionRewardSchema,
+  applicableProductIds: z.array(z.string()).optional(),
 });
 
 export type PromotionInput = z.infer<typeof promotionSchema>;

@@ -27,12 +27,14 @@ export type AppliedPromo = {
   name: string;
   discountAmount: number;
   rewardType: string;
+  applicableProductIds?: string[];
+  rewardValue?: number;
 };
 
 interface PosState {
   items: CartItem[];
   customerId: string | undefined;
-  appliedPromo: AppliedPromo | null;
+  appliedPromos: AppliedPromo[];
   appliedVoucher: any | null;
   loadedBookingId: string | null;
   loadedTransactionId: string | null;
@@ -50,8 +52,8 @@ interface PosActions {
   updateItemDiscount: (cartId: string, discountAmount: number) => void;
   updateItem: (cartId: string, updates: Partial<CartItem>) => void;
   clearCart: () => void;
-  applyPromo: (promo: AppliedPromo) => void;
-  removePromo: () => void;
+  togglePromo: (promo: AppliedPromo) => void;
+  clearPromos: () => void;
   applyVoucher: (voucher: any) => void;
   removeVoucher: () => void;
   setLoadedBookingId: (id: string | null) => void;
@@ -71,7 +73,7 @@ export const createPosStore = () => {
       (set) => ({
         items: [],
         customerId: undefined,
-        appliedPromo: null,
+        appliedPromos: [],
         appliedVoucher: null,
         loadedBookingId: null,
         loadedTransactionId: null,
@@ -90,34 +92,41 @@ export const createPosStore = () => {
               },
             ],
             // Auto remove promo when items are added as it might invalidate conditions
-            appliedPromo: null,
+            appliedPromos: [],
           })),
         removeItem: (cartId) =>
           set((state) => ({
             items: state.items.filter((i) => i.cartId !== cartId),
             // Auto remove promo when items are removed
-            appliedPromo: null,
+            appliedPromos: [],
           })),
         updateQuantity: (cartId, quantity) =>
           set((state) => ({
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, quantity } : i)),
             // Auto remove promo when quantity changes
-            appliedPromo: null,
+            appliedPromos: [],
           })),
         updateItemDiscount: (cartId, discountAmount) =>
           set((state) => ({
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, discountAmount } : i)),
-            appliedPromo: null,
+            appliedPromos: [],
           })),
         updateItem: (cartId, updates) =>
           set((state) => ({
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, ...updates } : i)),
-            appliedPromo: null,
+            appliedPromos: [],
           })),
-        clearCart: () => set({ items: [], customerId: undefined, appliedPromo: null, appliedVoucher: null, loadedBookingId: null, loadedTransactionId: null }),
-        applyPromo: (promo) => set({ appliedPromo: promo }), // Nominal vouchers can coexist with promos
-        removePromo: () => set({ appliedPromo: null }),
-        applyVoucher: (voucher) => set({ appliedVoucher: voucher }), // Nominal vouchers can coexist with promos
+        clearCart: () => set({ items: [], customerId: undefined, appliedPromos: [], appliedVoucher: null, loadedBookingId: null, loadedTransactionId: null }),
+        togglePromo: (promo) => set((state) => {
+          const exists = state.appliedPromos.some(p => p.promoId === promo.promoId);
+          if (exists) {
+            return { appliedPromos: state.appliedPromos.filter(p => p.promoId !== promo.promoId) };
+          } else {
+            return { appliedPromos: [...state.appliedPromos, promo], appliedVoucher: null };
+          }
+        }), // Applying promo removes voucher
+        clearPromos: () => set({ appliedPromos: [] }),
+        applyVoucher: (voucher) => set({ appliedVoucher: voucher, appliedPromos: [] }), // Applying voucher removes promo
         removeVoucher: () => set({ appliedVoucher: null }),
         setLoadedBookingId: (loadedBookingId) => set({ loadedBookingId }),
         setLoadedTransactionId: (loadedTransactionId) => set({ loadedTransactionId }),
@@ -182,7 +191,7 @@ export const createPosStore = () => {
             customerId: booking.customerId || undefined,
             loadedBookingId: booking.id,
             loadedTransactionId: booking.transactions?.[0]?.id || null, // Assuming first transaction if any
-            appliedPromo: null,
+            appliedPromos: [],
             isVipUpgrade: false,
           });
         },
@@ -234,8 +243,8 @@ export function usePosStoreActions() {
     updateItemDiscount: useStore(store, (s) => s.updateItemDiscount),
     updateItem: useStore(store, (s) => s.updateItem),
     clearCart: useStore(store, (s) => s.clearCart),
-    applyPromo: useStore(store, (s) => s.applyPromo),
-    removePromo: useStore(store, (s) => s.removePromo),
+    togglePromo: useStore(store, (s) => s.togglePromo),
+    clearPromos: useStore(store, (s) => s.clearPromos),
     applyVoucher: useStore(store, (s) => s.applyVoucher),
     removeVoucher: useStore(store, (s) => s.removeVoucher),
     setLoadedBookingId: useStore(store, (s) => s.setLoadedBookingId),
@@ -263,9 +272,9 @@ export function usePosCart() {
   const updateItemDiscount = useStore(store, (s) => s.updateItemDiscount);
   const updateItem = useStore(store, (s) => s.updateItem);
   const clearCart = useStore(store, (s) => s.clearCart);
-  const appliedPromo = useStore(store, (s) => s.appliedPromo);
-  const applyPromo = useStore(store, (s) => s.applyPromo);
-  const removePromo = useStore(store, (s) => s.removePromo);
+  const appliedPromos = useStore(store, (s) => s.appliedPromos);
+  const togglePromo = useStore(store, (s) => s.togglePromo);
+  const clearPromos = useStore(store, (s) => s.clearPromos);
   const appliedVoucher = useStore(store, (s) => s.appliedVoucher);
   const applyVoucher = useStore(store, (s) => s.applyVoucher);
   const removeVoucher = useStore(store, (s) => s.removeVoucher);
@@ -281,7 +290,7 @@ export function usePosCart() {
   let subtotal = items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
   if (isVipUpgrade) subtotal += 80000;
   const itemDiscountTotal = items.reduce((acc, item) => acc + item.discountAmount, 0);
-  const promoDiscountTotal = appliedPromo ? appliedPromo.discountAmount : 0;
+  const promoDiscountTotal = appliedPromos.reduce((acc, promo) => acc + promo.discountAmount, 0);
   const discountTotal = itemDiscountTotal + promoDiscountTotal;
   const totalAmount = subtotal - discountTotal;
 
@@ -299,9 +308,9 @@ export function usePosCart() {
     updateItemDiscount,
     updateItem,
     clearCart,
-    appliedPromo,
-    applyPromo,
-    removePromo,
+    appliedPromos,
+    togglePromo,
+    clearPromos,
     appliedVoucher,
     applyVoucher,
     removeVoucher,

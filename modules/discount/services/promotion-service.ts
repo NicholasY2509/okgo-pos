@@ -90,6 +90,14 @@ export class PromotionService {
         if (reward.type === "PERCENTAGE_TOTAL" && reward.value) {
           const subtotal = cartItems.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
           potentialDiscountValue = subtotal * (reward.value / 100);
+        } else if (reward.type === "PERCENTAGE_ITEM" && reward.value) {
+          const applicableProductIds = (promo as any).applicableProducts?.map((p: any) => p.id) || [];
+          if (applicableProductIds.length > 0) {
+            const applicableSubtotal = cartItems
+              .filter(item => item.serviceId && applicableProductIds.includes(item.serviceId))
+              .reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+            potentialDiscountValue = applicableSubtotal * (reward.value / 100);
+          }
         } else if (reward.type === "FREE_ADDON" && reward.addonServiceId) {
           const product = await ProductRepository.getProductById(reward.addonServiceId);
           if (product) {
@@ -104,7 +112,9 @@ export class PromotionService {
         rewardType: reward.type,
         potentialDiscountValue,
         isEligible,
-        ineligibilityReason
+        ineligibilityReason,
+        applicableProductIds: reward.type === "PERCENTAGE_ITEM" ? (promo as any).applicableProducts?.map((p: any) => p.id) || [] : undefined,
+        rewardValue: reward.value
       });
     }
 

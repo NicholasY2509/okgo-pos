@@ -19,17 +19,19 @@ interface PosCartProps {
 }
 
 export function PosCart({ onCheckout, branchId, onRedeemVoucher }: PosCartProps) {
-  const { isVipUpgrade, setIsVipUpgrade, appliedPromo, removePromo } = usePosCart();
+  const { isVipUpgrade, setIsVipUpgrade, appliedPromos, clearPromos, appliedVoucher } = usePosCart();
   const cartItems = usePosStoreSelector((state) => state.items);
   const hasVoucherPacket = cartItems.some(i => i.type === "VOUCHER_PACKET");
+  const hasAppliedVoucher = !!appliedVoucher || cartItems.some(i => i.isVoucherRedemption);
+  const hasAppliedPromo = appliedPromos.length > 0;
 
   useEffect(() => {
     if (hasVoucherPacket) {
       if (isVipUpgrade) setIsVipUpgrade(false);
-      if (appliedPromo) removePromo();
+      if (appliedPromos.length > 0) clearPromos();
     }
-  }, [hasVoucherPacket, isVipUpgrade, appliedPromo, setIsVipUpgrade, removePromo]);
-  
+  }, [hasVoucherPacket, isVipUpgrade, appliedPromos.length, setIsVipUpgrade, clearPromos]);
+
   return (
     <div className="flex-1 bg-card p-4 rounded-xl shadow-sm border border-border flex flex-col h-full relative overflow-hidden">
       <CartHeader />
@@ -40,14 +42,14 @@ export function PosCart({ onCheckout, branchId, onRedeemVoucher }: PosCartProps)
 
       <div className="border-t border-border pt-3 mt-2 bg-card relative z-10 shrink-0 space-y-3">
         <div className="flex flex-col gap-1">
-          <PosPromoDialog branchId={branchId} disabled={hasVoucherPacket} />
-          <PosVoucherDialog onRedeemVoucher={onRedeemVoucher} disabled={hasVoucherPacket} />
-          
+          <PosPromoDialog branchId={branchId} disabled={hasVoucherPacket || hasAppliedVoucher} />
+          <PosVoucherDialog onRedeemVoucher={onRedeemVoucher} disabled={hasVoucherPacket || hasAppliedPromo} />
+
           <div className="flex items-center space-x-2 mt-2 px-2">
-            <Checkbox 
-              id="vip-upgrade" 
-              checked={isVipUpgrade} 
-              onCheckedChange={(checked) => setIsVipUpgrade(checked === true)} 
+            <Checkbox
+              id="vip-upgrade"
+              checked={isVipUpgrade}
+              onCheckedChange={(checked) => setIsVipUpgrade(checked === true)}
               disabled={hasVoucherPacket}
             />
             <label

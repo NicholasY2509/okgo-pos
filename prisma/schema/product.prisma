@@ -26,6 +26,7 @@ model Product {
 
   category       Category?       @relation(fields: [categoryId], references: [id])
   voucherPackets VoucherPacket[]
+  applicablePromotions Promotion[]
 }
 
 model VoucherPacket {

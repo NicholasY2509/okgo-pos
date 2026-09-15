@@ -5,6 +5,7 @@ import { usePosStoreSelector, usePosStoreActions } from "../../stores/pos-store"
 
 export function CartItems() {
   const items = usePosStoreSelector((state) => state.items);
+  const appliedPromos = usePosStoreSelector((state) => state.appliedPromos);
   const { removeItem, updateQuantity } = usePosStoreActions();
 
   if (items.length === 0) {
@@ -21,7 +22,17 @@ export function CartItems() {
 
   return (
     <div className="flex-1 overflow-y-auto pr-1 space-y-2 min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-      {items.map((item) => (
+      {items.map((item) => {
+        const applicablePromo = appliedPromos.find(
+          p => p.rewardType === "PERCENTAGE_ITEM" && p.applicableProductIds?.includes(item.serviceId!)
+        );
+        let discountedPrice = null;
+        if (applicablePromo && applicablePromo.rewardValue) {
+           const discount = item.unitPrice * (applicablePromo.rewardValue / 100);
+           discountedPrice = item.unitPrice - discount;
+        }
+
+        return (
         <div key={item.cartId} className="p-3 border shadow-sm border-border/60 rounded-xl bg-background hover:bg-card hover:border-border transition-colors group relative overflow-hidden flex flex-col gap-3">
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0 px-2">
@@ -35,7 +46,7 @@ export function CartItems() {
                 </div>
               )}
 
-              {(item.type === "VOUCHER_PACKET" || item.isVoucherRedemption) && (
+              {(item.type === "VOUCHER_PACKET" || item.isVoucherRedemption || applicablePromo) && (
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {item.type === "VOUCHER_PACKET" && (
                     <span className="inline-block text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider">
@@ -45,6 +56,11 @@ export function CartItems() {
                   {item.isVoucherRedemption && (
                     <span className="inline-block text-[9px] font-semibold bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider">
                       Vch: {item.voucherCode}
+                    </span>
+                  )}
+                  {applicablePromo && (
+                    <span className="inline-block text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider">
+                      % {applicablePromo.name}
                     </span>
                   )}
                 </div>
@@ -91,6 +107,15 @@ export function CartItems() {
                   </span>
                   <span className="font-light text-base tracking-tight text-green-600">Rp 0</span>
                 </>
+              ) : discountedPrice !== null ? (
+                <>
+                  <span className="text-[10px] line-through text-muted-foreground/60 mb-0.5">
+                    Rp {(item.unitPrice * item.quantity).toLocaleString('id-ID')}
+                  </span>
+                  <span className="font-light text-base tracking-tight text-primary">
+                    Rp {(discountedPrice * item.quantity).toLocaleString('id-ID')}
+                  </span>
+                </>
               ) : (
                 <span className="font-light text-base tracking-tight text-foreground">
                   Rp {(item.unitPrice * item.quantity).toLocaleString('id-ID')}
@@ -99,7 +124,8 @@ export function CartItems() {
             </div>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

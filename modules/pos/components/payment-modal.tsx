@@ -41,71 +41,88 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
 
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-[850px] p-0 overflow-hidden bg-background">
-        <DialogHeader className="p-6 pb-4 border-b border-border/40 bg-muted/10">
+      <DialogContent className="sm:max-w-[850px] p-0 overflow-hidden bg-background gap-0 max-h-[90vh] flex flex-col">
+        <DialogHeader className="p-6 border-b border-border/40 bg-muted/10 shrink-0">
           <DialogTitle className="text-xl flex items-center gap-2 text-foreground font-medium">
             <CreditCard className="w-5 h-5 text-primary" />
             Selesaikan Pembayaran
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 overflow-y-auto flex-1">
           {/* Left Panel: Summary & Input */}
           <div className="p-6 border-r border-border/40 bg-muted/5 flex flex-col space-y-6">
-            <div className="bg-card rounded-2xl p-5 border border-border/50 space-y-2 text-base shadow-sm">
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-muted-foreground ml-auto">Total Layanan</span>
-                <span className="w-32 text-right font-medium">{cart.subtotal.toLocaleString('id-ID')}</span>
+            <div className="bg-card rounded-xl p-4 border shadow-sm space-y-3">
+              {/* Order Details */}
+              <div className="space-y-1.5">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Rincian Transaksi</div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-foreground">Total Layanan ({cart.items.length} item)</span>
+                  <span className="font-medium">Rp {(cart.subtotal - (cart.isVipUpgrade ? 80000 : 0)).toLocaleString('id-ID')}</span>
+                </div>
+                {cart.isVipUpgrade && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-foreground">Upgrade VIP</span>
+                    <span className="font-medium">Rp 80.000</span>
+                  </div>
+                )}
               </div>
 
-              {cart.itemDiscountTotal > 0 && (
-                <div className="flex justify-between items-center text-red-500">
-                  <span className="text-sm font-medium ml-auto">Diskon Item</span>
-                  <span className="w-32 text-right font-medium">-{cart.itemDiscountTotal.toLocaleString('id-ID')}</span>
-                </div>
+              {/* Discounts & Promos */}
+              {(cart.itemDiscountTotal > 0 || cart.appliedPromos.length > 0 || cart.voucherNominalDiscount > 0) && (
+                <>
+                  <div className="border-t border-border/50 border-dashed" />
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Potongan & Promo</div>
+
+                    {cart.itemDiscountTotal > 0 && (
+                      <div className="flex justify-between text-sm text-primary">
+                        <span>Diskon Manual</span>
+                        <span className="font-medium">-Rp {cart.itemDiscountTotal.toLocaleString('id-ID')}</span>
+                      </div>
+                    )}
+
+                    {cart.appliedPromos?.map((promo: any) => (
+                      <div key={promo.promoId} className="flex justify-between text-sm text-primary">
+                        <span className="truncate pr-2">Promo: {promo.name}</span>
+                        <span className="font-medium whitespace-nowrap">-Rp {promo.discountAmount?.toLocaleString('id-ID') || 0}</span>
+                      </div>
+                    ))}
+
+                    {cart.voucherNominalDiscount > 0 && (
+                      <div className="flex justify-between text-sm text-primary">
+                        <span>Voucher Nominal</span>
+                        <span className="font-medium">-Rp {cart.voucherNominalDiscount.toLocaleString('id-ID')}</span>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
 
-              {cart.promoDiscountTotal > 0 && (
-                <div className="flex justify-between items-center text-red-500">
-                  <span className="text-sm font-medium ml-auto">Promo ({cart.appliedPromo?.name})</span>
-                  <span className="w-32 text-right font-medium">-{cart.promoDiscountTotal.toLocaleString('id-ID')}</span>
+              {/* Totals */}
+              <div className="border-t border-border pt-3 mt-1">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-muted-foreground">Pajak (0%)</span>
+                  <span className="text-sm font-medium">Rp 0</span>
                 </div>
-              )}
-
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-muted-foreground ml-auto">Tax (0%)</span>
-                <span className="w-32 text-right font-medium">0</span>
-              </div>
-
-              <div className="border-t border-border/60 mt-2 pt-2 flex justify-between items-center">
-                <span className="font-medium text-muted-foreground ml-auto">Total Belanja</span>
-                <span className="w-32 text-right font-medium">{cart.totalAmount.toLocaleString('id-ID')}</span>
-              </div>
-
-              {cart.voucherNominalDiscount > 0 && (
-                <div className="flex justify-between items-center text-primary pt-1">
-                  <span className="text-sm font-medium ml-auto">Potongan Voucher</span>
-                  <span className="w-32 text-right font-medium">-{cart.voucherNominalDiscount.toLocaleString('id-ID')}</span>
+                <div className="flex justify-between items-center text-base">
+                  <span className="font-bold text-foreground">Total Tagihan</span>
+                  <span className="font-bold text-lg">Rp {(cart.amountDue ?? cart.totalAmount).toLocaleString('id-ID')}</span>
                 </div>
-              )}
-
-              <div className="border-t border-border/60 mt-1 pt-2 flex justify-between items-center text-lg">
-                <span className="font-bold text-foreground ml-auto">Total Tagihan</span>
-                <span className="w-32 text-right font-bold">{(cart.amountDue ?? cart.totalAmount).toLocaleString('id-ID')}</span>
               </div>
 
               {!isZeroTotal && (
-                <>
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="font-medium text-muted-foreground ml-auto">Kekurangan</span>
-                    <span className="w-32 text-right font-medium text-red-500">{remaining.toLocaleString('id-ID')}</span>
+                <div className="pt-2 flex gap-4 text-sm bg-muted/30 p-2.5 rounded-lg border border-border/50">
+                  <div className="flex-1">
+                    <div className="text-muted-foreground text-xs mb-0.5">Kekurangan</div>
+                    <div className="font-semibold text-red-500">Rp {remaining.toLocaleString('id-ID')}</div>
                   </div>
-
-                  <div className="flex justify-between items-center pt-1">
-                    <span className="font-medium text-muted-foreground ml-auto">Kembalian</span>
-                    <span className="w-32 text-right font-medium text-primary">{changeAmount.toLocaleString('id-ID')}</span>
+                  <div className="w-px bg-border/80" />
+                  <div className="flex-1">
+                    <div className="text-muted-foreground text-xs mb-0.5">Kembalian</div>
+                    <div className="font-semibold text-green-600">Rp {changeAmount.toLocaleString('id-ID')}</div>
                   </div>
-                </>
+                </div>
               )}
             </div>
 
@@ -130,31 +147,7 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
               </div>
             )}
 
-            <div className="mt-auto pt-4 flex flex-col gap-2">
-              <Button
-                className="w-full h-14 text-lg rounded-xl font-medium"
-                onClick={() => handleSubmit(false)}
-                disabled={isSubmitting || (!isZeroTotal && (totalPaid < (cart.amountDue ?? cart.totalAmount) || !payment.paymentMethodId))}
-              >
-                {isSubmitting ? "Memproses..." : (
-                  <>
-                    <CheckCircle2 className="w-5 h-5 mr-2" />
-                    {isZeroTotal ? "Selesaikan Penukaran" : "Bayar Sekarang"}
-                  </>
-                )}
-              </Button>
 
-              {!isZeroTotal && !hasVoucherPacket && (
-                <Button
-                  variant="outline"
-                  className="w-full h-14 text-lg rounded-xl font-medium text-primary border-primary/20 hover:bg-primary/5"
-                  onClick={() => handleSubmit(true)}
-                  disabled={isSubmitting}
-                >
-                  Bayar Nanti & Mulai Sesi
-                </Button>
-              )}
-            </div>
           </div>
 
           {/* Right Panel: Methods & Notes */}
@@ -219,6 +212,34 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
                 />
               </div>
             )}
+
+            <div className="mt-auto flex flex-row w-full gap-2">
+              {!isZeroTotal && !hasVoucherPacket && (
+                <Button
+                  variant="outline"
+                  className="w-1/2"
+                  onClick={() => handleSubmit(true)}
+                  disabled={isSubmitting}
+                >
+                  Bayar Nanti & Mulai Sesi
+                </Button>
+              )}
+
+              <Button
+                className="w-1/2"
+                onClick={() => handleSubmit(false)}
+                disabled={isSubmitting || (!isZeroTotal && (totalPaid < (cart.amountDue ?? cart.totalAmount) || !payment.paymentMethodId))}
+              >
+                {isSubmitting ? "Memproses..." : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 mr-2" />
+                    {isZeroTotal ? "Selesaikan Penukaran" : "Bayar Sekarang"}
+                  </>
+                )}
+              </Button>
+
+
+            </div>
           </div>
         </div>
       </DialogContent>

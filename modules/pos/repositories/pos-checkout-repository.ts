@@ -16,7 +16,7 @@ export const PosCheckoutRepository = {
 
     return await prisma.$transaction(async (tx) => {
       await this.validatePreconditions(tx, input);
-      console.log("[CHECKOUT DEBUG] promotionId received:", input.promotionId, "appliedPromo raw:", JSON.stringify(input.promotionId));
+      console.log("[CHECKOUT DEBUG] promotionIds received:", input.promotionIds, "appliedPromos raw:", JSON.stringify(input.promotionIds));
 
       if (input.loadedTransactionId) {
         await tx.transaction.delete({
@@ -65,7 +65,6 @@ export const PosCheckoutRepository = {
           transactionNumber: PosUtils.generateTransactionNumber(),
           subtotal,
           discountTotal,
-          promotionId: input.promotionId || null,
           taxTotal: 0,
           totalAmount,
           paidAmount,
@@ -74,6 +73,9 @@ export const PosCheckoutRepository = {
           isVip: input.isVipUpgrade === true,
           payments: {
             create: transactionPaymentsData
+          },
+          promotions: {
+            connect: (input.promotionIds || []).map(id => ({ id }))
           }
         }
       });
@@ -123,6 +125,7 @@ export const PosCheckoutRepository = {
       let itemNameSnapshot = "";
       let cashierIncentiveAmount = 0;
       let therapistIncentivePerUnit = 0;
+      let staffIncentiveRules: any[] | null = null;
 
       if (item.type === "SERVICE") {
         const product = await tx.product.findUnique({ where: { id: item.serviceId } });
@@ -146,15 +149,7 @@ export const PosCheckoutRepository = {
         if (!staff || !staff.isActive) throw new Error(`Staf tidak valid: ${item.staffId}`);
 
         if (staff.workPosition?.incentiveRules) {
-          for (const rule of staff.workPosition.incentiveRules) {
-            if (rule.ruleType === "SERVICE_PRICE_PERCENTAGE" && rule.flatPercentage) {
-              therapistIncentivePerUnit = (Number(rule.flatPercentage) / 100) * unitPrice;
-              break;
-            } else if (rule.ruleType === "FIXED_AMOUNT" && rule.flatAmount) {
-              therapistIncentivePerUnit = Number(rule.flatAmount);
-              break;
-            }
-          }
+          staffIncentiveRules = staff.workPosition.incentiveRules;
         }
 
         const room = await tx.room.findUnique({ where: { id: item.roomId } });
@@ -278,9 +273,10 @@ export const PosCheckoutRepository = {
         discountAmount: totalItemDiscount,
         subtotal: itemSubtotal,
         cashierIncentiveAmount,
-        therapistIncentivePerUnit,
+        therapistIncentivePerUnit: 0,
         staffId: item.type === "SERVICE" ? item.staffId : null,
-        _tempType: item.type
+        _tempType: item.type,
+        _tempStaffIncentiveRules: staffIncentiveRules
       });
     }
 
@@ -298,11 +294,12 @@ export const PosCheckoutRepository = {
         cashierIncentiveAmount: 0,
         therapistIncentivePerUnit: 0,
         staffId: null,
-        _tempType: "VIP_UPGRADE"
+        _tempType: "VIP_UPGRADE",
+        _tempStaffIncentiveRules: null
       });
     }
 
-    if (input.promotionId) {
+    if (input.promotionIds && input.promotionIds.length > 0) {
       // Only service/visit voucher redemptions conflict with promo discounts.
       // Nominal credit vouchers used as a payment method are allowed alongside promos.
       const isServiceVoucherUsed = itemVoucherRedemptionsData.length > 0;
@@ -311,69 +308,112 @@ export const PosCheckoutRepository = {
         throw new Error("Voucher layanan dan Diskon Promosi tidak dapat digunakan bersamaan. Voucher memiliki prioritas.");
       }
 
-      const promo = await tx.promotion.findUnique({ where: { id: input.promotionId } });
-      console.log("[PROMO DEBUG] promotionId:", input.promotionId, "found:", !!promo, "isActive:", promo?.isActive);
-      if (promo && promo.isActive) {
-
-        // Validate schedule
-        const now = new Date();
-        const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-        const todayStr = days[now.getDay()];
-        const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-        let isTimeValid = false;
-        const schedules = promo.schedules as any[];
-
-        if (!schedules || !Array.isArray(schedules) || schedules.length === 0) {
-          // No schedules = always active
-          isTimeValid = true;
-        } else {
-          for (const schedule of schedules) {
-            if (schedule.days && schedule.days.includes(todayStr)) {
-              if (schedule.startTime && schedule.endTime) {
-                if (currentTimeStr >= schedule.startTime && currentTimeStr <= schedule.endTime) {
+      for (const promoId of input.promotionIds) {
+        const promo = await tx.promotion.findUnique({ 
+          where: { id: promoId },
+          include: { applicableProducts: true }
+        });
+        console.log("[PROMO DEBUG] promotionId:", promoId, "found:", !!promo, "isActive:", promo?.isActive);
+        if (promo && promo.isActive) {
+  
+          // Validate schedule
+          const now = new Date();
+          const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+          const todayStr = days[now.getDay()];
+          const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  
+          let isTimeValid = false;
+          const schedules = promo.schedules as any[];
+  
+          if (!schedules || !Array.isArray(schedules) || schedules.length === 0) {
+            // No schedules = always active
+            isTimeValid = true;
+          } else {
+            for (const schedule of schedules) {
+              if (schedule.days && schedule.days.includes(todayStr)) {
+                if (schedule.startTime && schedule.endTime) {
+                  if (currentTimeStr >= schedule.startTime && currentTimeStr <= schedule.endTime) {
+                    isTimeValid = true;
+                    break;
+                  }
+                } else {
                   isTimeValid = true;
                   break;
                 }
-              } else {
-                isTimeValid = true;
-                break;
               }
             }
           }
-        }
-
-        console.log("[PROMO DEBUG] isTimeValid:", isTimeValid, "day:", todayStr, "time:", currentTimeStr, "schedules:", JSON.stringify(promo.schedules));
-
-        if (!isTimeValid) {
-          throw new Error("Diskon promosi tidak berlaku pada waktu ini.");
-        }
-
-        // Validate conditions (minQuantity, requiredServiceIds)
-        if (promo.conditions) {
-          const conditions = promo.conditions as any;
-          if (conditions.minQuantity && input.items.length < conditions.minQuantity) {
-            throw new Error(`Promosi membutuhkan minimal ${conditions.minQuantity} item layanan.`);
+  
+          console.log("[PROMO DEBUG] isTimeValid:", isTimeValid, "day:", todayStr, "time:", currentTimeStr, "schedules:", JSON.stringify(promo.schedules));
+  
+          if (!isTimeValid) {
+            throw new Error(`Diskon promosi ${promo.name} tidak berlaku pada waktu ini.`);
           }
-          if (conditions.requiredServiceIds && conditions.requiredServiceIds.length > 0) {
-            const hasRequired = input.items.some(item =>
-              item.type === "SERVICE" && conditions.requiredServiceIds.includes(item.serviceId)
-            );
-            if (!hasRequired) {
-              throw new Error("Promosi ini tidak berlaku untuk layanan yang dipilih.");
+  
+          // Validate conditions (minQuantity, requiredServiceIds)
+          if (promo.conditions) {
+            const conditions = promo.conditions as any;
+            if (conditions.minQuantity && input.items.length < conditions.minQuantity) {
+              throw new Error(`Promosi ${promo.name} membutuhkan minimal ${conditions.minQuantity} item layanan.`);
+            }
+            if (conditions.requiredServiceIds && conditions.requiredServiceIds.length > 0) {
+              const hasRequired = input.items.some(item =>
+                item.type === "SERVICE" && conditions.requiredServiceIds.includes(item.serviceId)
+              );
+              if (!hasRequired) {
+                throw new Error(`Promosi ${promo.name} tidak berlaku untuk layanan yang dipilih.`);
+              }
             }
           }
+  
+          const reward = promo.reward as any;
+          console.log("[PROMO DEBUG] reward:", JSON.stringify(reward), "subtotal before promo:", subtotal, "discountTotal before promo:", discountTotal);
+          if (reward.type === "PERCENTAGE_TOTAL" && reward.value) {
+            for (const itemData of transactionItemsData) {
+              if (itemData.type === "SERVICE") {
+                const discount = (itemData.unitPrice * itemData.quantity) * (reward.value / 100);
+                itemData.discountAmount += discount;
+                discountTotal += discount;
+                itemData.subtotal = (itemData.unitPrice * itemData.quantity) - itemData.discountAmount;
+              }
+            }
+          } else if (reward.type === "PERCENTAGE_ITEM" && reward.value) {
+            const applicableProductIds = promo.applicableProducts?.map((p: any) => p.id) || [];
+            if (applicableProductIds.length > 0) {
+              for (const itemData of transactionItemsData) {
+                if (itemData.type === "SERVICE" && itemData.serviceId && applicableProductIds.includes(itemData.serviceId)) {
+                  const discount = (itemData.unitPrice * itemData.quantity) * (reward.value / 100);
+                  itemData.discountAmount += discount;
+                  discountTotal += discount;
+                  itemData.subtotal = (itemData.unitPrice * itemData.quantity) - itemData.discountAmount;
+                }
+              }
+            }
+          } else if (reward.type === "FREE_ADDON" && reward.addonServiceId) {
+            const product = await tx.product.findUnique({ where: { id: reward.addonServiceId } });
+            if (product) discountTotal += Number(product.price);
+          }
+          console.log("[PROMO DEBUG] discountTotal after promo:", discountTotal);
         }
+      }
+    }
 
-        const reward = promo.reward as any;
-        console.log("[PROMO DEBUG] reward:", JSON.stringify(reward), "subtotal before promo:", subtotal, "discountTotal before promo:", discountTotal);
-        if (reward.type === "PERCENTAGE_TOTAL" && reward.value) {
-          discountTotal += subtotal * (reward.value / 100);
-        } else if (reward.type === "FREE_ADDON" && reward.addonServiceId) {
-          const product = await tx.product.findUnique({ where: { id: reward.addonServiceId } });
-          if (product) discountTotal += Number(product.price);
+    // Final loop to calculate therapist incentives based on final discounted itemSubtotal
+    for (const itemData of transactionItemsData) {
+      if (itemData.type === "SERVICE" && itemData._tempStaffIncentiveRules) {
+        const finalUnitPrice = Math.max(0, itemData.subtotal) / itemData.quantity;
+        
+        let therapistIncentivePerUnit = 0;
+        for (const rule of itemData._tempStaffIncentiveRules) {
+          if (rule.ruleType === "SERVICE_PRICE_PERCENTAGE" && rule.flatPercentage) {
+            therapistIncentivePerUnit = (Number(rule.flatPercentage) / 100) * finalUnitPrice;
+            break;
+          } else if (rule.ruleType === "FIXED_AMOUNT" && rule.flatAmount) {
+            therapistIncentivePerUnit = Number(rule.flatAmount);
+            break;
+          }
         }
-        console.log("[PROMO DEBUG] discountTotal after promo:", discountTotal);
+        itemData.therapistIncentivePerUnit = therapistIncentivePerUnit;
       }
     }
 
@@ -483,6 +523,7 @@ export const PosCheckoutRepository = {
       const therapistIncentivePerUnit = itemData.therapistIncentivePerUnit;
       const staffId = itemData.staffId;
       delete itemData._tempType;
+      delete itemData._tempStaffIncentiveRules;
       delete itemData.therapistIncentivePerUnit;
       delete itemData.staffId;
 

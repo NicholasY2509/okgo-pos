@@ -16,6 +16,7 @@ export function usePromotionForm(initialData?: any, onSuccess?: () => void) {
     schedules: initialData.schedules || [{ days: [], startTime: "09:00", endTime: "22:00" }],
     conditions: initialData.conditions || undefined,
     reward: initialData.reward || { type: "PERCENTAGE_TOTAL", value: 0 },
+    applicableProductIds: initialData.applicableProducts?.map((p: any) => p.id) || [],
   } : {
     name: "",
     description: null,
@@ -24,6 +25,7 @@ export function usePromotionForm(initialData?: any, onSuccess?: () => void) {
     schedules: [{ days: [], startTime: "09:00", endTime: "22:00" }],
     conditions: undefined,
     reward: { type: "PERCENTAGE_TOTAL", value: 0 },
+    applicableProductIds: [],
   }
 
   const form = useForm<PromotionInput>({

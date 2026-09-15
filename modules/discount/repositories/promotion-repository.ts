@@ -6,13 +6,14 @@ export const PromotionRepository = {
   async getPromotions() {
     return await prisma.promotion.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { branch: true }
+      include: { branch: true, applicableProducts: true }
     });
   },
 
   async getPromotion(id: string) {
     return await prisma.promotion.findUnique({
-      where: { id }
+      where: { id },
+      include: { applicableProducts: true }
     });
   },
 
@@ -26,6 +27,9 @@ export const PromotionRepository = {
         schedules: data.schedules as unknown as Prisma.InputJsonValue,
         conditions: data.conditions ? data.conditions as unknown as Prisma.InputJsonValue : Prisma.JsonNull,
         reward: data.reward as unknown as Prisma.InputJsonValue,
+        applicableProducts: data.applicableProductIds ? {
+          connect: data.applicableProductIds.map(id => ({ id }))
+        } : undefined
       }
     });
   },
@@ -41,6 +45,9 @@ export const PromotionRepository = {
         schedules: data.schedules as unknown as Prisma.InputJsonValue,
         conditions: data.conditions ? data.conditions as unknown as Prisma.InputJsonValue : Prisma.JsonNull,
         reward: data.reward as unknown as Prisma.InputJsonValue,
+        applicableProducts: data.applicableProductIds ? {
+          set: data.applicableProductIds.map(id => ({ id }))
+        } : undefined
       }
     });
   },
@@ -59,7 +66,8 @@ export const PromotionRepository = {
           { branchId: null },
           { branchId: branchId }
         ]
-      }
+      },
+      include: { applicableProducts: true }
     });
   }
 };

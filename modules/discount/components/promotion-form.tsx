@@ -17,14 +17,14 @@ interface PromotionFormProps {
 }
 
 export function PromotionForm({ initialData, branches, products, onSuccess }: PromotionFormProps) {
-  const { 
-    form, 
-    scheduleFields, 
-    appendSchedule, 
-    removeSchedule, 
-    onSubmit, 
-    isSubmitting, 
-    error 
+  const {
+    form,
+    scheduleFields,
+    appendSchedule,
+    removeSchedule,
+    onSubmit,
+    isSubmitting,
+    error
   } = usePromotionForm(initialData, onSuccess)
 
   const rewardType = form.watch("reward.type")
@@ -34,40 +34,40 @@ export function PromotionForm({ initialData, branches, products, onSuccess }: Pr
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
           {/* 1. General Info */}
-      <Card>
-        <CardHeader><CardTitle>Informasi Umum</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Nama Promo</Label>
-            <Input {...form.register("name")} placeholder="Contoh: Diskon Pagi" />
-            {form.formState.errors.name && <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>}
-          </div>
+          <Card>
+            <CardHeader><CardTitle>Informasi Umum</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Nama Promo</Label>
+                <Input {...form.register("name")} placeholder="Contoh: Diskon Pagi" />
+                {form.formState.errors.name && <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>}
+              </div>
 
-          <div className="space-y-2">
-            <Label>Deskripsi (Opsional)</Label>
-            <Input {...form.register("description")} placeholder="Syarat dan ketentuan singkat..." />
-          </div>
+              <div className="space-y-2">
+                <Label>Deskripsi (Opsional)</Label>
+                <Input {...form.register("description")} placeholder="Syarat dan ketentuan singkat..." />
+              </div>
 
-          <div className="space-y-2">
-            <Label>Cabang</Label>
-            <Select
-              value={form.watch("branchId") || "all"}
-              onValueChange={(val) => form.setValue("branchId", val === "all" ? null : val)}
-            >
-              <SelectTrigger><SelectValue placeholder="Universal (Semua Cabang)" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Universal (Semua Cabang)</SelectItem>
-                {branches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-2">
+                <Label>Cabang</Label>
+                <Select
+                  value={form.watch("branchId") || "all"}
+                  onValueChange={(val) => form.setValue("branchId", val === "all" ? null : val)}
+                >
+                  <SelectTrigger><SelectValue placeholder="Universal (Semua Cabang)" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Universal (Semua Cabang)</SelectItem>
+                    {branches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="flex items-center space-x-2 pt-2">
-            <Switch checked={form.watch("isActive")} onCheckedChange={(val) => form.setValue("isActive", val)} />
-            <Label>Promo Aktif</Label>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="flex items-center space-x-2 pt-2">
+                <Switch checked={form.watch("isActive")} onCheckedChange={(val) => form.setValue("isActive", val)} />
+                <Label>Promo Aktif</Label>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* 3. Conditions */}
           <Card>
@@ -111,16 +111,50 @@ export function PromotionForm({ initialData, branches, products, onSuccess }: Pr
                   <SelectTrigger><SelectValue placeholder="Pilih Jenis" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="PERCENTAGE_TOTAL">Diskon % (Total Keranjang)</SelectItem>
+                    <SelectItem value="PERCENTAGE_ITEM">Diskon % (Layanan Tertentu)</SelectItem>
                     <SelectItem value="FREE_ADDON">Gratis Layanan Tambahan (Buy 1 Get 1)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {rewardType === "PERCENTAGE_TOTAL" && (
+              {(rewardType === "PERCENTAGE_TOTAL" || rewardType === "PERCENTAGE_ITEM") && (
                 <div className="space-y-2">
                   <Label>Besaran Diskon (%)</Label>
                   <Input type="number" min="0" max="100" {...form.register("reward.value", { valueAsNumber: true })} />
                   {form.formState.errors.reward?.value && <p className="text-sm text-red-500">{form.formState.errors.reward.value.message}</p>}
+                </div>
+              )}
+
+              {rewardType === "PERCENTAGE_ITEM" && (
+                <div className="space-y-2 pt-2 border-t mt-4">
+                  <Label>Layanan yang Mendapat Diskon</Label>
+                  <p className="text-sm text-muted-foreground mb-2">Pilih layanan yang akan dikenakan diskon ini. Bisa pilih lebih dari satu.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border rounded-md bg-muted/20">
+                    {products.map(p => {
+                      const currentIds = form.watch("applicableProductIds") || []
+                      const isSelected = currentIds.includes(p.id)
+                      return (
+                        <div key={p.id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`prod-${p.id}`}
+                            checked={isSelected}
+                            onChange={(e) => {
+                              const newIds = e.target.checked
+                                ? [...currentIds, p.id]
+                                : currentIds.filter(id => id !== p.id)
+                              form.setValue("applicableProductIds", newIds)
+                            }}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <label htmlFor={`prod-${p.id}`} className="text-sm cursor-pointer">{p.name}</label>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {form.formState.errors.applicableProductIds && (
+                    <p className="text-sm text-red-500">{form.formState.errors.applicableProductIds.message}</p>
+                  )}
                 </div>
               )}
 
@@ -143,61 +177,61 @@ export function PromotionForm({ initialData, branches, products, onSuccess }: Pr
           </Card>
 
           {/* 2. Schedules */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Jadwal Berlaku</CardTitle>
-          <Button type="button" variant="outline" size="sm" onClick={() => appendSchedule({ days: ["MONDAY"], startTime: "09:00", endTime: "22:00" })}>
-            <Plus className="w-4 h-4 mr-2" /> Tambah Jadwal
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {scheduleFields.map((field, index) => (
-            <div key={field.id} className="p-4 border rounded-md relative space-y-4">
-              <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-red-500" onClick={() => removeSchedule(index)}>
-                <Trash2 className="w-4 h-4" />
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Jadwal Berlaku</CardTitle>
+              <Button type="button" variant="outline" size="sm" onClick={() => appendSchedule({ days: ["MONDAY"], startTime: "09:00", endTime: "22:00" })}>
+                <Plus className="w-4 h-4 mr-2" /> Tambah Jadwal
               </Button>
-              
-              <div className="space-y-2">
-                <Label>Pilih Hari</Label>
-                <div className="flex flex-wrap gap-2">
-                  {["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"].map((day) => {
-                    const currentDays = form.watch(`schedules.${index}.days`) || []
-                    const isSelected = currentDays.includes(day as any)
-                    return (
-                      <Button
-                        key={day}
-                        type="button"
-                        variant={isSelected ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => {
-                          const newDays = isSelected 
-                            ? currentDays.filter(d => d !== day)
-                            : [...currentDays, day]
-                          form.setValue(`schedules.${index}.days`, newDays as any)
-                        }}
-                      >
-                        {day.substring(0, 3)}
-                      </Button>
-                    )
-                  })}
-                </div>
-              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {scheduleFields.map((field, index) => (
+                <div key={field.id} className="p-4 border rounded-md relative space-y-4">
+                  <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-red-500" onClick={() => removeSchedule(index)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Waktu Mulai</Label>
-                  <Input type="time" {...form.register(`schedules.${index}.startTime`)} />
+                  <div className="space-y-2">
+                    <Label>Pilih Hari</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"].map((day) => {
+                        const currentDays = form.watch(`schedules.${index}.days`) || []
+                        const isSelected = currentDays.includes(day as any)
+                        return (
+                          <Button
+                            key={day}
+                            type="button"
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              const newDays = isSelected
+                                ? currentDays.filter(d => d !== day)
+                                : [...currentDays, day]
+                              form.setValue(`schedules.${index}.days`, newDays as any)
+                            }}
+                          >
+                            {day.substring(0, 3)}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Waktu Mulai</Label>
+                      <Input type="time" {...form.register(`schedules.${index}.startTime`)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Waktu Selesai</Label>
+                      <Input type="time" {...form.register(`schedules.${index}.endTime`)} />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Waktu Selesai</Label>
-                  <Input type="time" {...form.register(`schedules.${index}.endTime`)} />
-                </div>
-              </div>
-            </div>
-          ))}
-          {form.formState.errors.schedules && <p className="text-sm text-red-500">{form.formState.errors.schedules.message}</p>}
-        </CardContent>
-      </Card>
+              ))}
+              {form.formState.errors.schedules && <p className="text-sm text-red-500">{form.formState.errors.schedules.message}</p>}
+            </CardContent>
+          </Card>
         </div>
       </div>
 

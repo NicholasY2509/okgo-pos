@@ -45,14 +45,12 @@ export default NextAuth(authConfig).auth((req) => {
   if (subdomain === "admin") {
     // Protect admin routes
     if (!isAuth && !url.pathname.startsWith("/login")) {
-      const protocol = req.headers.get("x-forwarded-proto") || "http"
-      const loginUrl = new URL("/login", `${protocol}://${hostname}`)
+      const loginUrl = new URL("/login", req.url)
       return NextResponse.redirect(loginUrl)
     }
 
     if (isAuth && url.pathname.startsWith("/login")) {
-      const protocol = req.headers.get("x-forwarded-proto") || "http"
-      const homeUrl = new URL("/", `${protocol}://${hostname}`)
+      const homeUrl = new URL("/", req.url)
       return NextResponse.redirect(homeUrl)
     }
 
@@ -60,14 +58,7 @@ export default NextAuth(authConfig).auth((req) => {
       return NextResponse.next()
     }
     // Rewrite admin.localhost:3000/ to /admin/
-    const protocol = req.headers.get("x-forwarded-proto") || "https"
-    const rewriteUrl = req.nextUrl.clone()
-
-    rewriteUrl.protocol = protocol
-    rewriteUrl.host = hostname
-    rewriteUrl.port = ""
-    rewriteUrl.pathname = `/admin${url.pathname}`
-    return NextResponse.rewrite(rewriteUrl)
+    return NextResponse.rewrite(new URL(`/admin${url.pathname}`, req.url))
   }
 
   // If there is no subdomain (or it's www), route normally (marketing site - public)
@@ -77,23 +68,15 @@ export default NextAuth(authConfig).auth((req) => {
 
   // Protect tenant routes
   if (!isAuth && !url.pathname.startsWith("/login")) {
-    const protocol = req.headers.get("x-forwarded-proto") || "http"
-    const loginUrl = new URL("/login", `${protocol}://${hostname}`)
+    const loginUrl = new URL("/login", req.url)
     return NextResponse.redirect(loginUrl)
   }
 
   if (isAuth && url.pathname.startsWith("/login")) {
-    const protocol = req.headers.get("x-forwarded-proto") || "http"
-    const homeUrl = new URL("/pos", `${protocol}://${hostname}`)
+    const homeUrl = new URL("/pos", req.url)
     return NextResponse.redirect(homeUrl)
   }
 
   // Rewrite to the branch app directory, passing the subdomain
-  const protocol = req.headers.get("x-forwarded-proto") || "https"
-  const rewriteUrl = req.nextUrl.clone()
-  rewriteUrl.protocol = protocol
-  rewriteUrl.host = hostname
-  rewriteUrl.port = ""
-  rewriteUrl.pathname = `/${subdomain}${url.pathname}`
-  return NextResponse.rewrite(rewriteUrl)
+  return NextResponse.rewrite(new URL(`/${subdomain}${url.pathname}`, req.url))
 })

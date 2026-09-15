@@ -83,7 +83,7 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
     const payload = {
       branchId,
       customerId: cart.customerId,
-      promotionId: cart.appliedPromo?.promoId,
+      promotionIds: cart.appliedPromos?.map((p: any) => p.promoId) || [],
       loadedBookingId: cart.loadedBookingId,
       loadedTransactionId: cart.loadedTransactionId,
       isVipUpgrade: cart.isVipUpgrade,
@@ -103,7 +103,7 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
       payments: isPayLater ? [] : paymentsArray,
       isPayLater
     };
-    console.log("[PAYMENT CLIENT DEBUG] appliedPromo:", cart.appliedPromo, "promotionId in payload:", payload.promotionId);
+    console.log("[PAYMENT CLIENT DEBUG] appliedPromos:", cart.appliedPromos, "promotionIds in payload:", payload.promotionIds);
 
     const res = await createPosTransactionAction(payload);
     setIsSubmitting(false);
