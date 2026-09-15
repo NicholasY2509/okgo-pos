@@ -37,6 +37,12 @@ export default NextAuth(authConfig).auth((req) => {
     req.headers.get("host") ||
     ""
 
+  // Build a reliable base URL from the *actual* request host.
+  // req.nextUrl may be normalized to AUTH_URL by NextAuth, so we
+  // cannot trust req.nextUrl.host for constructing rewrite/redirect URLs.
+  const protocol = req.headers.get("x-forwarded-proto") || "https"
+  const baseUrl = `${protocol}://${hostname}`
+
   let subdomain = ""
 
   /*
@@ -80,16 +86,13 @@ export default NextAuth(authConfig).auth((req) => {
   if (url.pathname.startsWith("/login")) {
     // Authenticated users should not access login
     if (isAuth) {
-      const redirectUrl = req.nextUrl.clone()
       if (subdomain === "admin") {
-        // / will be caught by the admin block below and rewritten to /admin/
-        redirectUrl.pathname = "/"
+        return NextResponse.redirect(new URL("/", baseUrl))
       } else if (subdomain && subdomain !== "www") {
-        redirectUrl.pathname = "/pos"
+        return NextResponse.redirect(new URL("/pos", baseUrl))
       } else {
-        redirectUrl.pathname = "/"
+        return NextResponse.redirect(new URL("/", baseUrl))
       }
-      return NextResponse.redirect(redirectUrl)
     }
 
     /*
@@ -98,18 +101,15 @@ export default NextAuth(authConfig).auth((req) => {
      * Rewrite /login to the correct location based on the subdomain.
      */
     if (subdomain && subdomain !== "www") {
-      // tenant subdomain  → /[tenant]/login
-      // admin subdomain   → /admin/login
-      const loginRewriteUrl = req.nextUrl.clone()
-      loginRewriteUrl.pathname =
+      const loginPath =
         subdomain === "admin"
           ? "/admin/login"
           : `/${subdomain}/login`
-      return NextResponse.rewrite(loginRewriteUrl)
+      return NextResponse.rewrite(new URL(loginPath, baseUrl))
     }
 
     // Root domain has no login page — redirect to marketing home
-    return NextResponse.redirect(new URL("/", req.nextUrl.origin))
+    return NextResponse.redirect(new URL("/", baseUrl))
   }
 
   /*
@@ -124,10 +124,7 @@ export default NextAuth(authConfig).auth((req) => {
   if (subdomain === "admin") {
     // Protect admin routes
     if (!isAuth) {
-      const loginUrl = req.nextUrl.clone()
-      loginUrl.pathname = "/login"
-
-      return NextResponse.redirect(loginUrl)
+      return NextResponse.redirect(new URL("/login", baseUrl))
     }
 
     /*
@@ -152,9 +149,7 @@ export default NextAuth(authConfig).auth((req) => {
      *        ↓
      * /admin/users
      */
-    const adminRewriteUrl = req.nextUrl.clone()
-    adminRewriteUrl.pathname = `/admin${url.pathname}`
-    return NextResponse.rewrite(adminRewriteUrl)
+    return NextResponse.rewrite(new URL(`/admin${url.pathname}`, baseUrl))
   }
 
   /*
@@ -182,10 +177,7 @@ export default NextAuth(authConfig).auth((req) => {
 
   // Protect tenant routes
   if (!isAuth) {
-    const loginUrl = req.nextUrl.clone()
-    loginUrl.pathname = "/login"
-
-    return NextResponse.redirect(loginUrl)
+    return NextResponse.redirect(new URL("/login", baseUrl))
   }
 
   /*
@@ -203,7 +195,5 @@ export default NextAuth(authConfig).auth((req) => {
    *        ↓
    * /juanda/orders
    */
-  const tenantRewriteUrl = req.nextUrl.clone()
-  tenantRewriteUrl.pathname = `/${subdomain}${url.pathname}`
-  return NextResponse.rewrite(tenantRewriteUrl)
+  return NextResponse.rewrite(new URL(`/${subdomain}${url.pathname}`, baseUrl))
 })
