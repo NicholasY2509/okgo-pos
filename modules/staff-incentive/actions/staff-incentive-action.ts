@@ -1,7 +1,7 @@
 "use server";
 
 import { StaffIncentiveService } from "../services/staff-incentive-service";
-import { GetIncentivesFilter } from "../repositories/staff-incentive-repository";
+import { GetIncentivesFilter, GetIncentiveDetailsFilter } from "../repositories/staff-incentive-repository";
 
 export async function getIncentivesAction(filter: GetIncentivesFilter) {
   try {
@@ -16,6 +16,15 @@ export async function getIncentiveSummaryAction(filter: Omit<GetIncentivesFilter
   try {
     const result = await StaffIncentiveService.getIncentiveSummary(filter);
     return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getStaffIncentiveDetailsAction(filter: GetIncentiveDetailsFilter) {
+  try {
+    const result = await StaffIncentiveService.getStaffIncentiveDetails(filter);
+    return { success: true, data: result.data, pagination: result.pagination };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

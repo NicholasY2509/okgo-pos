@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, FilterX } from "lucide-react";
+import React, { useState, Fragment } from "react";
+import { Search, FilterX, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DatePickerWithRange } from "@/components/ui/date-picker-with-range";
@@ -25,8 +26,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { IncentiveSettings } from "./incentive-settings";
 import { PageHeader } from "@/components/page-header";
+import { StaffIncentiveDetailsTable } from "./staff-incentive-details-table";
 
 export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: { workPositions?: any[], initialRules?: any[] }) {
+  const [expandedStaffId, setExpandedStaffId] = useState<string | null>(null);
   const {
     summary,
     loading,
@@ -202,6 +205,7 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
                     <TableHeader>
                       <TableRow>
                         <TableHead>Cabang</TableHead>
+                        {summary.branchBreakdowns[0]?.tierName && <TableHead>Info Tier</TableHead>}
                         <TableHead className="text-right">Pendapatan Kotor</TableHead>
                         <TableHead className="text-right">Insentif</TableHead>
                       </TableRow>
@@ -210,6 +214,11 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
                       {summary.branchBreakdowns.map((b, i) => (
                         <TableRow key={i}>
                           <TableCell className="font-medium">{b.branchName}</TableCell>
+                          {b.tierName !== undefined && (
+                            <TableCell className="text-slate-500 text-sm">
+                              {b.tierName}
+                            </TableCell>
+                          )}
                           <TableCell className="text-right">
                             <NumericFormat
                               value={b.gross}
@@ -241,33 +250,70 @@ export function StaffIncentiveClient({ workPositions = [], initialRules = [] }: 
                     <TableHeader>
                       <TableRow>
                         <TableHead>Staf</TableHead>
+                        {summary.staffBreakdowns?.some(s => s.tierName !== undefined) && <TableHead>Info Tier</TableHead>}
+                        <TableHead className="text-right">{countTitle}</TableHead>
                         <TableHead className="text-right">Pendapatan Kotor</TableHead>
                         <TableHead className="text-right">Insentif Diberikan</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {summary.staffBreakdowns.map((s, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-medium">{s.staffName}</TableCell>
-                          <TableCell className="text-right">
-                            <NumericFormat
-                              value={s.gross}
-                              displayType="text"
-                              thousandSeparator="."
-                              decimalSeparator=","
-                              prefix="Rp "
-                            />
-                          </TableCell>
-                          <TableCell className="text-right text-green-600 font-medium">
-                            <NumericFormat
-                              value={s.incentive}
-                              displayType="text"
-                              thousandSeparator="."
-                              decimalSeparator=","
-                              prefix="Rp "
-                            />
-                          </TableCell>
-                        </TableRow>
+                        <React.Fragment key={i}>
+                          <TableRow
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => setExpandedStaffId(expandedStaffId === s.staffId ? null : s.staffId)}
+                          >
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                {expandedStaffId === s.staffId ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                {s.staffName}
+                              </div>
+                            </TableCell>
+                            {summary.staffBreakdowns?.some(sb => sb.tierName !== undefined) && (
+                              <TableCell className="text-slate-500 text-sm">
+                                {s.tierName || "-"}
+                              </TableCell>
+                            )}
+                            <TableCell className="text-right">
+                              <NumericFormat
+                                value={s.count}
+                                displayType="text"
+                                thousandSeparator="."
+                                decimalSeparator=","
+                              />
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <NumericFormat
+                                value={s.gross}
+                                displayType="text"
+                                thousandSeparator="."
+                                decimalSeparator=","
+                                prefix="Rp "
+                              />
+                            </TableCell>
+                            <TableCell className="text-right text-green-600 font-medium">
+                              <NumericFormat
+                                value={s.incentive}
+                                displayType="text"
+                                thousandSeparator="."
+                                decimalSeparator=","
+                                prefix="Rp "
+                              />
+                            </TableCell>
+                          </TableRow>
+                          {expandedStaffId === s.staffId && (
+                            <TableRow>
+                              <TableCell colSpan={summary.staffBreakdowns?.some(sb => sb.tierName !== undefined) ? 5 : 4} className="p-0 border-b-0">
+                                <StaffIncentiveDetailsTable
+                                  staffId={s.staffId}
+                                  type={s.type}
+                                  startDate={dateRange?.from}
+                                  endDate={dateRange?.to}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
                       ))}
                     </TableBody>
                   </Table>

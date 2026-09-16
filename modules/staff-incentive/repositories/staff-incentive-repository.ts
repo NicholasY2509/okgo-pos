@@ -10,6 +10,15 @@ export interface GetIncentivesFilter {
   limit?: number;
 }
 
+export interface GetIncentiveDetailsFilter {
+  staffId: string;
+  type: string;
+  startDate?: Date;
+  endDate?: Date;
+  page?: number;
+  limit?: number;
+}
+
 export const StaffIncentiveRepository = {
   async getIncentives(filter: GetIncentivesFilter) {
     const { search, type, startDate, endDate, page = 1, limit = 10 } = filter;
@@ -73,8 +82,8 @@ export const StaffIncentiveRepository = {
     let totalIncentive = 0;
     let totalGross = 0;
     let totalCount = 0;
-    const branchBreakdowns: { branchName: string, gross: number, incentive: number }[] = [];
-    const staffBreakdowns: { staffName: string, gross: number, incentive: number, count: number }[] = [];
+    const branchBreakdowns: { branchName: string, gross: number, incentive: number, tierName?: string }[] = [];
+    const staffBreakdowns: { staffId: string, staffName: string, gross: number, incentive: number, count: number, tierName?: string, type: "SERVICE_COMMISSION" | "CASHIER_COMMISSION" }[] = [];
 
     // 1. TERAPIS (SERVICE_COMMISSION) - Static via StaffIncentive table
     if (!type || type === "ALL" || type === "SERVICE_COMMISSION") {
@@ -110,10 +119,12 @@ export const StaffIncentiveRepository = {
           for (const s of staffAgg) {
             const staffInfo = staffs.find(st => st.id === s.staffId);
             staffBreakdowns.push({
+              staffId: s.staffId,
               staffName: staffInfo ? `${staffInfo.firstName} ${staffInfo.lastName}`.trim() : "Staf Tidak Diketahui",
               gross: Number(s._sum.gross || 0),
               incentive: Number(s._sum.amount || 0),
-              count: s._count.id || 0
+              count: s._count.id || 0,
+              type: "SERVICE_COMMISSION"
             });
           }
 
@@ -159,17 +170,53 @@ export const StaffIncentiveRepository = {
         }
       }
 
-      for (const sales of cashierSales.values()) {
+      const cashierIds = Array.from(cashierSales.keys());
+      const cashiers = await prisma.staff.findMany({
+        where: { id: { in: cashierIds } },
+        select: { id: true, firstName: true, lastName: true }
+      });
+
+      for (const [cashierId, sales] of cashierSales.entries()) {
         totalGross += sales.gross;
         totalCount += sales.count;
 
+        let cashierIncentive = 0;
+        let tierName: string | undefined;
         if (kasirRule) {
           // Assuming tiers are based on quantity of vouchers sold
-          const matchedTier = kasirRule.tiers.find(t => sales.count >= Number(t.minTarget));
-          if (matchedTier) {
-            totalIncentive += Number(matchedTier.amount || 0);
+          const matchedTierIndex = kasirRule.tiers.findIndex(t => sales.count >= Number(t.minTarget));
+          if (matchedTierIndex !== -1) {
+            const matchedTier = kasirRule.tiers[matchedTierIndex];
+            const tierRank = kasirRule.tiers.length - matchedTierIndex;
+            const romanNumerals = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+            const roman = romanNumerals[tierRank] || tierRank.toString();
+            tierName = `Tier ${roman}`;
+
+            if (matchedTier.percentage) {
+              cashierIncentive = sales.gross * (Number(matchedTier.percentage) / 100);
+            } else {
+              cashierIncentive = Number(matchedTier.amount || 0);
+            }
+          } else {
+            tierName = "Belum mencapai target";
           }
         }
+        totalIncentive += cashierIncentive;
+
+        const cashierInfo = cashiers.find(c => c.id === cashierId);
+        staffBreakdowns.push({
+          staffId: cashierId,
+          staffName: cashierInfo ? `${cashierInfo.firstName} ${cashierInfo.lastName}`.trim() : "Kasir Tidak Diketahui",
+          gross: sales.gross,
+          incentive: cashierIncentive,
+          count: sales.count,
+          tierName,
+          type: "CASHIER_COMMISSION"
+        });
+      }
+
+      if (type === "CASHIER_COMMISSION") {
+        staffBreakdowns.sort((a, b) => b.incentive - a.incentive);
       }
     }
 
@@ -204,10 +251,23 @@ export const StaffIncentiveRepository = {
         spvGrossTotal += branchGross;
 
         let branchIncentive = 0;
+        let tierName: string | undefined;
         if (spvRule) {
-          const matchedTier = spvRule.tiers.find(t => branchGross >= Number(t.minTarget));
-          if (matchedTier) {
-            branchIncentive = Number(matchedTier.amount || 0);
+          const matchedTierIndex = spvRule.tiers.findIndex(t => branchGross >= Number(t.minTarget));
+          if (matchedTierIndex !== -1) {
+            const matchedTier = spvRule.tiers[matchedTierIndex];
+            const tierRank = spvRule.tiers.length - matchedTierIndex;
+            const romanNumerals = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+            const roman = romanNumerals[tierRank] || tierRank.toString();
+            tierName = `Tier ${roman}`;
+
+            if (matchedTier.percentage) {
+              branchIncentive = branchGross * (Number(matchedTier.percentage) / 100);
+            } else {
+              branchIncentive = Number(matchedTier.amount || 0);
+            }
+          } else {
+            tierName = "Belum mencapai target";
           }
         }
 
@@ -216,7 +276,8 @@ export const StaffIncentiveRepository = {
         branchBreakdowns.push({
           branchName: branches.find(b => b.id === branchAgg.branchId)?.name || "Cabang Tidak Diketahui",
           gross: branchGross,
-          incentive: branchIncentive
+          incentive: branchIncentive,
+          tierName
         });
       }
 
@@ -232,5 +293,96 @@ export const StaffIncentiveRepository = {
       branchBreakdowns,
       staffBreakdowns,
     };
+  },
+
+  async getStaffIncentiveDetails(filter: GetIncentiveDetailsFilter) {
+    const { staffId, type, page = 1, limit = 10 } = filter;
+    const skip = (page - 1) * limit;
+
+    let parsedStartDate = filter.startDate ? new Date(filter.startDate) : undefined;
+    let parsedEndDate = filter.endDate ? new Date(filter.endDate) : undefined;
+    if (parsedEndDate) {
+      parsedEndDate.setHours(23, 59, 59, 999);
+    }
+
+    if (type === "SERVICE_COMMISSION") {
+      const where: Prisma.StaffIncentiveWhereInput = { staffId, type };
+      if (parsedStartDate && parsedEndDate) where.date = { gte: parsedStartDate, lte: parsedEndDate };
+      else if (parsedStartDate) where.date = { gte: parsedStartDate };
+      else if (parsedEndDate) where.date = { lte: parsedEndDate };
+
+      const [data, total] = await Promise.all([
+        prisma.staffIncentive.findMany({
+          where,
+          include: {
+            transactionItem: true,
+            serviceSession: {
+              include: { transactionItem: true }
+            }
+          },
+          orderBy: { date: "desc" },
+          skip,
+          take: limit,
+        }),
+        prisma.staffIncentive.count({ where }),
+      ]);
+
+      const formattedData = data.map(d => ({
+        id: d.id,
+        date: d.date,
+        itemName: d.transactionItem?.itemNameSnapshot || d.serviceSession?.transactionItem?.itemNameSnapshot || d.description || "Layanan",
+        quantity: d.transactionItem?.quantity || d.serviceSession?.transactionItem?.quantity || 1,
+        gross: Number(d.gross || 0),
+        incentive: Number(d.amount || 0)
+      }));
+
+      return {
+        data: formattedData,
+        pagination: { total, totalPages: Math.ceil(total / limit), page, limit },
+      };
+    } else if (type === "CASHIER_COMMISSION") {
+      const where: Prisma.TransactionItemWhereInput = {
+        type: "VOUCHER_PACKET",
+        transaction: {
+          status: "COMPLETED",
+          cashierId: staffId,
+        }
+      };
+
+      if (parsedStartDate && parsedEndDate) {
+        where.transaction!.createdAt = { gte: parsedStartDate, lte: parsedEndDate };
+      } else if (parsedStartDate) {
+        where.transaction!.createdAt = { gte: parsedStartDate };
+      } else if (parsedEndDate) {
+        where.transaction!.createdAt = { lte: parsedEndDate };
+      }
+
+      const [data, total] = await Promise.all([
+        prisma.transactionItem.findMany({
+          where,
+          include: { transaction: true },
+          orderBy: { transaction: { createdAt: "desc" } },
+          skip,
+          take: limit,
+        }),
+        prisma.transactionItem.count({ where }),
+      ]);
+
+      const formattedData = data.map(d => ({
+        id: d.id,
+        date: d.transaction.createdAt,
+        itemName: d.itemNameSnapshot,
+        quantity: d.quantity,
+        gross: Number(d.subtotal || 0),
+        incentive: 0 // Cashier incentive is tiered, we can't show it per item easily. We can show 0 or null.
+      }));
+
+      return {
+        data: formattedData,
+        pagination: { total, totalPages: Math.ceil(total / limit), page, limit },
+      };
+    }
+
+    return { data: [], pagination: { total: 0, totalPages: 0, page, limit } };
   }
 };

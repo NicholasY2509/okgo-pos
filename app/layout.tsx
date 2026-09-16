@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     description: "Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda.",
     type: "website",
     locale: "id_ID",
-    siteName: "Nyenyak",
+    siteName: "Nyenyak Healing Point",
   },
 };
 
@@ -83,8 +83,8 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              "name": "Nyenyak",
-              "alternateName": ["Nyenyak Healing Point", "Nyenyak Spa"],
+              "name": "Nyenyak Healing Point",
+              "alternateName": ["Nyenyak", "Nyenyak Spa"],
               "url": "https://www.nyenyak.com/"
             })
           }}

@@ -173,9 +173,9 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
       </div>
 
       <div className="space-y-8">
-        <div className="space-y-3">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2 mb-2">Pilih Tanggal</label>
-          <div className="flex overflow-x-auto gap-3 mt-1 pb-4 snap-x scroll-smooth px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="space-y-4">
+          <label className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground mb-4">Pilih Tanggal</label>
+          <div className="flex overflow-x-auto gap-4 mt-1 pb-4 snap-x scroll-smooth border-b border-border/10" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {dates.map(dateStr => {
               const d = new Date(dateStr);
               const dayName = d.toLocaleDateString('id-ID', { weekday: 'short' });
@@ -186,27 +186,27 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
               return (
                 <div
                   key={dateStr}
-                  className={`snap-center shrink-0 w-18 h-20 flex flex-col items-center justify-center rounded-2xl border cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-border/50 bg-muted/10 hover:bg-muted/30 text-foreground'}`}
+                  className={`snap-center shrink-0 w-16 pb-4 flex flex-col items-center justify-center cursor-pointer transition-all border-b-2 -mb-[1px] ${isSelected ? 'border-foreground text-primary border-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                   onClick={() => {
                     form.setValue("date", dateStr, { shouldValidate: true });
                     form.setValue("startTime", "");
                   }}
                 >
-                  <span className="text-[10px] uppercase tracking-wider opacity-80">{dayName}</span>
-                  <span className="text-xl font-medium my-0.5">{dateNum}</span>
-                  <span className="text-[10px] uppercase opacity-80">{monthName}</span>
+                  <span className="text-[9px] uppercase tracking-widest mb-1 opacity-80">{dayName}</span>
+                  <span className="text-2xl font-light">{dateNum}</span>
+                  <span className="text-[9px] uppercase tracking-widest mt-1 opacity-80">{monthName}</span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="space-y-3 pt-2">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-2 block mb-2">Waktu Tersedia</label>
+        <div className="space-y-4 pt-4">
+          <label className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground block mb-4">Waktu Tersedia</label>
           {loading || !dailySchedule ? (
-            <div className="py-8 text-center text-muted-foreground font-light text-xs uppercase tracking-widest">Mencari jadwal kosong...</div>
+            <div className="py-8 text-center text-muted-foreground font-light text-[10px] uppercase tracking-[0.3em]">Mencari jadwal kosong...</div>
           ) : timeSlots.length === 0 ? (
-            <div className="py-12 text-center bg-muted/10 border border-border/30 rounded-2xl">
+            <div className="py-12 text-center border-y border-border/10">
               <p className="text-muted-foreground font-light">Tidak ada jadwal tersedia di tanggal ini.</p>
             </div>
           ) : (
@@ -218,15 +218,15 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
                 return (
                   <div
                     key={slot.timeString}
-                    className={`py-3 px-2 flex flex-col text-center cursor-pointer transition-all rounded-2xl border font-medium ${isFull ? 'opacity-50 cursor-not-allowed border-border/50 bg-muted/10 text-muted-foreground' : isSelected ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-border/50 bg-muted/10 hover:bg-muted/30 text-foreground'}`}
+                    className={`py-3 px-2 flex flex-col text-center cursor-pointer transition-all border-b-2 ${isFull ? 'opacity-40 cursor-not-allowed border-transparent text-muted-foreground' : isSelected ? 'border-primary text-primary' : 'border-border/20 hover:border-primary/50 text-foreground hover:text-primary'}`}
                     onClick={() => {
                       if (!isFull) {
                         form.setValue("startTime", slot.timeString, { shouldValidate: true })
                       }
                     }}
                   >
-                    <span className="text-lg">{slot.label}</span>
-                    <span className={`text-[10px] mt-1 font-normal ${isSelected ? 'text-primary-foreground/80' : isFull ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    <span className="text-xl font-light">{slot.label}</span>
+                    <span className={`text-[9px] mt-1 tracking-widest uppercase ${isSelected ? 'text-primary/70' : isFull ? 'text-destructive' : 'text-muted-foreground'}`}>
                       {isFull ? 'Penuh' : `${slot.availableStaff} Slot`}
                     </span>
                   </div>
@@ -234,7 +234,7 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
               })}
             </div>
           )}
-          {form.formState.errors.startTime && <p className="text-xs text-destructive ml-2 mt-1">{form.formState.errors.startTime.message}</p>}
+          {form.formState.errors.startTime && <p className="text-xs text-destructive mt-1">{form.formState.errors.startTime.message}</p>}
         </div>
       </div>
     </div>

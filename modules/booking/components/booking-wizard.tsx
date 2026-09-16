@@ -31,19 +31,19 @@ export function BookingWizard() {
   if (isSuccess) {
     return (
       <div className="flex flex-col items-center justify-center py-32 px-6 text-center animate-in fade-in duration-1000">
-        <h2 className="text-xl  md:text-4xl font-light tracking-[0.2em] uppercase text-foreground mb-4">
+        <h2 className="text-3xl md:text-5xl font-display font-light tracking-tight text-foreground mb-6">
           Booking Berhasil
         </h2>
-        <p className="text-muted-foreground font-light max-w-sm text-xs md:text-sm leading-loose mb-12">
+        <p className="text-muted-foreground font-light max-w-sm text-sm leading-relaxed mb-12">
           Terima kasih, {(form.watch as any)("customerName")}. Jadwal Anda telah diamankan. Silakan datang tepat waktu dan selesaikan pembayaran di kasir.
         </p>
         <div className="flex flex-col items-center gap-4 w-full">
           <Button
             variant="outline"
-            className="min-w-[240px] text-muted-foreground font-medium tracking-widest uppercase text-xs h-14 rounded-full transition-all hover:text-foreground hover:bg-transparent"
+            className="min-w-[240px] text-foreground font-light tracking-[0.2em] uppercase text-xs h-12 rounded-none border-foreground/30 hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-500"
             onClick={() => window.location.href = "/"}
           >
-            Kembali Ke Halaman Utama
+            Kembali Ke Utama
           </Button>
         </div>
       </div>
@@ -52,13 +52,13 @@ export function BookingWizard() {
 
   return (
     <div className="">
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4 mb-6 border-b border-border/10">
         {step > 1 && (
-          <Button type="button" variant="outline" onClick={prevStep} size={'icon-sm'}>
-            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+          <Button type="button" variant="ghost" onClick={prevStep} size="icon-sm" className="rounded-none hover:bg-transparent hover:text-foreground transition-colors group">
+            <ChevronLeft className="w-5 h-5 text-muted-foreground group-hover:-translate-x-1 transition-transform" />
           </Button>
         )}
-        <div className="text-xs font-light uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/60">
           Langkah {step} dari 4
         </div>
       </div>
@@ -84,15 +84,15 @@ export function BookingWizard() {
       </form>
 
       {/* Navigation - Fixed at bottom of page */}
-      <div className="fixed bottom-6 left-0 right-0 px-6 z-50 flex justify-center pointer-events-none">
-        <div className="w-full max-w-3xl relative h-14">
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none bg-linear-to-t from-background via-background/80 to-transparent pt-12 pb-6 px-6">
+        <div className="w-full max-w-3xl relative h-12">
           <div className={`w-full transition-all duration-500 ease-out absolute inset-0 ${canProceed ? 'translate-y-0 opacity-100 pointer-events-auto' : 'translate-y-16 opacity-0 pointer-events-none'}`}>
             {step < 4 ? (
-              <Button type="button" onClick={nextStep} className="rounded-full w-full h-14 bg-foreground text-background font-medium tracking-wide text-base hover:bg-primary transition-colors flex items-center justify-center gap-2 group cursor-pointer shadow-xl">
-                Lanjut <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <Button type="button" onClick={nextStep} className="rounded-none w-full h-12 bg-foreground text-background font-medium tracking-[0.2em] uppercase text-xs hover:bg-primary transition-colors flex items-center justify-center gap-3 group cursor-pointer">
+                Lanjut <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             ) : (
-              <Button type="button" onClick={onSubmit} disabled={isSubmitting} className="rounded-full w-full h-14 bg-foreground text-background font-medium tracking-wide text-base hover:bg-primary transition-colors flex items-center justify-center gap-2 group cursor-pointer shadow-xl">
+              <Button type="button" onClick={onSubmit} disabled={isSubmitting} className="rounded-none w-full h-12 bg-foreground text-background font-medium tracking-[0.2em] uppercase text-xs hover:bg-primary transition-colors flex items-center justify-center gap-3 group cursor-pointer">
                 {isSubmitting ? "Memproses..." : "Konfirmasi Booking"}
               </Button>
             )}

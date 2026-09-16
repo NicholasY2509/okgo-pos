@@ -1,4 +1,4 @@
-import { StaffIncentiveRepository, GetIncentivesFilter } from "../repositories/staff-incentive-repository";
+import { StaffIncentiveRepository, GetIncentivesFilter, GetIncentiveDetailsFilter } from "../repositories/staff-incentive-repository";
 
 export class StaffIncentiveService {
   static async getIncentives(filter: GetIncentivesFilter) {
@@ -7,5 +7,9 @@ export class StaffIncentiveService {
 
   static async getIncentiveSummary(filter: Omit<GetIncentivesFilter, "page" | "limit">) {
     return await StaffIncentiveRepository.getIncentiveSummary(filter);
+  }
+
+  static async getStaffIncentiveDetails(filter: GetIncentiveDetailsFilter) {
+    return await StaffIncentiveRepository.getStaffIncentiveDetails(filter);
   }
 }

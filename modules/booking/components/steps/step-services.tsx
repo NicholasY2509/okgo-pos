@@ -89,13 +89,13 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
           const selectedServiceId = form.watch(`selections.${index}.serviceId`);
 
           return (
-            <div key={field.id} className="rounded-3xl border border-border/50 bg-background shadow-sm p-4 relative">
+            <div key={field.id} className="border-t border-border/20 pt-6 pb-2 relative">
               {fields.length > 1 && (
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => remove(index)}
-                  className="absolute right-2 top-2 text-muted-foreground hover:text-destructive h-8 w-8 p-0 rounded-full transition-colors hover:bg-destructive/10"
+                  className="absolute right-0 top-4 text-muted-foreground hover:text-destructive h-8 w-8 p-0 rounded-none transition-colors hover:bg-transparent"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -121,15 +121,15 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                         key={cat.id}
                         type="button"
                         onClick={() => handleCategoryChange(field.id, cat.id)}
-                        className="p-6 cursor-pointer transition-all rounded-2xl border border-border/50 bg-muted/10 hover:bg-muted/30 hover:border-primary/50 text-left flex flex-col justify-center items-center gap-3 group relative"
+                        className="p-6 cursor-pointer transition-all rounded-2xl border border-border/20 bg-transparent hover:border-primary/40 text-left flex flex-col justify-center items-center gap-4 group relative hover:bg-primary/[0.02]"
                       >
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 rounded-full border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform bg-primary/5">
                           <span className="font-display text-xl font-light">{cat.name.charAt(0)}</span>
                         </div>
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="font-light text-foreground text-lg text-center">{cat.name}</span>
-                          <span className="text-xs text-center text-muted-foreground px-2 py-0.5 rounded-full">
-                            {availableCount} Terapis Tersedia
+                        <div className="flex flex-col items-center gap-1.5">
+                          <span className="font-light text-foreground text-lg text-center tracking-wide">{cat.name}</span>
+                          <span className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">
+                            {availableCount} Terapis
                           </span>
                         </div>
                       </button>
@@ -167,9 +167,9 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                       .map((service) => (
                         <div
                           key={service.id}
-                          className={`p-3 cursor-pointer transition-all rounded-2xl border flex flex-col justify-center ${selectedServiceId === service.id
-                            ? "border-primary bg-primary/5 shadow-sm"
-                            : "border-border/50 bg-muted/10 hover:bg-muted/30"
+                          className={`p-4 cursor-pointer transition-all rounded-2xl border flex flex-col justify-center ${selectedServiceId === service.id
+                            ? "border-primary bg-primary/[0.03]"
+                            : "border-border/20 bg-transparent hover:border-primary/30"
                             }`}
                           onClick={() =>
                             form.setValue(
@@ -179,10 +179,10 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                             )
                           }
                         >
-                          <div className="font-light text-foreground text-base mb-1">{service.name}</div>
+                          <div className={`font-light text-base mb-2 ${selectedServiceId === service.id ? 'text-primary' : 'text-foreground'}`}>{service.name}</div>
                           <div className="text-[10px] text-muted-foreground font-light flex justify-between uppercase tracking-widest">
                             <span>{service.duration} mnt</span>
-                            <span className="font-medium text-primary">
+                            <span className={selectedServiceId === service.id ? "text-primary font-medium" : "text-foreground"}>
                               Rp {Number(service.price).toLocaleString("id-ID")}
                             </span>
                           </div>
@@ -209,18 +209,18 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                         return (
                           <div className="flex overflow-x-auto gap-3 pb-2 snap-x scroll-smooth px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                             <div
-                              className={`snap-center shrink-0 w-24 h-28 p-2 cursor-pointer transition-all rounded-2xl border flex flex-col items-center justify-start gap-1 pt-3 ${selectedStaffId === undefined ? 'border-primary bg-primary/5 shadow-sm' : 'border-border/50 bg-muted/10 hover:bg-muted/30'}`}
+                              className={`snap-center shrink-0 w-24 h-28 p-2 cursor-pointer transition-all rounded-2xl border flex flex-col items-center justify-start gap-1 pt-4 ${selectedStaffId === undefined ? 'border-primary bg-primary/[0.03]' : 'border-border/20 bg-transparent hover:border-primary/30'}`}
                               onClick={() => form.setValue(`selections.${index}.staffId`, undefined, { shouldValidate: true })}
                             >
-                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                <span className="text-primary font-medium text-sm">?</span>
+                              <div className="w-8 h-8 rounded-full border border-primary/20 bg-primary/5 flex items-center justify-center shrink-0">
+                                <span className="text-primary font-light text-sm">?</span>
                               </div>
-                              <div className="text-[10px] font-medium text-center leading-tight mt-1">Siapa Saja</div>
-                              <div className="text-[8px] text-muted-foreground mt-1 text-center line-clamp-2">Tersedia</div>
+                              <div className="text-[10px] font-medium text-center leading-tight mt-2">Siapa Saja</div>
+                              <div className="text-[8px] text-muted-foreground mt-1 text-center line-clamp-2 uppercase tracking-widest">Tersedia</div>
                             </div>
 
                             {eligibleStaffList.length === 0 && (
-                              <div className="snap-center shrink-0 w-40 h-28 p-2 border border-dashed border-border/50 rounded-2xl flex flex-col items-center justify-center text-center">
+                              <div className="snap-center shrink-0 w-40 h-28 p-2 rounded-2xl border border-border/20 flex flex-col items-center justify-center text-center">
                                 <p className="text-[10px] text-muted-foreground">Tidak ada staf dengan role yang sesuai.</p>
                               </div>
                             )}
@@ -232,20 +232,20 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
                               return (
                                 <div
                                   key={staff.id}
-                                  className={`snap-center shrink-0 w-24 h-28 p-2 transition-all rounded-2xl border flex flex-col items-center justify-start gap-1 pt-3 ${isBusy ? 'opacity-50 cursor-not-allowed bg-muted/20 border-border/30' : selectedStaffId === staff.id ? 'border-primary bg-primary/5 shadow-sm cursor-pointer' : 'border-border/50 bg-muted/10 hover:bg-muted/30 cursor-pointer'}`}
+                                  className={`snap-center shrink-0 w-24 h-28 p-2 transition-all rounded-2xl border flex flex-col items-center justify-start gap-1 pt-4 ${isBusy ? 'opacity-40 cursor-not-allowed border-border/10' : selectedStaffId === staff.id ? 'border-primary bg-primary/[0.03] cursor-pointer' : 'border-border/20 bg-transparent hover:border-primary/30 cursor-pointer'}`}
                                   onClick={() => {
                                     if (!isBusy) {
                                       form.setValue(`selections.${index}.staffId`, staff.id, { shouldValidate: true })
                                     }
                                   }}
                                 >
-                                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                                    <span className="text-muted-foreground font-medium text-sm">
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden ${selectedStaffId === staff.id ? 'bg-primary/20 text-primary' : 'bg-muted border border-border/30 text-muted-foreground'}`}>
+                                    <span className="font-light text-sm">
                                       {staff.firstName.charAt(0).toUpperCase()}
                                     </span>
                                   </div>
-                                  <div className="text-[10px] font-medium text-center leading-tight truncate w-full mt-1">{staff.firstName}</div>
-                                  <div className={`text-[8px] mt-1 text-center leading-[10px] line-clamp-2 w-full px-1 ${isBusy ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                                  <div className="text-[10px] font-medium text-center leading-tight truncate w-full mt-2">{staff.firstName}</div>
+                                  <div className={`text-[8px] mt-1 text-center leading-[10px] uppercase tracking-widest line-clamp-2 w-full px-1 ${isBusy ? 'text-destructive' : 'text-muted-foreground'}`}>
                                     {isBusy ? busyReason : 'Tersedia'}
                                   </div>
                                 </div>
@@ -266,7 +266,7 @@ export function StepServices({ form, services, staffList, dailySchedule, loading
         <Button
           type="button"
           variant="outline"
-          className="w-full rounded-2xl h-14 border-dashed border-2 border-border/50 hover:bg-muted/30 hover:border-primary/50 text-foreground font-medium tracking-wide flex items-center gap-2 mt-4"
+          className="w-full rounded-none h-14 border border-border/30 hover:bg-transparent hover:border-foreground/50 text-foreground font-light tracking-[0.2em] uppercase text-xs flex items-center justify-center gap-3 mt-6"
           onClick={handleAdd}
         >
           <Plus className="w-4 h-4" /> Tambah Layanan Lagi

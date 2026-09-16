@@ -9,8 +9,8 @@ export function useStaffIncentives(initialRules: any[] = []) {
     totalGross: number;
     totalIncentive: number;
     totalCount: number;
-    branchBreakdowns?: { branchName: string; gross: number; incentive: number; }[];
-    staffBreakdowns?: { staffName: string; gross: number; incentive: number; count: number; }[];
+    branchBreakdowns?: { branchName: string; gross: number; incentive: number; tierName?: string; }[];
+    staffBreakdowns?: { staffId: string; type: string; staffName: string; gross: number; incentive: number; count: number; tierName?: string; }[];
   }>({ totalGross: 0, totalIncentive: 0, totalCount: 0, branchBreakdowns: [], staffBreakdowns: [] });
   const [loading, setLoading] = useState(true);
 
