@@ -164,7 +164,7 @@ export default function MarketingPage() {
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 1.5, ease: "easeOut" }}
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled
-          ? "bg-background/10 backdrop-blur-xl border-b border-border/50 py-4"
+          ? "bg-background/75 dark:bg-background/25 backdrop-blur-lg border-b border-border/10 dark:border-border/75 py-2"
           : "bg-transparent border-b-transparent py-6"
           }`}
       >
@@ -253,7 +253,7 @@ export default function MarketingPage() {
       </section>
 
       {/* LAYANAN REGULER */}
-      <section id="layanan" className="py-40">
+      <section id="layanan" className="py-40 dark:bg-white/2 bg-muted/50">
         <div className="max-w-6xl mx-auto reveal-section px-6">
           <div className="text-center mb-24">
             <h2 className="text-5xl font-display font-light text-foreground mb-3">Menu Layanan</h2>
@@ -270,42 +270,42 @@ export default function MarketingPage() {
             featuredServices.map((service, i) => {
               const isEven = i % 2 === 0;
 
-              // A consistent 55/45 split keeps it asymmetrical but visually balanced
-              const imageWidth = 'md:w-[55%]';
-              const textWidth = 'md:w-[45%]';
-
               return (
-                <div key={i} className={`flex flex-col md:flex-row ${!isEven ? 'md:flex-row-reverse' : ''} w-full min-h-[500px] overflow-hidden group`}>
-                  <motion.div
-                    initial={{ opacity: 0, x: isEven ? -100 : 100 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className={`w-full ${imageWidth} relative min-h-[400px] md:min-h-full`}
-                  >
-                    <img
-                      src={service.img}
-                      alt={service.title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  </motion.div>
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: i * 0.1 }}
+                  className="relative w-full min-h-[400px] md:min-h-[500px] overflow-hidden group mb-1 md:mb-3 last:mb-0"
+                >
+                  <img
+                    src={service.img}
+                    alt={service.title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  {/* Faded background overlay */}
+                  <div className={`absolute inset-0 opacity-80 bg-gradient-to-t ${isEven ? 'md:bg-gradient-to-r' : 'md:bg-gradient-to-l'} from-black/95 via-black/60 to-transparent`}></div>
 
-                  <motion.div
-                    initial={{ opacity: 0, x: isEven ? 100 : -100 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                    className={`w-full ${textWidth} flex flex-col justify-center p-8 md:p-12 lg:p-16 bg-white/[0.02]`}
-                  >
-                    <h3 className="text-3xl sm:text-4xl lg:text-5xl font-extralight uppercase tracking-tight text-foreground mb-4 md:mb-6">{service.title}</h3>
-                    <p className="text-muted-foreground text-sm sm:text-base lg:text-lg mb-6 md:mb-8 leading-relaxed font-light">{service.desc}</p>
-                    <div className="flex items-center gap-4 md:gap-6 mt-auto md:mt-0">
-                      <span className="text-xl lg:text-2xl font-light text-foreground tracking-widest">{service.price}</span>
-                      <div className="h-[1px] flex-1 bg-border/50"></div>
-                      <span className="text-[10px] sm:text-xs md:text-sm text-muted-foreground uppercase tracking-widest">{service.time}</span>
+                  <div className={`absolute inset-0 flex flex-col justify-end md:justify-center p-8 md:p-12 lg:p-20 text-white z-10 items-start text-left ${!isEven ? 'md:items-end md:text-right' : 'md:items-start md:text-left'}`}>
+                    <div className="w-full sm:max-w-xl md:max-w-2xl flex flex-col">
+                      <h3 className={`text-3xl sm:text-4xl lg:text-5xl font-extralight uppercase tracking-tight mb-4 lg:mb-6 ${!isEven ? 'md:self-end' : ''}`}>
+                        {service.title}
+                      </h3>
+
+                      <div>
+                        <p className="text-white/80 text-sm sm:text-base lg:text-lg mb-8 lg:mb-10 leading-relaxed font-light">
+                          {service.desc}
+                        </p>
+                        <div className={`flex items-center gap-4 md:gap-6 ${!isEven ? 'md:flex-row-reverse' : ''}`}>
+                          <span className="text-xl lg:text-2xl font-light tracking-widest">{service.price}</span>
+                          <div className="h-[1px] flex-1 bg-white/30"></div>
+                          <span className="text-[10px] sm:text-xs md:text-sm text-white/70 uppercase tracking-widest">{service.time}</span>
+                        </div>
+                      </div>
                     </div>
-                  </motion.div>
-                </div>
+                  </div>
+                </motion.div>
               );
             })
           )}
