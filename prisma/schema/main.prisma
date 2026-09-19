@@ -12,7 +12,6 @@ model BrandSetting {
   businessStartTime String @default("08:00")
   businessEndTime   String @default("21:00")
 
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

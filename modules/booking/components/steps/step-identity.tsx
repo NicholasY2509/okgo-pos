@@ -51,10 +51,10 @@ export function StepIdentity({ form, branches, loadingBranches }: StepIdentityPr
             ) : branches.map(branch => (
               <div
                 key={branch.id}
-                className={`p-6 pb-5 cursor-pointer transition-all border-b-2 flex flex-col justify-center items-start text-left group ${selectedBranchId === branch.id ? 'border-primary' : 'border-border/20 bg-transparent hover:border-primary/50'}`}
+                className={`p-6 pb-5 cursor-pointer transition-all border-b flex flex-col justify-center items-start text-left group ${selectedBranchId === branch.id ? 'border-primary' : 'border-border/20 bg-transparent hover:border-primary/50'}`}
                 onClick={() => form.setValue("branchId", branch.id, { shouldValidate: true })}
               >
-                <div className={`font-light text-lg mb-1 tracking-wide transition-colors ${selectedBranchId === branch.id ? 'text-primary' : 'text-foreground group-hover:text-primary'}`}>{branch.name}</div>
+                <div className={`font-light text-lg mb-1 tracking-wide transition-all ${selectedBranchId === branch.id ? 'text-primary font-normal' : 'text-foreground group-hover:text-primary'}`}>{branch.name}</div>
                 <div className="text-xs text-muted-foreground font-light line-clamp-1">{branch.address || "Lokasi"}</div>
               </div>
             ))}

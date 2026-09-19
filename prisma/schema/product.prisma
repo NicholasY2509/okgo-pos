@@ -24,8 +24,8 @@ model Product {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  category       Category?       @relation(fields: [categoryId], references: [id])
-  voucherPackets VoucherPacket[]
+  category             Category?       @relation(fields: [categoryId], references: [id])
+  voucherPackets       VoucherPacket[]
   applicablePromotions Promotion[]
 }
 

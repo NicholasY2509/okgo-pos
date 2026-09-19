@@ -17,7 +17,7 @@ export async function createSalaryComponentAction(values: SalaryComponentInput) 
     }
 
     const result = await SalaryComponentService.create(validatedFields.data)
-    revalidatePath("/admin/payroll/components")
+    revalidatePath("/admin/salaries/components")
     return { success: true, data: result }
   } catch (error: any) {
     return { error: error.message || "Terjadi kesalahan saat menyimpan komponen gaji." }
@@ -32,7 +32,7 @@ export async function updateSalaryComponentAction(values: UpdateSalaryComponentI
     }
 
     const result = await SalaryComponentService.update(validatedFields.data)
-    revalidatePath("/admin/payroll/components")
+    revalidatePath("/admin/salaries/components")
     return { success: true, data: result }
   } catch (error: any) {
     return { error: error.message || "Terjadi kesalahan saat menyimpan komponen gaji." }
@@ -42,7 +42,7 @@ export async function updateSalaryComponentAction(values: UpdateSalaryComponentI
 export async function deleteSalaryComponentAction(id: string) {
   try {
     await SalaryComponentService.delete(id)
-    revalidatePath("/admin/payroll/components")
+    revalidatePath("/admin/salaries/components")
     return { success: true }
   } catch (error: any) {
     return { error: error.message || "Terjadi kesalahan saat menghapus komponen gaji." }

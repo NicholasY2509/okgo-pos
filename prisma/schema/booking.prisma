@@ -50,7 +50,7 @@ model BookingItem {
   appliedVoucher   CustomerVoucher? @relation(fields: [appliedVoucherId], references: [id])
 
   requestedStaffId String?
-  requestedStaff   Staff? @relation(fields: [requestedStaffId], references: [id], onDelete: SetNull)
+  requestedStaff   Staff?  @relation(fields: [requestedStaffId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

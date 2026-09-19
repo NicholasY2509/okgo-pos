@@ -4,13 +4,19 @@ import { SalaryComponentInput, UpdateSalaryComponentInput } from "../schemas/sal
 export const SalaryComponentRepository = {
   async getAll() {
     return await prisma.salaryComponent.findMany({
-      orderBy: { name: "asc" }
+      orderBy: { name: "asc" },
+      include: {
+        workPositions: true
+      }
     })
   },
 
   async getById(id: string) {
     return await prisma.salaryComponent.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        workPositions: true
+      }
     })
   },
 
@@ -28,6 +34,9 @@ export const SalaryComponentRepository = {
         isDeduction: data.isDeduction,
         type: data.type,
         amount: data.amount,
+        workPositions: {
+          connect: data.workPositionIds?.map((id) => ({ id })) || []
+        }
       }
     })
   },
@@ -41,6 +50,11 @@ export const SalaryComponentRepository = {
         isDeduction: data.isDeduction,
         type: data.type,
         amount: data.amount,
+        ...(data.workPositionIds !== undefined && {
+          workPositions: {
+            set: data.workPositionIds.map((wpId) => ({ id: wpId }))
+          }
+        })
       }
     })
   },

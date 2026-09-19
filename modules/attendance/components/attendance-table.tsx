@@ -111,7 +111,7 @@ export function AttendanceTable({ data, statuses, onRowClick }: AttendanceTableP
       accessorKey: "status.name",
       header: "Status",
       cell: ({ row }) => {
-        return row.original.status.name
+        return row.original.status?.name || "-"
       },
     },
     {

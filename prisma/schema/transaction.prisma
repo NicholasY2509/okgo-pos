@@ -156,11 +156,11 @@ model CustomerVoucher {
   status    String    @default("ACTIVE") // ACTIVE, USED_UP, EXPIRED, VOID
   expiresAt DateTime?
 
-  customer      Customer?      @relation(fields: [customerId], references: [id])
+  customer      Customer?     @relation(fields: [customerId], references: [id])
   voucherPacket VoucherPacket @relation(fields: [voucherPacketId], references: [id])
 
-  redemptions VoucherRedemption[]
-  bookings    Booking[]
+  redemptions  VoucherRedemption[]
+  bookings     Booking[]
   bookingItems BookingItem[]
 
   createdAt DateTime @default(now())

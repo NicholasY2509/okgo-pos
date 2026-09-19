@@ -53,14 +53,14 @@ export function StaffSalaryDialog({ staffId, staffName, initialData, onSuccess, 
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{initialData ? "Edit Gaji Pokok" : "Atur Gaji Pokok"}</DialogTitle>
           <DialogDescription>
             Konfigurasi gaji untuk staf <strong>{staffName}</strong>.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="py-4">
           <StaffSalaryForm
             staffId={staffId}

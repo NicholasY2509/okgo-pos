@@ -18,13 +18,46 @@ export const PayrollRepository = {
     });
   },
 
-  async getStaffSalaryComponents(staffId: string) {
-    return await prisma.staffSalaryComponent.findMany({
+  async getStaffApplicableSalaryComponents(staffId: string) {
+    const staff = await prisma.staff.findUnique({
+      where: { id: staffId },
+      select: { workPositionId: true }
+    });
+
+    if (!staff) return [];
+
+    // Position-based components
+    const positionComponents = await prisma.salaryComponent.findMany({
+      where: {
+        workPositions: {
+          some: { id: staff.workPositionId }
+        }
+      }
+    });
+
+    // Staff-specific overrides/additions
+    const staffSpecificComponents = await prisma.staffSalaryComponent.findMany({
       where: { staffId },
       include: {
         salaryComponent: true,
       },
     });
+
+    // Merge them
+    const componentMap = new Map<string, any>();
+
+    for (const pc of positionComponents) {
+      componentMap.set(pc.id, { salaryComponent: pc, amount: null });
+    }
+
+    for (const ssc of staffSpecificComponents) {
+      componentMap.set(ssc.salaryComponentId, {
+        salaryComponent: ssc.salaryComponent,
+        amount: ssc.amount
+      });
+    }
+
+    return Array.from(componentMap.values());
   },
 
   async getAttendancesByPeriod(staffId: string, startDate: Date, endDate: Date) {

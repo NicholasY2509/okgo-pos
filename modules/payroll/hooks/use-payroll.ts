@@ -25,8 +25,11 @@ export function useGenerateBatchPayroll(onSuccess?: () => void) {
       toast.error(result.error);
     } else {
       toast.success("Penggajian massal berhasil dibuat!");
-      form.reset();
-      onSuccess?.();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        form.reset();
+      }
     }
   }
 

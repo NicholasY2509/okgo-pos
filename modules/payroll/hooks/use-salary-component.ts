@@ -10,25 +10,23 @@ export function useSalaryComponent(defaultValues?: UpdateSalaryComponentInput, o
   const isEditing = !!defaultValues
 
   const form = useForm<SalaryComponentInput>({
-    resolver: zodResolver(salaryComponentSchema),
-    defaultValues: defaultValues || { 
+    resolver: zodResolver(salaryComponentSchema) as any,
+    defaultValues: defaultValues || ({
       code: "",
       name: "",
       isDeduction: false,
       type: "FIXED",
-      amount: 0
-    },
+      amount: 0,
+      workPositionIds: []
+    } as SalaryComponentInput),
   })
 
   async function onSubmit(values: SalaryComponentInput) {
     setError(null)
-    
-    let result;
-    if (isEditing && defaultValues?.id) {
-      result = await updateSalaryComponentAction({ ...values, id: defaultValues.id })
-    } else {
-      result = await createSalaryComponentAction(values)
-    }
+
+    const result = (isEditing && defaultValues?.id)
+      ? await updateSalaryComponentAction({ ...values, id: defaultValues.id })
+      : await createSalaryComponentAction(values)
 
     if (result.error) {
       setError(result.error)
@@ -36,8 +34,11 @@ export function useSalaryComponent(defaultValues?: UpdateSalaryComponentInput, o
       return false
     } else {
       toast.success(isEditing ? "Komponen berhasil diubah!" : "Komponen berhasil dibuat!")
-      if (!isEditing) form.reset()
-      if (onSuccess) onSuccess()
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        if (!isEditing) form.reset()
+      }
       return true
     }
   }
