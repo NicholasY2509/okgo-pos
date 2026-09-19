@@ -12,9 +12,6 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   allowedDevOrigins: ["192.168.1.76"],
   async rewrites() {
     return [
