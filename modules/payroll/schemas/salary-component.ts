@@ -15,7 +15,7 @@ export const salaryComponentSchema = z.object({
   name: z.string().min(1, "Nama komponen wajib diisi"),
   isDeduction: z.boolean().default(false),
   type: z.enum(SALARY_COMPONENT_TYPES, {
-    errorMap: () => ({ message: "Tipe komponen wajib dipilih" }),
+    message: "Tipe komponen wajib dipilih",
   }),
   amount: z.coerce.number().min(0, "Jumlah tidak boleh negatif"),
   workPositionIds: z.array(z.string()).default([]),
