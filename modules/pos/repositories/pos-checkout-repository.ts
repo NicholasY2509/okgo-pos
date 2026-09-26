@@ -149,7 +149,15 @@ export const PosCheckoutRepository = {
         if (!staff || !staff.isActive) throw new Error(`Staf tidak valid: ${item.staffId}`);
 
         if (staff.workPosition?.incentiveRules) {
-          staffIncentiveRules = staff.workPosition.incentiveRules;
+          staffIncentiveRules = staff.workPosition.incentiveRules
+            .filter((rule: any) =>
+              rule.targetStaffLevel === null || rule.targetStaffLevel === staff.level
+            )
+            .sort((a: any, b: any) => {
+              if (a.targetStaffLevel && !b.targetStaffLevel) return -1;
+              if (!a.targetStaffLevel && b.targetStaffLevel) return 1;
+              return 0;
+            });
         }
 
         const room = await tx.room.findUnique({ where: { id: item.roomId } });
@@ -309,22 +317,22 @@ export const PosCheckoutRepository = {
       }
 
       for (const promoId of input.promotionIds) {
-        const promo = await tx.promotion.findUnique({ 
+        const promo = await tx.promotion.findUnique({
           where: { id: promoId },
           include: { applicableProducts: true }
         });
         console.log("[PROMO DEBUG] promotionId:", promoId, "found:", !!promo, "isActive:", promo?.isActive);
         if (promo && promo.isActive) {
-  
+
           // Validate schedule
           const now = new Date();
           const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
           const todayStr = days[now.getDay()];
           const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-  
+
           let isTimeValid = false;
           const schedules = promo.schedules as any[];
-  
+
           if (!schedules || !Array.isArray(schedules) || schedules.length === 0) {
             // No schedules = always active
             isTimeValid = true;
@@ -343,13 +351,13 @@ export const PosCheckoutRepository = {
               }
             }
           }
-  
+
           console.log("[PROMO DEBUG] isTimeValid:", isTimeValid, "day:", todayStr, "time:", currentTimeStr, "schedules:", JSON.stringify(promo.schedules));
-  
+
           if (!isTimeValid) {
             throw new Error(`Diskon promosi ${promo.name} tidak berlaku pada waktu ini.`);
           }
-  
+
           // Validate conditions (minQuantity, requiredServiceIds)
           if (promo.conditions) {
             const conditions = promo.conditions as any;
@@ -365,7 +373,7 @@ export const PosCheckoutRepository = {
               }
             }
           }
-  
+
           const reward = promo.reward as any;
           console.log("[PROMO DEBUG] reward:", JSON.stringify(reward), "subtotal before promo:", subtotal, "discountTotal before promo:", discountTotal);
           if (reward.type === "PERCENTAGE_TOTAL" && reward.value) {
@@ -402,7 +410,7 @@ export const PosCheckoutRepository = {
     for (const itemData of transactionItemsData) {
       if (itemData.type === "SERVICE" && itemData._tempStaffIncentiveRules) {
         const finalUnitPrice = Math.max(0, itemData.subtotal) / itemData.quantity;
-        
+
         let therapistIncentivePerUnit = 0;
         for (const rule of itemData._tempStaffIncentiveRules) {
           if (rule.ruleType === "SERVICE_PRICE_PERCENTAGE" && rule.flatPercentage) {
