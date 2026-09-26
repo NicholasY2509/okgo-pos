@@ -93,7 +93,7 @@ export function StaffOnboardingForm({ branches, roles, workPositions }: StaffOnb
                 control={form.control}
                 name="workPositionId"
                 render={({ field }) => (
-                  <FormItem className="col-span-2">
+                  <FormItem>
                     <FormLabel>Work Position</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
@@ -107,6 +107,28 @@ export function StaffOnboardingForm({ branches, roles, workPositions }: StaffOnb
                             {pos.name}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Level (Optional)</FormLabel>
+                    <Select onValueChange={(v) => field.onChange(v === "ALL" ? null : v)} value={field.value || "ALL"}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="No level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ALL">No level</SelectItem>
+                        <SelectItem value="JUNIOR">Junior</SelectItem>
+                        <SelectItem value="SENIOR">Senior</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

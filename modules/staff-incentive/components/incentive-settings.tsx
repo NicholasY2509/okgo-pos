@@ -57,6 +57,11 @@ export function IncentiveSettings({ workPositions, initialRules }: { workPositio
                     {rule.targetWorkPositions?.map((wp: any) => (
                       <Badge key={wp.id} variant="secondary" className="text-xs">{wp.name}</Badge>
                     ))}
+                    {rule.targetStaffLevel && (
+                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                        Level: {rule.targetStaffLevel}
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <Badge variant={rule.isActive ? "default" : "secondary"}>
@@ -132,6 +137,20 @@ function IncentiveRuleForm({ initialData, workPositions, onSuccess }: { initialD
           {form.formState.errors.name && <p className="text-red-500 text-sm">{form.formState.errors.name.message}</p>}
         </div>
         <div className="space-y-2">
+          <Label>Level Staff (Opsional)</Label>
+          <Select
+            value={form.watch("targetStaffLevel") || "ALL"}
+            onValueChange={(v: any) => form.setValue("targetStaffLevel", v === "ALL" ? null : v)}
+          >
+            <SelectTrigger><SelectValue placeholder="Semua Level" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Level</SelectItem>
+              <SelectItem value="JUNIOR">Junior</SelectItem>
+              <SelectItem value="SENIOR">Senior</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2 col-span-2">
           <Label>Posisi Kerja</Label>
           <div className="flex flex-wrap gap-2">
             {workPositions.map(wp => {

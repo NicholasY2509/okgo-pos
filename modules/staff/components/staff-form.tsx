@@ -68,57 +68,98 @@ export function StaffForm({ workPositions, initialData, onSuccess }: StaffFormPr
         </div>
       </div>
 
-      <div className="space-y-2 flex flex-col">
-        <label className="text-sm font-medium">Posisi Kerja</label>
-        <Popover open={positionOpen} onOpenChange={setPositionOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={positionOpen}
-              className={cn(
-                "w-full justify-between font-normal",
-                !selectedPositionId && "text-muted-foreground"
-              )}
-            >
-              {selectedPositionId
-                ? workPositions.find((wp) => wp.id === selectedPositionId)?.name
-                : "Pilih posisi..."}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
-            <Command>
-              <CommandInput placeholder="Cari posisi..." />
-              <CommandList>
-                <CommandEmpty>Posisi tidak ditemukan.</CommandEmpty>
-                <CommandGroup>
-                  {workPositions.map((wp) => (
-                    <CommandItem
-                      key={wp.id}
-                      value={wp.name}
-                      onSelect={() => {
-                        form.setValue("workPositionId", wp.id, { shouldValidate: true })
-                        setPositionOpen(false)
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedPositionId === wp.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {wp.name}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2 flex flex-col">
+          <label className="text-sm font-medium">Posisi Kerja</label>
+          <Popover open={positionOpen} onOpenChange={setPositionOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={positionOpen}
+                className={cn(
+                  "w-full justify-between font-normal",
+                  !selectedPositionId && "text-muted-foreground"
+                )}
+              >
+                {selectedPositionId
+                  ? workPositions.find((wp) => wp.id === selectedPositionId)?.name
+                  : "Pilih posisi..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Cari posisi..." />
+                <CommandList>
+                  <CommandEmpty>Posisi tidak ditemukan.</CommandEmpty>
+                  <CommandGroup>
+                    {workPositions.map((wp) => (
+                      <CommandItem
+                        key={wp.id}
+                        value={wp.name}
+                        onSelect={() => {
+                          form.setValue("workPositionId", wp.id, { shouldValidate: true })
+                          setPositionOpen(false)
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedPositionId === wp.id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {wp.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          {form.formState.errors.workPositionId && (
+            <p className="text-sm text-destructive">{form.formState.errors.workPositionId.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2 flex flex-col">
+          <label className="text-sm font-medium">Level Staf (Opsional)</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                className={cn(
+                  "w-full justify-between font-normal",
+                  !form.watch("level") && "text-muted-foreground"
+                )}
+              >
+                {form.watch("level") === "JUNIOR" ? "Junior" : form.watch("level") === "SENIOR" ? "Senior" : "Tidak ada level"}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+              <Command>
+                <CommandList>
+                  <CommandGroup>
+                    <CommandItem onSelect={() => form.setValue("level", null)}>
+                      <Check className={cn("mr-2 h-4 w-4", !form.watch("level") ? "opacity-100" : "opacity-0")} />
+                      Tidak ada level
                     </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        {form.formState.errors.workPositionId && (
-          <p className="text-sm text-destructive">{form.formState.errors.workPositionId.message}</p>
-        )}
+                    <CommandItem onSelect={() => form.setValue("level", "JUNIOR")}>
+                      <Check className={cn("mr-2 h-4 w-4", form.watch("level") === "JUNIOR" ? "opacity-100" : "opacity-0")} />
+                      Junior
+                    </CommandItem>
+                    <CommandItem onSelect={() => form.setValue("level", "SENIOR")}>
+                      <Check className={cn("mr-2 h-4 w-4", form.watch("level") === "SENIOR" ? "opacity-100" : "opacity-0")} />
+                      Senior
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       <div className="space-y-2 flex flex-col">

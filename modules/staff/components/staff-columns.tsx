@@ -14,6 +14,7 @@ export type StaffData = {
   phone: string | null
   staffIdNumber: string | null
   isActive: boolean
+  level?: string | null
   createdAt: Date
   workPosition: {
     name: string
@@ -45,6 +46,16 @@ export const staffColumns: ColumnDef<StaffData>[] = [
   {
     accessorKey: "workPosition.name",
     header: "Posisi",
+    cell: ({ row }) => (
+      <div className="flex flex-col">
+        <span>{row.original.workPosition.name}</span>
+        {row.original.level && (
+          <span className="text-xs text-muted-foreground">
+            {row.original.level === "JUNIOR" ? "Junior" : row.original.level === "SENIOR" ? "Senior" : row.original.level}
+          </span>
+        )}
+      </div>
+    ),
   },
   {
     id: "branches",

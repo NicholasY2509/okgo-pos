@@ -21,6 +21,7 @@ export function useStaffOnboarding() {
       lastName: "",
       phone: "",
       workPositionId: "",
+      level: null,
       branchId: "",
       roleId: "",
     },

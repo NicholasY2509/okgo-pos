@@ -18,6 +18,7 @@ export function useIncentiveRuleForm(initialData?: any, onSuccess?: () => void) 
       ruleType: initialData?.ruleType || "FIXED_AMOUNT",
       flatAmount: initialData?.flatAmount || 0,
       flatPercentage: initialData?.flatPercentage || 0,
+      targetStaffLevel: initialData?.targetStaffLevel || null,
       isActive: initialData?.isActive ?? true,
       tiers: initialData?.tiers || [],
     },

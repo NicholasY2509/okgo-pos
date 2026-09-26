@@ -50,6 +50,8 @@ model IncentiveRule {
   flatAmount     Decimal?
   flatPercentage Decimal?
 
+  targetStaffLevel String? // e.g., "JUNIOR", "SENIOR". If null, applies to all levels.
+
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -84,6 +86,7 @@ model Staff {
   isActive       Boolean @default(true)
   workPositionId String
   staffIdNumber  String?
+  level          String? // e.g. "JUNIOR", "SENIOR"
 
   // Kiosk Login Fields
   username String? @unique

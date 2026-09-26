@@ -15,6 +15,7 @@ export const staffOnboardingSchema = z.object({
   phone: z.string().optional(),
   staffIdNumber: z.string().optional(),
   workPositionId: z.string().min(1, "Work position is required"),
+  level: z.string().optional().nullable(),
 
   // Branch Assignment (Required)
   branchId: z.string().min(1, "Branch is required"),

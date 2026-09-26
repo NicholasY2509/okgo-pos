@@ -15,6 +15,7 @@ export const incentiveRuleSchema = z.object({
   ruleType: z.enum(["SERVICE_PRICE_PERCENTAGE", "VOUCHER_SALES_TIERED", "TOTAL_SALES_TIERED", "FIXED_AMOUNT"]),
   flatAmount: z.coerce.number().nullable().optional(),
   flatPercentage: z.coerce.number().nullable().optional(),
+  targetStaffLevel: z.string().nullable().optional(),
   isActive: z.boolean().default(true),
   tiers: z.array(incentiveTierSchema).optional().default([]),
 });

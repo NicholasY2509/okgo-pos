@@ -12,6 +12,7 @@ export const StaffOnboardingRepository = {
           phone: data.phone || null,
           staffIdNumber: data.staffIdNumber || null,
           workPositionId: data.workPositionId,
+          level: data.level || null,
           isActive: true, // Default to true
         },
       });

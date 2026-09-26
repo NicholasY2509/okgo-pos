@@ -7,6 +7,7 @@ export const createStaffSchema = z.object({
   email: z.string().email("Email tidak valid").optional().or(z.literal("")).nullable(),
   isActive: z.boolean().default(true),
   workPositionId: z.string().min(1, "Posisi kerja wajib diisi"),
+  level: z.string().optional().nullable(),
   staffIdNumber: z.string().optional().nullable(),
   username: z.string().optional().nullable(),
   pin: z.string().min(4, "PIN minimal 4 digit").optional().nullable().or(z.literal("")),
