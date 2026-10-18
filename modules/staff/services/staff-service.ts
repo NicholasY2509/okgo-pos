@@ -56,6 +56,14 @@ export class StaffService {
     return await StaffRepository.getStaffById(id)
   }
 
+  static async getActiveStaffIds() {
+    return await StaffRepository.getActiveStaffIds()
+  }
+
+  static async getActiveStaffForExport() {
+    return await StaffRepository.getActiveStaffForExport()
+  }
+
   static async createStaff(data: CreateStaffInput) {
     if (!data.staffIdNumber) {
       const lastStaff = await StaffRepository.getLastStaffIdNumber()

@@ -23,8 +23,9 @@ export async function verifyKioskPinAction(values: KioskLoginInput) {
     })
 
     return { success: true, data: staff }
-  } catch (error: any) {
-    return { error: error.message || "An unexpected error occurred." }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An unexpected error occurred."
+    return { error: message }
   }
 }
 
@@ -33,3 +34,4 @@ export async function exitKioskAction() {
   cookieStore.delete("staff_session")
   return { success: true }
 }
+

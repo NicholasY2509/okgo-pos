@@ -4,9 +4,15 @@ import { revalidatePath } from "next/cache"
 import { UserService } from "../services/user-service"
 import { createUserSchema, updateUserSchema, type CreateUserInput, type UpdateUserInput } from "../schemas/user-schema"
 import { Prisma } from "@/lib/generated/prisma"
+import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 
 export async function createUserAction(values: CreateUserInput) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const validatedFields = createUserSchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -17,7 +23,7 @@ export async function createUserAction(values: CreateUserInput) {
     revalidatePath("/admin/users")
     
     return { success: true, data: user }
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return { error: "Email sudah terdaftar." }
     }
@@ -28,6 +34,11 @@ export async function createUserAction(values: CreateUserInput) {
 
 export async function updateUserAction(values: UpdateUserInput) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const validatedFields = updateUserSchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -40,7 +51,7 @@ export async function updateUserAction(values: UpdateUserInput) {
     revalidatePath("/admin/users")
     
     return { success: true, data: user }
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return { error: "Email sudah terdaftar." }
     }
@@ -51,10 +62,15 @@ export async function updateUserAction(values: UpdateUserInput) {
 
 export async function deleteUserAction(id: string) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     await UserService.deleteUser(id)
     revalidatePath("/admin/users")
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to delete user:", error)
     return { error: "Gagal menghapus pengguna." }
   }

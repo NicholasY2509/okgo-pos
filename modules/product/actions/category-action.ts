@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { CategoryService } from "../services/category-service"
+import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 import {
   createCategorySchema,
   updateCategorySchema,
@@ -11,6 +12,11 @@ import {
 
 export async function createCategoryAction(values: CreateCategoryInput) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const validatedFields = createCategorySchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -20,7 +26,7 @@ export async function createCategoryAction(values: CreateCategoryInput) {
     const category = await CategoryService.createCategory(validatedFields.data)
     revalidatePath("/admin/products")
     return { success: true, data: category }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to create category:", error)
     return { error: "Gagal membuat kategori." }
   }
@@ -28,6 +34,11 @@ export async function createCategoryAction(values: CreateCategoryInput) {
 
 export async function updateCategoryAction(values: UpdateCategoryInput) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const validatedFields = updateCategorySchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -38,7 +49,7 @@ export async function updateCategoryAction(values: UpdateCategoryInput) {
     const category = await CategoryService.updateCategory(id, data)
     revalidatePath("/admin/products")
     return { success: true, data: category }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to update category:", error)
     return { error: "Gagal memperbarui kategori." }
   }
@@ -46,10 +57,15 @@ export async function updateCategoryAction(values: UpdateCategoryInput) {
 
 export async function deleteCategoryAction(id: string) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     await CategoryService.deleteCategory(id)
     revalidatePath("/admin/products")
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to delete category:", error)
     return { error: "Gagal menghapus kategori." }
   }

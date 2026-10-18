@@ -4,13 +4,16 @@ import { useMemo } from "react"
 import { DataTable } from "@/components/ui/data-table"
 import { ProductDialog } from "./product-dialog"
 import { getProductsColumns } from "./products-columns"
+import type { Category, ProductWithCategory } from "../types/product-types"
 
 interface ProductsTableProps {
-  products: any[]
-  categories: any[]
+  products: ProductWithCategory[]
+  categories: Category[]
 }
 
 export function ProductsTable({ products, categories }: ProductsTableProps) {
+  const columns = useMemo(() => getProductsColumns(categories), [categories])
+
   if (products.length === 0) {
     return (
       <div className="p-12 text-center border border-dashed rounded-xl bg-card">
@@ -20,8 +23,6 @@ export function ProductsTable({ products, categories }: ProductsTableProps) {
       </div>
     )
   }
-
-  const columns = useMemo(() => getProductsColumns(categories), [categories])
 
   return <DataTable columns={columns} data={products} emptyMessage="Layanan tidak ditemukan." />
 }

@@ -123,6 +123,14 @@ export class TimetableService {
     });
   }
 
+  static async updateSessionRoom(sessionId: string, roomId: string) {
+    const session = await TimetableRepository.getSessionById(sessionId);
+    if (!session) throw new Error("Session not found");
+    if (session.status === "COMPLETED") throw new Error("Sesi sudah selesai");
+
+    return await TimetableRepository.updateSession(sessionId, { roomId });
+  }
+
   static async getPendingBookings(branchId: string) {
     const bookings = await TimetableRepository.getPendingBookings(branchId);
 

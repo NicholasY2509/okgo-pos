@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { StaffUserService } from "../services/staff-user-service"
+import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 import {
   createStaffUserSchema,
   deleteStaffUserSchema,
@@ -11,6 +12,7 @@ import {
 
 export async function linkUserToStaffAction(values: CreateStaffUserInput) {
   try {
+    await AuthGuardService.requireAuth()
     const validatedFields = createStaffUserSchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -20,14 +22,16 @@ export async function linkUserToStaffAction(values: CreateStaffUserInput) {
     const staffUser = await StaffUserService.linkUserToStaff(validatedFields.data)
     revalidatePath("/admin/staff")
     return { success: true, data: staffUser }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to link user to staff:", error)
-    return { error: "Failed to link user to staff." }
+    const message = error instanceof Error ? error.message : "Failed to link user to staff."
+    return { error: message }
   }
 }
 
 export async function unlinkUserFromStaffAction(values: DeleteStaffUserInput) {
   try {
+    await AuthGuardService.requireAuth()
     const validatedFields = deleteStaffUserSchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -37,8 +41,10 @@ export async function unlinkUserFromStaffAction(values: DeleteStaffUserInput) {
     await StaffUserService.unlinkUserFromStaff(validatedFields.data)
     revalidatePath("/admin/staff")
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to unlink user from staff:", error)
-    return { error: "Failed to unlink user from staff." }
+    const message = error instanceof Error ? error.message : "Failed to unlink user from staff."
+    return { error: message }
   }
 }
+

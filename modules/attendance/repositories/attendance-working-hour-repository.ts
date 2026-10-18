@@ -77,5 +77,37 @@ export const AttendanceWorkingHourRepository = {
 
     return { data, total };
   },
+
+  async findOverlapping(minDate: Date, maxDate: Date, staffIds: string[]) {
+    return prisma.attendanceWorkingHour.findFirst({
+      where: {
+        attendanceDate: {
+          gte: minDate,
+          lte: maxDate,
+        },
+        staffId: { in: staffIds },
+      },
+    });
+  },
+
+  async replaceSchedules(
+    dateStaffEntries: [string, string[]][],
+    records: { staffId: string; attendanceDate: Date; workingHourId: string }[]
+  ) {
+    return prisma.$transaction(async (tx) => {
+      for (const [dateStr, staffIds] of dateStaffEntries) {
+        await tx.attendanceWorkingHour.deleteMany({
+          where: {
+            attendanceDate: new Date(dateStr),
+            staffId: { in: staffIds },
+          },
+        });
+      }
+
+      return tx.attendanceWorkingHour.createMany({
+        data: records,
+      });
+    });
+  },
 };
 

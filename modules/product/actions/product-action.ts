@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { ProductService } from "../services/product-service"
+import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 import {
   createProductSchema,
   updateProductSchema,
@@ -11,6 +12,11 @@ import {
 
 export async function createProductAction(values: CreateProductInput) {
   try {
+    const authCheck = await AuthGuardService.requireAuth()
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const validatedFields = createProductSchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -27,8 +33,11 @@ export async function createProductAction(values: CreateProductInput) {
 }
 
 export async function updateProductAction(values: UpdateProductInput) {
-  console.log("Received values in update:", values)
   try {
+    const authCheck = await AuthGuardService.requireAuth()
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
     const validatedFields = updateProductSchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -40,14 +49,20 @@ export async function updateProductAction(values: UpdateProductInput) {
     const product = await ProductService.updateProduct(id, data)
     revalidatePath("/admin/products")
     return { success: true, data: product }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to update product:", error)
-    return { error: `Gagal memperbarui produk: ${error?.message || "Unknown error"}` }
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return { error: `Gagal memperbarui produk: ${message}` }
   }
 }
 
 export async function deleteProductAction(id: string) {
   try {
+    const authCheck = await AuthGuardService.requireAuth()
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     await ProductService.deleteProduct(id)
     revalidatePath("/admin/products")
     return { success: true }
@@ -59,6 +74,11 @@ export async function deleteProductAction(id: string) {
 
 export async function toggleProductMarketingAction(id: string, showOnMarketing: boolean) {
   try {
+    const authCheck = await AuthGuardService.requireAuth()
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     await ProductService.toggleMarketingStatus(id, showOnMarketing)
     revalidatePath("/admin/marketing")
     revalidatePath("/")
@@ -88,7 +108,8 @@ export async function getAllProductsListAction() {
     // Just fetch up to 1000 products for the combobox
     const result = await ProductService.getAllProducts({ page: 1, limit: 1000 });
     return { success: true, data: result.products };
-  } catch (error: any) {
-    return { error: error.message || "Gagal memuat produk" };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal memuat produk";
+    return { error: message };
   }
 }

@@ -164,5 +164,25 @@ export const StaffRepository = {
       orderBy: { staffIdNumber: "desc" },
       select: { staffIdNumber: true }
     })
+  },
+
+  async getActiveStaffIds() {
+    return await prisma.staff.findMany({
+      where: { isActive: true },
+      select: { id: true }
+    })
+  },
+
+  async getActiveStaffForExport() {
+    return await prisma.staff.findMany({
+      where: { isActive: true },
+      orderBy: { firstName: "asc" },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        staffIdNumber: true
+      }
+    })
   }
 }

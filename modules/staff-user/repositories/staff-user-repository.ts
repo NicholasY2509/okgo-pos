@@ -32,5 +32,11 @@ export const StaffUserRepository = {
         }
       }
     })
+  },
+
+  async findByUserId(userId: string) {
+    return await prisma.staffUser.findFirst({
+      where: { userId }
+    })
   }
 }

@@ -4,13 +4,16 @@ import { useMemo } from "react"
 import { DataTable } from "@/components/ui/data-table"
 import { CategoryDialog } from "./category-dialog"
 import { getCategoriesColumns } from "./categories-columns"
+import type { CategoryWithRelations, WorkPositionItem } from "../types/product-types"
 
 interface CategoriesTableProps {
-  categories: any[]
-  workPositions: any[]
+  categories: CategoryWithRelations[]
+  workPositions: WorkPositionItem[]
 }
 
 export function CategoriesTable({ categories, workPositions }: CategoriesTableProps) {
+  const columns = useMemo(() => getCategoriesColumns(workPositions), [workPositions])
+
   if (categories.length === 0) {
     return (
       <div className="p-12 text-center border border-dashed rounded-xl bg-card">
@@ -20,8 +23,6 @@ export function CategoriesTable({ categories, workPositions }: CategoriesTablePr
       </div>
     )
   }
-
-  const columns = useMemo(() => getCategoriesColumns(workPositions), [workPositions])
 
   return <DataTable columns={columns} data={categories} emptyMessage="Kategori tidak ditemukan." />
 }

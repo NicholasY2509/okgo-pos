@@ -13,7 +13,7 @@ export class AttendanceWorkingHourService {
   static async bulkAssignSchedules(data: BulkAttendanceWorkingHourInput) {
     // Generate an array of dates between startDate and endDate inclusive
     const dates: Date[] = [];
-    let currentDate = new Date(data.startDate);
+    const currentDate = new Date(data.startDate);
     const end = new Date(data.endDate);
 
     while (currentDate <= end) {
@@ -55,6 +55,21 @@ export class AttendanceWorkingHourService {
         hasPreviousPage: page > 1,
       },
     };
+  }
+
+  static async checkExistingSchedules(minDate: Date, maxDate: Date, staffIds: string[]) {
+    return await AttendanceWorkingHourRepository.findOverlapping(minDate, maxDate, staffIds);
+  }
+
+  static async replaceSchedules(
+    dateStaffEntries: [string, string[]][],
+    records: { staffId: string; attendanceDate: Date; workingHourId: string }[]
+  ) {
+    return await AttendanceWorkingHourRepository.replaceSchedules(dateStaffEntries, records);
+  }
+
+  static async deleteSchedule(id: string) {
+    return await AttendanceWorkingHourRepository.delete(id);
   }
 }
 

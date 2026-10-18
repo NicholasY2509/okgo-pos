@@ -3,9 +3,15 @@
 import { revalidatePath } from "next/cache"
 import { voucherPacketSchema, type VoucherPacketInput } from "../schemas/voucher-packet"
 import { VoucherPacketService } from "../services/voucher-packet-service"
+import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 
 export async function createVoucherPacketAction(values: VoucherPacketInput) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const validatedFields = voucherPacketSchema.safeParse(values)
     if (!validatedFields.success) {
       return { error: "Data formulir tidak valid." }
@@ -24,14 +30,20 @@ export async function createVoucherPacketAction(values: VoucherPacketInput) {
         price: Number(result.price)
       } 
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create voucher packet:", error)
-    return { error: error?.message || "Terjadi kesalahan tak terduga." }
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan tak terduga."
+    return { error: message }
   }
 }
 
 export async function updateVoucherPacketAction(id: string, values: VoucherPacketInput) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const validatedFields = voucherPacketSchema.safeParse(values)
     if (!validatedFields.success) {
       return { error: "Data formulir tidak valid." }
@@ -49,34 +61,46 @@ export async function updateVoucherPacketAction(id: string, values: VoucherPacke
         price: Number(result.price)
       } 
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to update voucher packet:", error)
-    return { error: error?.message || "Terjadi kesalahan tak terduga." }
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan tak terduga."
+    return { error: message }
   }
 }
 
 export async function deleteVoucherPacketAction(id: string, productId: string) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     await VoucherPacketService.delete(id)
     
     revalidatePath(`/dashboard/products/${productId}`)
     revalidatePath("/dashboard/vouchers")
     
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to delete voucher packet:", error)
-    return { error: error?.message || "Terjadi kesalahan tak terduga." }
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan tak terduga."
+    return { error: message }
   }
 }
 
-
 export async function generateVouchersAction(packetId: string, quantity: number) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const result = await VoucherPacketService.generateVouchers(packetId, quantity)
     revalidatePath("/admin/vouchers")
     return { success: true, count: result.length }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to generate vouchers:", error)
-    return { error: error?.message || "Terjadi kesalahan tak terduga." }
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan tak terduga."
+    return { error: message }
   }
 }

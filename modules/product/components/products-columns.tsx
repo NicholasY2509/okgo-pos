@@ -8,8 +8,11 @@ import { Edit, ChevronRight } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { formatIDR } from "@/lib/utils"
+import type { Category, ProductWithCategory } from "../types/product-types"
 
-export const getProductsColumns = (categories: any[]): ColumnDef<any>[] => [
+export const getProductsColumns = (
+  categories: Category[]
+): ColumnDef<ProductWithCategory>[] => [
   {
     accessorKey: "image",
     header: "Gambar",

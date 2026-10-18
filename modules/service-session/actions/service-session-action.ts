@@ -8,9 +8,10 @@ export async function getStaffDailySessionsAction(staffId: string) {
   try {
     const sessions = await ServiceSessionService.getStaffDailySessions(staffId)
     return { success: true, data: sessions }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to fetch daily sessions:", error)
-    return { error: "Gagal mengambil riwayat sesi hari ini." }
+    const message = error instanceof Error ? error.message : "Gagal mengambil riwayat sesi hari ini."
+    return { error: message }
   }
 }
 
@@ -19,9 +20,10 @@ export async function startServiceSessionAction(sessionId: string, tenantSlug: s
     await ServiceSessionService.startSession(sessionId)
     revalidatePath(`/${tenantSlug}/kiosk/dashboard`)
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to start session:", error)
-    return { error: "Gagal memulai sesi." }
+    const message = error instanceof Error ? error.message : "Gagal memulai sesi."
+    return { error: message }
   }
 }
 
@@ -30,9 +32,10 @@ export async function endServiceSessionAction(sessionId: string, tenantSlug: str
     await ServiceSessionService.endSession(sessionId)
     revalidatePath(`/${tenantSlug}/kiosk/dashboard`)
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to end session:", error)
-    return { error: "Gagal mengakhiri sesi."  }
+    const message = error instanceof Error ? error.message : "Gagal mengakhiri sesi."
+    return { error: message }
   }
 }
 
@@ -44,9 +47,10 @@ export async function getDailyReviewableSessionsAction(tenantSlug: string) {
     }
     const sessions = await ServiceSessionService.getDailyReviewableSessions(branch.id)
     return { success: true, data: sessions }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to fetch reviewable sessions:", error)
-    return { error: "Gagal mengambil sesi yang perlu diulas." }
+    const message = error instanceof Error ? error.message : "Gagal mengambil sesi yang perlu diulas."
+    return { error: message }
   }
 }
 
@@ -55,8 +59,10 @@ export async function submitReviewAction(sessionId: string, tenantSlug: string, 
     await ServiceSessionService.submitReview(sessionId, rating, reviewComment)
     revalidatePath(`/${tenantSlug}/reviews`)
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to submit review:", error)
-    return { error: "Gagal mengirim ulasan." }
+    const message = error instanceof Error ? error.message : "Gagal mengirim ulasan."
+    return { error: message }
   }
 }
+

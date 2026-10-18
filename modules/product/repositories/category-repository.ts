@@ -8,7 +8,8 @@ export const CategoryRepository = {
       include: {
         _count: {
           select: { products: true }
-        }
+        },
+        targetWorkPosition: true
       }
     })
   },

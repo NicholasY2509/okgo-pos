@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { WorkPositionService } from "../services/work-position-service"
+import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 import {
   createWorkPositionSchema,
   updateWorkPositionSchema,
@@ -11,6 +12,11 @@ import {
 
 export async function createWorkPositionAction(values: CreateWorkPositionInput) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const validatedFields = createWorkPositionSchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -20,7 +26,7 @@ export async function createWorkPositionAction(values: CreateWorkPositionInput) 
     const position = await WorkPositionService.createWorkPosition(validatedFields.data)
     revalidatePath("/admin/staff/work-positions")
     return { success: true, data: position }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to create work position:", error)
     return { error: "Gagal membuat posisi kerja." }
   }
@@ -28,6 +34,11 @@ export async function createWorkPositionAction(values: CreateWorkPositionInput) 
 
 export async function updateWorkPositionAction(values: UpdateWorkPositionInput) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     const validatedFields = updateWorkPositionSchema.safeParse(values)
 
     if (!validatedFields.success) {
@@ -38,7 +49,7 @@ export async function updateWorkPositionAction(values: UpdateWorkPositionInput) 
     const position = await WorkPositionService.updateWorkPosition(id, data)
     revalidatePath("/admin/staff/work-positions")
     return { success: true, data: position }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to update work position:", error)
     return { error: "Gagal memperbarui posisi kerja." }
   }
@@ -46,10 +57,15 @@ export async function updateWorkPositionAction(values: UpdateWorkPositionInput) 
 
 export async function deleteWorkPositionAction(id: string) {
   try {
+    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
     await WorkPositionService.deleteWorkPosition(id)
     revalidatePath("/admin/staff/work-positions")
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Failed to delete work position:", error)
     return { error: "Gagal menghapus posisi kerja." }
   }

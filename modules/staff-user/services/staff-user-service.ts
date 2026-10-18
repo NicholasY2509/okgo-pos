@@ -13,4 +13,8 @@ export class StaffUserService {
   static async unlinkUserFromStaff(data: DeleteStaffUserInput) {
     return await StaffUserRepository.unlinkUserFromStaff(data)
   }
+
+  static async findByUserId(userId: string) {
+    return await StaffUserRepository.findByUserId(userId)
+  }
 }

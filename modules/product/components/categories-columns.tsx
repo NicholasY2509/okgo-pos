@@ -4,8 +4,11 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { CategoryDialog } from "./category-dialog"
 import { Edit } from "lucide-react"
+import type { CategoryWithRelations, WorkPositionItem } from "../types/product-types"
 
-export const getCategoriesColumns = (workPositions: any[]): ColumnDef<any>[] => [
+export const getCategoriesColumns = (
+  workPositions: WorkPositionItem[]
+): ColumnDef<CategoryWithRelations>[] => [
   {
     accessorKey: "name",
     header: "Nama",
