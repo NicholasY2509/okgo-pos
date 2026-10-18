@@ -1,0 +1,50 @@
+{
+  "description": "Structure governance hooks: orient on session start, prompt for a branch before the first edit on the default branch, gate dependency changes behind an ADR, and check completion discipline before stopping.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/governance-status.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/adr-gate.sh\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/branch-guard.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "You are checking Structure completion discipline for the session that is about to end. Be permissive by default — only block when something concrete is missing.\n\nReturn {\"decision\":\"approve\"} immediately if ANY of these hold:\n- No files were created or modified this session (questions, reading, exploration, search).\n- Only files outside the repository were touched (scratchpad, temp directories).\n- The user explicitly ended, interrupted, cancelled, or deferred the work.\n- The user was told about a remaining step and chose not to do it.\n- The only modified files are the governance documents themselves (CODINGSTYLE.md, DESIGN.md, LOG.md, docs/adr/).\n\nOtherwise, source code in the repository was changed. Return {\"decision\":\"block\",\"reason\":\"...\"} ONLY if one of these is definitely true, and name the specific omission in the reason:\n1. The change was reported as done, but no format/lint/typecheck/test command was run this session, and the repository has such tooling available. The fix is to run the verification gate.\n2. A dependency was added or removed, a schema or data model was changed, or a breaking change was made to a shared signature or API, and no ADR was written and no ADR was explicitly waived by the user. The fix is to write the ADR.\n3. Substantive work was completed that produced durable context — a non-obvious reason, a rejected approach, a gotcha, or an unfinished thread — and LOG.md was not updated. The fix is to append a LOG.md entry.\n\nDo not block for: missing tests when the project does not require them, style preferences, incomplete work the user knows is incomplete, or anything you are merely unsure about. When in doubt, approve. A false block wastes the user's turn; a false approve costs little.\n\nKeep the reason to one sentence naming the specific missing step."
+          }
+        ]
+      }
+    ]
+  }
+}

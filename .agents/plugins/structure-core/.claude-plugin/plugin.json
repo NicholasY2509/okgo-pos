@@ -1,0 +1,23 @@
+{
+  "name": "structure-core",
+  "version": "0.3.0",
+  "description": "Stack-agnostic project governance for Claude Code. Enforces a four-document contract (CODINGSTYLE.md, DESIGN.md, LOG.md, docs/adr/), gates package installs and breaking changes behind Architecture Decision Records, detects the repository toolchain to run the right format/lint/typecheck/test commands, translates Figma CSS into the project's styling system, and holds implementations to no-hardcoding and algorithmic-quality standards.",
+  "license": "MIT",
+  "keywords": [
+    "governance",
+    "adr",
+    "architecture-decision-record",
+    "conventions",
+    "coding-style",
+    "design-tokens",
+    "figma",
+    "tailwind",
+    "conventional-commits",
+    "verification",
+    "stack-detection"
+  ],
+  "author": {
+    "name": "Geoffrey Farrel",
+    "email": "geoffreyfarrel67@gmail.com"
+  }
+}
