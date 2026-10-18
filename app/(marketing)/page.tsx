@@ -247,7 +247,7 @@ export default function MarketingPage() {
           </h2>
           <div className="w-12 h-[1px] bg-border mx-auto mb-10"></div>
           <p className="text-muted-foreground font-light text-sm md:text-xl leading-relaxed max-w-3xl mx-auto">
-            Di Nyenyak, kami percaya bahwa istirahat yang berkualitas adalah pondasi untuk hidup yang lebih baik. Melalui sentuhan terapis profesional, teknik pijat tradisional yang disempurnakan, dan suasana yang menenangkan, kami menghadirkan pengalaman relaksasi yang memulihkan energi Anda sepenuhnya.
+            Sebagai destinasi <strong className="font-normal text-foreground">tempat pijat dan spa terbaik di Medan</strong>, kami percaya bahwa istirahat yang berkualitas adalah pondasi untuk hidup yang lebih baik. Melalui sentuhan terapis profesional, teknik <strong className="font-normal text-foreground">pijat Medan</strong> yang disempurnakan, dan suasana yang menenangkan, kami menghadirkan pengalaman relaksasi yang memulihkan energi Anda sepenuhnya.
           </p>
         </div>
       </section>
@@ -334,7 +334,8 @@ export default function MarketingPage() {
       {/* FOOTER */}
       <footer className="bg-background py-24 px-6 border-t border-border/30 text-center relative">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-          <p className="text-2xl font-extralight text-foreground mb-8 tracking-[0.2em] text-primary">NYENYAK</p>
+          <p className="text-2xl font-extralight text-foreground mb-4 tracking-[0.2em] text-primary">NYENYAK</p>
+          <p className="text-sm font-light text-muted-foreground mb-8 max-w-md">Tempat Pijat & Spa Premium di Medan untuk Relaksasi Maksimal</p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-xs uppercase tracking-widest text-muted-foreground mb-16">
             <span>Medan, Indonesia</span>
             <span className="hidden md:inline-block text-muted-foreground/40">•</span>
@@ -344,7 +345,7 @@ export default function MarketingPage() {
             <span className="block md:hidden w-4 h-[1px] bg-muted-foreground/20"></span>
             <span>+62 812 3456 7890</span>
           </div>
-          <p className="text-muted-foreground/60 text-xs font-light">&copy; {new Date().getFullYear()} Nyenyak. All Rights Reserved.</p>
+          <p className="text-muted-foreground/60 text-xs font-light">&copy; {new Date().getFullYear()} Nyenyak Tempat Pijat & Spa Medan. All Rights Reserved.</p>
         </div>
       </footer>
     </div>

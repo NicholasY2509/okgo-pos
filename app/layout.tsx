@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.nyenyak.com"),
   title: {
     template: "%s | Nyenyak Healing Point",
-    default: "Nyenyak Healing Point",
+    default: "Nyenyak Healing Point | Tempat Pijat & Spa Medan",
   },
   applicationName: "Nyenyak",
   appleWebApp: {
@@ -45,11 +45,11 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     capable: true,
   },
-  description: "Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.",
-  keywords: ["Nyenyak Healing Point", "spa", "massage", "relaksasi", "terapi tidur", "medan"],
+  description: "Tempat pijat dan spa terbaik di Medan. Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.",
+  keywords: ["Nyenyak Healing Point", "spa", "massage", "relaksasi", "terapi tidur", "medan", "tempat pijat", "pijat medan", "spa medan", "tempat pijat medan", "pijat panggilan medan"],
   openGraph: {
-    title: "Nyenyak Healing Point",
-    description: "Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda.",
+    title: "Nyenyak Healing Point | Tempat Pijat & Spa Medan",
+    description: "Tempat pijat dan spa terbaik di Medan. Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam.",
     type: "website",
     locale: "id_ID",
     siteName: "Nyenyak Healing Point",
@@ -72,7 +72,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="id"
       suppressHydrationWarning
       className={cn("antialiased", fontMono.variable, fontSans.variable, fontHeading.variable, fontDisplay.variable, "font-sans")}
     >
@@ -82,10 +82,19 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "WebSite",
+              "@type": ["WebSite", "DaySpa", "HealthAndBeautyBusiness"],
               "name": "Nyenyak Healing Point",
-              "alternateName": ["Nyenyak", "Nyenyak Spa"],
-              "url": "https://www.nyenyak.com/"
+              "alternateName": ["Nyenyak", "Nyenyak Spa", "Tempat Pijat Nyenyak Medan"],
+              "url": "https://www.nyenyak.com/",
+              "description": "Tempat pijat dan spa terbaik di Medan. Lepas lelah, tidur lebih nyenyak.",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Medan",
+                "addressRegion": "Sumatera Utara",
+                "addressCountry": "ID"
+              },
+              "telephone": "+6281234567890",
+              "priceRange": "$$"
             })
           }}
         />
