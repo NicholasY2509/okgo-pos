@@ -40,7 +40,7 @@ export function BookingWizard() {
         </nav>
 
         <div className="flex-1 flex flex-col items-center justify-center py-8 px-6 text-center animate-in fade-in duration-1000">
-          <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tight text-foreground mb-6">
+          <h2 className="text-3xl md:text-5xl font-lighter uppercase tracking-wider text-foreground mb-6">
             Booking Berhasil
           </h2>
           <p className="text-muted-foreground font-light max-w-sm text-sm leading-relaxed mb-12">
@@ -49,7 +49,7 @@ export function BookingWizard() {
           <div className="flex flex-col items-center gap-4 w-full">
             <Button
               variant="outline"
-              className="min-w-[240px] text-foreground font-light tracking-[0.2em] uppercase text-xs h-12 rounded-none border-foreground/30 hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-500"
+              className="min-w-[240px] text-foreground font-light tracking-[0.2em] uppercase text-xs h-12 rounded-none border-foreground/30 hover:border-foreground hover:bg-foreground transition-all duration-500"
               onClick={() => window.location.href = "/"}
             >
               Kembali Ke Halaman Utama

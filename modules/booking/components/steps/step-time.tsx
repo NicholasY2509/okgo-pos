@@ -155,10 +155,43 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
           }
         }
 
+        // Count unassigned bookings in this slot
+        let unassignedInSlot = 0;
+        if (dailySchedule.unassignedBookings) {
+          dailySchedule.unassignedBookings.forEach((bkg: any) => {
+            if (bkg.scheduledStartTime) {
+              const bStart = new Date(bkg.scheduledStartTime);
+              const bEnd = addMinutes(bStart, bkg.estimatedDuration || 60);
+              if (slotStart < bEnd && slotEnd > bStart) {
+                unassignedInSlot += (bkg.guestCount || 1);
+              }
+            }
+          });
+        }
+
+        // Check room capacity
+        let occupiedRooms = 0;
+        if (dailySchedule.roomSessions) {
+          dailySchedule.roomSessions.forEach((sess: any) => {
+            if (sess.startTime && sess.endTime) {
+              const rStart = new Date(sess.startTime);
+              const rEnd = new Date(sess.endTime);
+              if (slotStart < rEnd && slotEnd > rStart) {
+                occupiedRooms += 1;
+              }
+            }
+          });
+        }
+
+        const totalCapacity = dailySchedule.totalCapacity || (dailySchedule.rooms?.length || 1);
+        const availableRooms = Math.max(0, totalCapacity - occupiedRooms - unassignedInSlot);
+        const remainingStaff = Math.max(0, availableStaff - unassignedInSlot);
+        const slotCapacity = Math.min(remainingStaff, availableRooms);
+
         slots.push({
           timeString: slotStart.toISOString(),
           label: slotStart.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-          availableStaff
+          availableStaff: slotCapacity
         });
       }
     }

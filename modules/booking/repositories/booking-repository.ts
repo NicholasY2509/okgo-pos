@@ -77,15 +77,40 @@ export const BookingRepository = {
       }
     });
 
-    const staffSchedules = staff.map(s => ({
-      ...s,
-      sessions: sessions
+    const unassignedBookings = await prisma.booking.findMany({
+      where: {
+        branchId,
+        isAssignedToTimetable: false,
+        status: { in: ["PENDING"] },
+        scheduledStartTime: { gte: start, lte: end }
+      },
+      include: { items: true }
+    });
+
+    const staffSchedules = staff.map(s => {
+      const staffSessions = sessions
         .filter(session => session.staffId === s.id)
         .map(sess => ({
           startTime: sess.startTime,
           endTime: sess.endTime || addMinutes(sess.startTime!, 60),
-        }))
-    }));
+        }));
+
+      for (const bkg of unassignedBookings) {
+        if (!bkg.scheduledStartTime) continue;
+        const hasRequested = bkg.items.some(item => item.requestedStaffId === s.id);
+        if (hasRequested) {
+          staffSessions.push({
+            startTime: bkg.scheduledStartTime,
+            endTime: addMinutes(bkg.scheduledStartTime, bkg.estimatedDuration || 60),
+          });
+        }
+      }
+
+      return {
+        ...s,
+        sessions: staffSessions
+      };
+    });
 
     const totalCapacity = rooms.reduce((acc, r) => acc + (r.capacity || 1), 0);
     const roomSessions = sessions.filter(s => s.roomId).map(s => ({
@@ -93,7 +118,13 @@ export const BookingRepository = {
       endTime: s.endTime || addMinutes(s.startTime!, 60)
     }));
 
-    return { staffSchedules, roomSessions, totalCapacity, rooms };
+    const simplifiedUnassigned = unassignedBookings.map(b => ({
+      scheduledStartTime: b.scheduledStartTime,
+      estimatedDuration: b.estimatedDuration || 60,
+      guestCount: b.guestCount || b.items.length || 1,
+    }));
+
+    return { staffSchedules, roomSessions, totalCapacity, rooms, unassignedBookings: simplifiedUnassigned };
   },
 
   async getAvailableSlots(branchId: string, dateStr: string, selections: { serviceId?: string, staffId?: string }[]) {
