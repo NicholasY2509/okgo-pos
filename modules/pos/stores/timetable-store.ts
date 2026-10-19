@@ -85,6 +85,7 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   setDate: (date) => {
     set({ date });
     get().fetchSessions();
+    get().fetchPendingBookings();
   },
   setIsBookingModalOpen: (isBookingModalOpen) => set({ isBookingModalOpen }),
   setSelectedSessionForInfo: (selectedSessionForInfo) => set({ selectedSessionForInfo }),

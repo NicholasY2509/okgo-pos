@@ -20,12 +20,20 @@ export class TimetableService {
       || session.booking?.customerName
       || "Walk-in";
 
+    const customerPhone = session.transactionItem?.transaction?.customer?.phone
+      || session.booking?.customer?.phone
+      || session.booking?.customerPhone
+      || null;
+
     return {
       ...session,
+      isBooking: isBooking || !!session.bookingId,
+      bookingNumber: session.booking?.bookingNumber,
       isVip: !!session.transactionItem?.transaction?.isVip,
       itemName,
       paymentStatus,
       customerName,
+      customerPhone,
       transactionItem: session.transactionItem ? {
         ...session.transactionItem,
         unitPrice: session.transactionItem.unitPrice ? Number(session.transactionItem.unitPrice) : 0,

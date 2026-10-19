@@ -1,8 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
+import { isSameDay } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CurrentTimeLine } from "./current-time-line";
 import { SessionCard } from "./session-card";
+import { UnassignedBookingsLane } from "./unassigned-bookings-lane";
 import { calculateSessionLanes } from "./timetable-utils";
 import { useTimetableStore } from "../../stores/timetable-store";
 
@@ -11,12 +14,23 @@ export function TimetableGrid() {
     date,
     rooms,
     sessions,
+    pendingBookings,
     loading,
     businessHoursStart,
     totalHours,
+    setSelectedBookingForAssignment,
   } = useTimetableStore();
 
   const hoursArray = Array.from({ length: totalHours }, (_, i) => i + businessHoursStart);
+
+  const unassignedBookingsForDate = useMemo(() => {
+    return (pendingBookings || []).filter((b: any) => {
+      if (b.isAssignedToTimetable) return false;
+      if (!b.scheduledStartTime) return false;
+      const bDate = new Date(b.scheduledStartTime);
+      return isSameDay(bDate, date);
+    });
+  }, [pendingBookings, date]);
 
   return (
     <div className="flex-1 overflow-auto relative flex flex-col border-r border-border">
@@ -35,9 +49,18 @@ export function TimetableGrid() {
       </div>
 
       {/* Y-Axis Body (Rooms & Sessions) */}
-      <div className="flex-1 flex flex-col min-w-max relative pb-4 pt-4">
+      <div className="flex-1 flex flex-col min-w-max relative pb-4">
 
         <CurrentTimeLine date={date} />
+
+        {/* Unassigned / Incoming Bookings Lane */}
+        <UnassignedBookingsLane
+          bookings={unassignedBookingsForDate}
+          hoursArray={hoursArray}
+          businessHoursStart={businessHoursStart}
+          totalHours={totalHours}
+          onAssignBooking={(booking) => setSelectedBookingForAssignment(booking)}
+        />
 
         {loading ? (
           rooms.map((room, roomIndex) => (

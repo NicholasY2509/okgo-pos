@@ -22,7 +22,7 @@ export const TimetableRepository = {
                 discountTotal: true,
                 isVip: true,
                 customer: {
-                  select: { name: true }
+                  select: { name: true, phone: true }
                 }
               }
             }
@@ -31,7 +31,7 @@ export const TimetableRepository = {
         booking: {
           include: {
             items: true,
-            customer: { select: { name: true } }
+            customer: { select: { name: true, phone: true } }
           }
         },
         staff: {
@@ -69,7 +69,7 @@ export const TimetableRepository = {
                 discountTotal: true,
                 isVip: true,
                 customer: {
-                  select: { name: true }
+                  select: { name: true, phone: true }
                 },
                 items: true
               }
@@ -79,7 +79,7 @@ export const TimetableRepository = {
         booking: {
           include: {
             items: true,
-            customer: { select: { name: true } }
+            customer: { select: { name: true, phone: true } }
           }
         },
         staff: {
@@ -134,7 +134,11 @@ export const TimetableRepository = {
       },
       include: {
         customer: true,
-        items: true,
+        items: {
+          include: {
+            requestedStaff: true
+          }
+        },
         serviceSessions: {
           include: {
             staff: true

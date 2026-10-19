@@ -1,4 +1,4 @@
-import { Clock } from "lucide-react";
+import { Clock, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSessionCard } from "../../hooks/use-session-card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,8 @@ export function SessionCard({ session, lane = 0 }: { session: any, lane?: number
   if (!session.startTime) return null;
   if (isOutsideBusinessHours) return null;
 
+  const isBooking = !!session.isBooking || !!session.bookingId;
+
   return (
     <>
       <div
@@ -33,10 +35,14 @@ export function SessionCard({ session, lane = 0 }: { session: any, lane?: number
           if (session.status === "COMPLETED") setSelectedSessionForInfo(session);
         }}
         className={cn(
-          "absolute rounded-lg p-2 flex flex-col gap-1 overflow-hidden shadow-sm border group/card cursor-pointer",
-          session.status === "IN_PROGRESS" ? "bg-primary/10 border-primary/30" :
-            session.status === "COMPLETED" ? "bg-muted border-border opacity-70" :
-              "bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800",
+          "absolute rounded-lg p-2 flex flex-col gap-1 overflow-hidden shadow-xs border group/card cursor-pointer",
+          session.status === "IN_PROGRESS"
+            ? "bg-primary/10 border-primary/30 border-l-2 border-l-primary"
+            : session.status === "COMPLETED"
+              ? "bg-muted/60 border-border opacity-70"
+              : isBooking
+                ? "bg-card border-border border-l-2 border-l-foreground/60 shadow-xs"
+                : "bg-card border-border border-l-2 border-l-border shadow-xs",
           (isDragging || isResizingLeft || isResizingRight) ? "z-50 shadow-md opacity-90 transition-none" : "transition-all",
           isDragging ? "cursor-grabbing" : "cursor-grab"
         )}
@@ -65,10 +71,28 @@ export function SessionCard({ session, lane = 0 }: { session: any, lane?: number
           />
         )}
 
-        <div className="flex justify-between items-start gap-2 select-none pointer-events-none">
+        <div className="flex justify-between items-start gap-1.5 select-none pointer-events-none">
           <span className="font-semibold text-xs truncate" title={session.itemName}>
             {session.itemName}
           </span>
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[8px] px-1 py-0 h-4 shrink-0 font-medium",
+              isBooking
+                ? "bg-muted text-foreground border-border font-semibold"
+                : "bg-muted/40 text-muted-foreground border-border"
+            )}
+          >
+            {isBooking ? (
+              <span className="flex items-center gap-0.5">
+                <Calendar className="w-2.5 h-2.5" />
+                Booking
+              </span>
+            ) : (
+              "Walk-in"
+            )}
+          </Badge>
         </div>
 
         <div className="text-[10px] text-muted-foreground flex flex-col gap-0.5 mt-auto select-none pointer-events-none">
@@ -85,11 +109,15 @@ export function SessionCard({ session, lane = 0 }: { session: any, lane?: number
               Terapis: {session.staff ? session.staff.firstName : "-"}
             </span>
             <div className="flex items-center gap-1">
-              {(session.transactionItem?.transaction?.id || session.bookingId) && (
-                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4">
+              {session.bookingNumber ? (
+                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4 font-mono font-medium">
+                  #{session.bookingNumber.slice(-4).toUpperCase()}
+                </Badge>
+              ) : (session.transactionItem?.transaction?.id || session.bookingId) ? (
+                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4 font-mono">
                   #{(session.transactionItem?.transaction?.id || session.bookingId).slice(-4).toUpperCase()}
                 </Badge>
-              )}
+              ) : null}
               {session.paymentStatus === "PENDING" && (
                 <Badge variant="destructive" className="text-[8px] px-1 py-0 h-4 uppercase">
                   Belum Lunas
