@@ -240,9 +240,9 @@ export default function MarketingPage() {
       </header>
 
       {/* TENTANG KAMI */}
-      <section id="tentang" className="py-40 px-6 bg-background">
+      <section id="tentang" className="py-65 px-6 bg-background">
         <div className="max-w-5xl mx-auto reveal-section text-center">
-          <h2 className="text-4xl md:text-6xl font-display font-light text-foreground mb-10 leading-[1.2]">
+          <h2 className="text-5xl md:text-6xl font-display font-light text-foreground mb-10 leading-[1.2]">
             Kembalikan <span className="italic text-primary">Keseimbangan</span> Anda.
           </h2>
           <div className="w-12 h-[1px] bg-border mx-auto mb-10"></div>
@@ -253,7 +253,7 @@ export default function MarketingPage() {
       </section>
 
       {/* LAYANAN REGULER */}
-      <section id="layanan" className="py-40 dark:bg-white/2 bg-muted/50">
+      <section id="layanan" className="py-30 dark:bg-white/2 bg-muted/50">
         <div className="max-w-6xl mx-auto reveal-section px-6">
           <div className="text-center mb-24">
             <h2 className="text-5xl font-display font-light text-foreground mb-3">Menu Layanan</h2>
