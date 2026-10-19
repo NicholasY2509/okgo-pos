@@ -13,15 +13,27 @@ export default async function TenantBookingsPage({
 
   const search = typeof resolvedSearchParams.search === 'string' ? resolvedSearchParams.search : undefined;
 
+  let date: Date | undefined;
   let from: Date | undefined;
   let to: Date | undefined;
 
-  if (resolvedSearchParams.from) {
-    from = new Date(resolvedSearchParams.from as string);
-  }
-
-  if (resolvedSearchParams.to) {
-    to = new Date(resolvedSearchParams.to as string);
+  if (typeof resolvedSearchParams.date === 'string') {
+    const [year, month, day] = resolvedSearchParams.date.split('-').map(Number);
+    if (year && month && day) {
+      date = new Date(year, month - 1, day, 0, 0, 0, 0);
+      from = date;
+      to = new Date(year, month - 1, day, 23, 59, 59, 999);
+    } else {
+      date = new Date(resolvedSearchParams.date);
+      from = date;
+      to = date;
+    }
+  } else if (typeof resolvedSearchParams.from === 'string') {
+    from = new Date(resolvedSearchParams.from);
+    date = from;
+    if (typeof resolvedSearchParams.to === 'string') {
+      to = new Date(resolvedSearchParams.to);
+    }
   }
 
   const isHistory = resolvedSearchParams.history === 'true';
@@ -46,8 +58,9 @@ export default async function TenantBookingsPage({
           initialBookings={res.data}
           initialFilters={{
             search: search || "",
-            from: from || undefined,
-            to: to || undefined,
+            date,
+            from,
+            to,
             isHistory
           }}
         />

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Search, FilterX, TrendingUp, Receipt, Tag } from "lucide-react";
+import { Search, FilterX, TrendingUp, Receipt, Tag, ChevronLeft, ChevronRight } from "lucide-react";
+import { addDays, subDays } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TransactionDetailDialog } from "./transaction-detail-dialog";
-import { DatePickerWithRange } from "@/components/ui/date-picker-with-range";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useTransactions } from "../hooks/use-transactions";
 import { DataTable } from "@/components/ui/data-table";
 import { getTransactionHistoryColumns } from "./transaction-history-columns";
@@ -29,8 +30,8 @@ export function TransactionHistoryClient({ branchId }: TransactionHistoryClientP
     loading,
     searchTerm,
     setSearchTerm,
-    dateRange,
-    setDateRange,
+    date,
+    setDate,
     page,
     setPage,
     pagination,
@@ -110,9 +111,42 @@ export function TransactionHistoryClient({ branchId }: TransactionHistoryClientP
               />
             </div>
           </div>
-          <div className="space-y-2 w-full md:w-[260px]">
-            <label className="text-xs font-semibold text-muted-foreground uppercase">Rentang Waktu</label>
-            <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          <div className="space-y-2 w-full md:w-auto">
+            <label className="text-xs font-semibold text-muted-foreground uppercase">Tanggal Transaksi</label>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setDate(subDays(date || new Date(), 1))}
+                title="Hari Sebelumnya"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <DatePicker
+                date={date}
+                setDate={setDate}
+                placeholder="Pilih Tanggal"
+                className="w-[180px] sm:w-[200px]"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setDate(addDays(date || new Date(), 1))}
+                title="Hari Berikutnya"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDate(new Date())}
+                title="Hari Ini"
+              >
+                Hari Ini
+              </Button>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={handleResetFilter} title="Reset Filter">

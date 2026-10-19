@@ -2,10 +2,10 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Search, FilterX, History, LayoutList } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DatePickerWithRange } from "@/components/ui/date-picker-with-range";
-import { DateRange } from "react-day-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable } from "@/components/ui/data-table";
 import { getBookingColumns } from "./booking-columns";
 import { BookingDetailDialog } from "./booking-detail-dialog";
@@ -16,17 +16,14 @@ export function BookingList({
   initialFilters
 }: {
   initialBookings: any[];
-  initialFilters: { search: string; from?: Date; to?: Date; isHistory: boolean }
+  initialFilters: { search: string; date?: Date; from?: Date; to?: Date; isHistory: boolean }
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState(initialFilters.search);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: initialFilters.from,
-    to: initialFilters.to,
-  });
+  const [date, setDate] = useState<Date | undefined>(initialFilters.date ?? initialFilters.from);
   const [isHistory, setIsHistory] = useState(initialFilters.isHistory);
 
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
@@ -52,20 +49,15 @@ export function BookingList({
         changed = true;
       }
 
-      const fromStr = dateRange?.from?.toISOString();
-      if (fromStr && params.get('from') !== fromStr) {
-        params.set('from', fromStr);
-        changed = true;
-      } else if (!fromStr && params.has('from')) {
+      const dateStr = date ? format(date, "yyyy-MM-dd") : null;
+      if (dateStr && params.get('date') !== dateStr) {
+        params.set('date', dateStr);
         params.delete('from');
+        params.delete('to');
         changed = true;
-      }
-
-      const toStr = dateRange?.to?.toISOString();
-      if (toStr && params.get('to') !== toStr) {
-        params.set('to', toStr);
-        changed = true;
-      } else if (!toStr && params.has('to')) {
+      } else if (!dateStr && (params.has('date') || params.has('from') || params.has('to'))) {
+        params.delete('date');
+        params.delete('from');
         params.delete('to');
         changed = true;
       }
@@ -85,11 +77,11 @@ export function BookingList({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, dateRange, isHistory, pathname, router, searchParams]);
+  }, [searchTerm, date, isHistory, pathname, router, searchParams]);
 
   const handleResetFilter = () => {
     setSearchTerm("");
-    setDateRange(undefined);
+    setDate(undefined);
     setIsHistory(false);
   };
 
@@ -112,7 +104,7 @@ export function BookingList({
             </div>
             <div className="space-y-2 w-full md:w-[260px]">
               <label className="text-xs font-semibold text-muted-foreground uppercase">Jadwal Booking</label>
-              <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+              <DatePicker date={date} setDate={setDate} placeholder="Pilih Tanggal Booking" />
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={handleResetFilter} title="Reset Filter">

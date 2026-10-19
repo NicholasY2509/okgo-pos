@@ -30,7 +30,8 @@ export const BookingListRepository = {
           include: {
             appliedVoucher: {
               include: { voucherPacket: { include: { product: true } } }
-            }
+            },
+            requestedStaff: true
           }
         },
         appliedVoucher: {

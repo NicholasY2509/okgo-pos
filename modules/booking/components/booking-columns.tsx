@@ -15,22 +15,23 @@ export const getBookingColumns = (onViewDetail: (booking: any) => void): ColumnD
     header: "Jadwal",
     cell: ({ row }) => {
       const booking = row.original;
-      let earliestTime: Date | null = null;
-      const sessions = booking.serviceSessions || [];
-
-      sessions.forEach((s: any) => {
-        if (s.startTime) {
-          const d = new Date(s.startTime);
-          if (!earliestTime || d < earliestTime) {
-            earliestTime = d;
-          }
-        }
-      });
+      const scheduleTime = booking.scheduledStartTime
+        ? new Date(booking.scheduledStartTime)
+        : booking.serviceSessions?.[0]?.startTime
+          ? new Date(booking.serviceSessions[0].startTime)
+          : null;
 
       return (
-        <div className="flex items-center gap-1.5 font-medium text-primary whitespace-nowrap">
-          <Calendar className="w-3.5 h-3.5" />
-          {earliestTime ? format(earliestTime, "dd MMM yy HH:mm", { locale: id }) : "-"}
+        <div className="flex flex-col gap-1 items-start">
+          <div className="flex items-center gap-1.5 font-medium text-primary whitespace-nowrap">
+            <Calendar className="w-3.5 h-3.5" />
+            {scheduleTime ? format(scheduleTime, "dd MMM yy HH:mm", { locale: id }) : "-"}
+          </div>
+          {!booking.isAssignedToTimetable && (
+            <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-500/10 border-amber-200">
+              Belum Ditugaskan
+            </Badge>
+          )}
         </div>
       );
     },

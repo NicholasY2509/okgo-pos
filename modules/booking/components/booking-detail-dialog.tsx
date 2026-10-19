@@ -116,24 +116,34 @@ export function BookingDetailDialog({ open, onOpenChange, booking }: BookingDeta
                 <div className="space-y-3">
                   <h4 className="font-medium">Jadwal & Layanan</h4>
                   {booking.scheduledStartTime && (
-                    <div className="flex items-center text-sm text-muted-foreground mb-2">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {format(new Date(booking.scheduledStartTime), "EEEE, d MMMM yyyy HH:mm", { locale: id })}
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4" />
+                        <span>{format(new Date(booking.scheduledStartTime), "EEEE, d MMMM yyyy HH:mm", { locale: id })}</span>
+                      </div>
+                      {!booking.isAssignedToTimetable && (
+                        <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-500/10 border-amber-200">
+                          Belum Ditugaskan ke Timetable
+                        </Badge>
+                      )}
                     </div>
                   )}
                   <div className="space-y-2">
                     {booking.items?.map((item: any, i: number) => {
                       const session = booking.serviceSessions?.find((s: any) => s.serviceId === item.serviceId);
                       const hasVoucher = !!item.appliedVoucher;
+                      const staffName = session?.staff?.name || item.requestedStaff?.name;
+                      const isRequestedStaff = !session?.staff && !!item.requestedStaff;
+
                       return (
                         <div key={i} className="flex flex-col border p-3 rounded-lg bg-muted/20 space-y-2">
                           <div className="flex justify-between items-start text-sm">
                             <div>
                               <p className="font-medium">{item.itemNameSnapshot}</p>
                               <p className="text-xs text-muted-foreground">{item.categoryName || "Lainnya"}</p>
-                              {session?.staff && (
+                              {staffName && (
                                 <p className="text-muted-foreground text-xs mt-1">
-                                  Terapis: {session.staff.name}
+                                  {isRequestedStaff ? `Permintaan Terapis: ${staffName}` : `Terapis: ${staffName}`}
                                 </p>
                               )}
                             </div>

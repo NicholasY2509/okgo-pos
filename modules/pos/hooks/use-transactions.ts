@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { DateRange } from "react-day-picker";
 import { getBranchTransactionsAction } from "../actions/transaction-action";
 
 interface UseTransactionsProps {
@@ -13,7 +12,7 @@ export function useTransactions({ branchId }: UseTransactionsProps) {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [date, setDate] = useState<Date | undefined>(new Date());
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -26,10 +25,12 @@ export function useTransactions({ branchId }: UseTransactionsProps) {
     const filters: any = { branchId, page, limit };
 
     if (searchTerm) filters.search = searchTerm;
-    if (dateRange?.from) filters.startDate = dateRange.from;
-    if (dateRange?.to) {
-      const end = new Date(dateRange.to);
+    if (date) {
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(date);
       end.setHours(23, 59, 59, 999);
+      filters.startDate = start;
       filters.endDate = end;
     }
 
@@ -54,13 +55,12 @@ export function useTransactions({ branchId }: UseTransactionsProps) {
     }, 400); // 400ms debounce
     return () => clearTimeout(handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branchId, searchTerm, dateRange, page, limit]);
+  }, [branchId, searchTerm, date, page, limit]);
 
   const handleResetFilter = () => {
     setSearchTerm("");
-    setDateRange(undefined);
+    setDate(new Date());
     setPage(1);
-    // The useEffect will trigger the fetch because of state changes
   };
 
   return {
@@ -68,8 +68,8 @@ export function useTransactions({ branchId }: UseTransactionsProps) {
     loading,
     searchTerm,
     setSearchTerm,
-    dateRange,
-    setDateRange,
+    date,
+    setDate,
     page,
     setPage,
     limit,

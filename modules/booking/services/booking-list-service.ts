@@ -33,7 +33,10 @@ export class BookingListService {
         dateFilter.lte = toEnd;
       }
       andConditions.push({
-        serviceSessions: { some: { startTime: dateFilter } }
+        OR: [
+          { serviceSessions: { some: { startTime: dateFilter } } },
+          { scheduledStartTime: dateFilter }
+        ]
       });
     }
 
