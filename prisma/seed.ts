@@ -227,6 +227,7 @@ async function main() {
     // REVENUE
     { code: '411', name: 'Pendapatan Penjualan', type: 'REVENUE', isLocked: true },
     { code: '412', name: 'Pendapatan Voucher Kedaluwarsa', type: 'REVENUE', isLocked: true },
+    { code: '413', name: 'Pendapatan Voucher', type: 'REVENUE', isLocked: true },
 
     // EXPENSES
     { code: '511', name: 'Beban Bahan Baku (COGS)', type: 'EXPENSE', isLocked: true },

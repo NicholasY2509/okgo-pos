@@ -12,6 +12,7 @@ Decisions that were expensive to make and would be expensive to reverse. Each fi
 | --- | --- | --- | --- |
 | 0001 | [Modular DDD Architecture & 5-Layer Submission Pattern](0001-module-architecture-and-form-submission-pattern.md) | Accepted | 2026-10-18 |
 | 0002 | [Adopt Vitest for Automated Unit and Domain Engine Testing](0002-adopt-vitest-for-automated-testing.md) | Accepted | 2026-10-18 |
+| 0003 | [Direct Revenue Recognition for Voucher Purchases](0003-voucher-direct-revenue-accounting.md) | Accepted | 2026-10-18 |
 
 ## When an ADR is required
 

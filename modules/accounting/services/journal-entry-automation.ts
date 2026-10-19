@@ -1,4 +1,3 @@
-import { JournalEntryInput } from "../schemas/journal-entry"
 import { AccountingUtils } from "./accounting-utils"
 
 export class JournalEntryAutomation {
@@ -24,7 +23,7 @@ export class JournalEntryAutomation {
     // Look up the required Ledger Accounts by code
     const accounts = await tx.ledgerAccount.findMany({
       where: {
-        code: { in: ['101', '111', '211', '214', '411'] }
+        code: { in: ['101', '111', '211', '411', '413'] }
       }
     });
 
@@ -33,11 +32,11 @@ export class JournalEntryAutomation {
     const cashAcc = getAccount('101');
     const bankAcc = getAccount('111');
     const taxAcc = getAccount('211');
-    const voucherLiabilityAcc = getAccount('214');
     const revenueAcc = getAccount('411');
+    const voucherRevenueAcc = getAccount('413') || revenueAcc;
 
-    if (!revenueAcc || !voucherLiabilityAcc) {
-      console.warn("Accounting accounts not fully seeded (missing 411 or 214). Cannot generate journal entry.");
+    if (!revenueAcc) {
+      console.warn("Accounting accounts not fully seeded (missing 411). Cannot generate journal entry.");
       return;
     }
 
@@ -63,48 +62,16 @@ export class JournalEntryAutomation {
       }
     }
 
-    // Fetch voucher redemptions for this transaction
-    const voucherRedemptions = await tx.voucherRedemption.findMany({
-      where: { transactionId: transaction.id },
-      include: {
-        customerVoucher: {
-          include: { voucherPacket: true }
-        }
-      }
-    });
-
-    let redeemedVoucherValue = 0;
-    for (const vr of voucherRedemptions) {
-      const packet = vr.customerVoucher?.voucherPacket;
-      if (!packet) continue;
-
-      if (vr.redeemedVisitCount && packet.totalVisitCount && packet.price) {
-        // Value per visit = packet price / total visits
-        const valuePerVisit = Number(packet.price) / packet.totalVisitCount;
-        redeemedVoucherValue += valuePerVisit * vr.redeemedVisitCount;
-      } else if (vr.redeemedAmount) {
-        redeemedVoucherValue += Number(vr.redeemedAmount);
-      }
-    }
-
-    if (redeemedVoucherValue > 0) {
-      // DEBIT 214 (Reduce unearned revenue liability)
-      journalLines.push({
-        ledgerAccountId: voucherLiabilityAcc.id,
-        debit: redeemedVoucherValue,
-        credit: 0
-      });
-      // We also need to add this to serviceRevenue because the item was discounted
-    }
-
     // 2. CREDIT: Revenue Recognition (Service vs Voucher Packet)
-    // item.subtotal already has item-level discount applied (including 100% discount for voucher)
-    let serviceRevenue = redeemedVoucherValue; // Add the redeemed value to service revenue
-    let unearnedVoucherRevenue = 0;
+    // Under ADR-0003, voucher packet purchases are recognized directly as revenue (account 413).
+    // When a customer redeems a voucher, no secondary revenue/liability entry is created
+    // to prevent double-counting revenue.
+    let serviceRevenue = 0;
+    let voucherRevenue = 0;
 
     for (const item of items) {
       if (item.type === 'VOUCHER_PACKET') {
-        unearnedVoucherRevenue += Number(item.subtotal);
+        voucherRevenue += Number(item.subtotal);
       } else {
         serviceRevenue += Number(item.subtotal);
       }
@@ -118,11 +85,11 @@ export class JournalEntryAutomation {
       });
     }
 
-    if (unearnedVoucherRevenue > 0) {
+    if (voucherRevenue > 0 && voucherRevenueAcc) {
       journalLines.push({
-        ledgerAccountId: voucherLiabilityAcc.id,
+        ledgerAccountId: voucherRevenueAcc.id,
         debit: 0,
-        credit: unearnedVoucherRevenue
+        credit: voucherRevenue
       });
     }
 
