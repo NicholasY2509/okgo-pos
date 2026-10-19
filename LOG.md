@@ -8,6 +8,61 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
+## 2026-10-19 — Booking Wizard: Minimalist Compacted Service Card & Intuitive Therapist Selection
+
+**Did:**
+1. Refactored [`StepServices`](modules/booking/components/steps/step-services.tsx) to automatically and smoothly compact completed services using `framer-motion` (`AnimatePresence`).
+2. Redesigned the compacted service card with minimalist luxury typography consistent with Nyenyak POS design tokens, removing superfluous icon badges.
+3. Updated therapist selection to start in a neutral/empty state (neither "Siapa Saja" nor specific staff pre-selected) while keeping "Siapa Saja" as an immediate, intuitive selectable option.
+4. Cleaned up unnecessary collapse/done buttons in favor of natural selection-driven collapsing.
+5. Accounted for unassigned bookings and room capacity in [`BookingRepository`](modules/booking/repositories/booking-repository.ts) and [`StepTime`](modules/booking/components/steps/step-time.tsx).
+6. Verified with `npm test` (12/12 passing) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
+
+---
+
+## 2026-10-18 — Transaction History: Single Date Filter with Navigation Controls
+
+**Did:**
+1. Updated [`useTransactions`](modules/pos/hooks/use-transactions.ts) hook to filter by a single date (`date: Date | undefined`), defaulting to today (`new Date()`).
+2. Updated [`TransactionHistoryClient`](modules/pos/components/transaction-history-client.tsx) to replace `DatePickerWithRange` with `DatePicker`.
+3. Added previous day (`ChevronLeft`), next day (`ChevronRight`), and quick "Hari Ini" buttons for fast date stepping.
+4. Verified with `npm test` (12/12 passing) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
+
+---
+
+## 2026-10-18 — Booking List: Single Date Filter
+
+**Did:**
+1. Replaced `DatePickerWithRange` with `DatePicker` in [`BookingList`](modules/booking/components/booking-list.tsx) to allow selecting a single date rather than a date range.
+2. Synchronized `date` query parameter (`yyyy-MM-dd`) in URLSearchParams while maintaining fallback compatibility for legacy `from`/`to` parameters in [`TenantBookingsPage`](app/[tenant]/(main)/bookings/page.tsx).
+3. Verified via `npm test` (12/12 passing) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
+
+---
+
+## 2026-10-18 — Voucher Accounting Refactor: Direct Revenue Recognition (ADR-0003)
+
+**Did:**
+1. Created and switched to branch `feat/voucher-direct-revenue-accounting` per branch-workflow rules.
+2. Recorded [ADR-0003: Direct Revenue Recognition for Voucher Purchases](docs/adr/0003-voucher-direct-revenue-accounting.md) and indexed it in `docs/adr/README.md`.
+3. Added account `413` (`Pendapatan Voucher`, type: `REVENUE`, `isLocked: true`) to `prisma/seed.ts`.
+4. Refactored `JournalEntryAutomation.handleTransactionCompleted` in `modules/accounting/services/journal-entry-automation.ts`:
+   - Voucher packet sales credit `413 Pendapatan Voucher` directly upon purchase (with fallback to `411` if unseeded).
+   - Removed unearned revenue liability booking to account `214`.
+   - Prevented revenue double-counting on voucher redemptions: redeeming a voucher does not create secondary revenue or liability entries for the voucher-covered portion.
+5. Streamlined `VoucherExpirationService.processExpiredVouchers` in `modules/accounting/services/voucher-expiration-service.ts`:
+   - Marks expired vouchers as `EXPIRED` without generating redundant breakage journal entries, as revenue was already recognized 100% on purchase.
+6. Created automated unit test suite `modules/accounting/services/journal-entry-automation.test.ts` (3 tests) covering:
+   - Direct credit to `413` upon voucher purchase.
+   - Fallback to `411` when `413` is not seeded.
+   - Zero-entry suppression on 100% voucher-redeemed transactions.
+7. Verified with `npm test` (12/12 passing across 4 suites) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
+
+**Why:**
+Per business requirement, voucher packet sales represent immediate realized income rather than deferred unearned liabilities (`214`), simplifying bookkeeping and aligning revenue timing with cash collection.
+
+**Watch out:**
+- Existing databases that have not re-run `prisma db seed` will automatically fall back to `411 Pendapatan Penjualan`. Run seed when practical to establish separate `413` reporting.
+
 ---
 
 ## 2026-10-18 — Code Quality Remediation: React Hooks, Action Auth & 5-Layer Purity
