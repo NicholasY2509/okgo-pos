@@ -28,8 +28,21 @@ export async function syncAttendanceFromMachineAction(values?: Partial<SyncAtten
       data: result
     }
   } catch (error: unknown) {
-    const message =
+    const targetIp = values?.ipAddress || "192.168.1.231"
+    const isLocalPrivateIp = /^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|127\.)/.test(targetIp)
+
+    let message =
       error instanceof Error ? error.message : "Terjadi kesalahan saat menarik data log dari mesin."
+
+    if (
+      isLocalPrivateIp &&
+      (message.toLowerCase().includes("fetch failed") ||
+        message.toLowerCase().includes("timeout") ||
+        message.toLowerCase().includes("abort"))
+    ) {
+      message = `Gagal terhubung ke IP lokal (${targetIp}). Server production di cloud tidak dapat mengakses IP privat di jaringan LAN/Wi-Fi cabang secara langsung. Gunakan IP Publik/DDNS, VPN (Tailscale), atau relay agent.`
+    }
+
     return { error: message }
   }
 }

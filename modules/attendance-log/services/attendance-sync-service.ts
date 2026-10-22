@@ -25,7 +25,10 @@ async function digestFetch(url: string, username: string, password: string): Pro
   const parsed = new URL(url)
   const uri = parsed.pathname + parsed.search
 
-  const initialResponse = await fetch(url, { method: "GET" })
+  const initialResponse = await fetch(url, {
+    method: "GET",
+    signal: AbortSignal.timeout(8000)
+  })
   if (initialResponse.status !== 401) {
     return initialResponse
   }
@@ -65,7 +68,8 @@ async function digestFetch(url: string, username: string, password: string): Pro
     method: "GET",
     headers: {
       Authorization: authString
-    }
+    },
+    signal: AbortSignal.timeout(15000)
   })
 }
 
