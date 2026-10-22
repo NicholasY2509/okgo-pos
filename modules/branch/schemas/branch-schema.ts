@@ -19,9 +19,34 @@ export const updateBranchSchema = z.object({
 
 export type UpdateBranchInput = z.infer<typeof updateBranchSchema>
 export const assignStaffBranchSchema = z.object({
-  branchId: z.string().cuid(),
-  staffId: z.string().cuid(),
-  roleId: z.string().cuid(),
+  branchId: z.string().min(1, "Cabang wajib dipilih"),
+  staffId: z.string().min(1, "Staf wajib dipilih"),
+  roleId: z.string().min(1, "Peran wajib dipilih"),
 })
 
 export type AssignStaffBranchInput = z.infer<typeof assignStaffBranchSchema>
+
+export const bulkAssignStaffSchema = z.object({
+  branchId: z.string().min(1, "Cabang tujuan wajib dipilih"),
+  roleId: z.string().min(1, "Peran wajib dipilih"),
+  staffIds: z.array(z.string().min(1)).min(1, "Pilih setidaknya satu staf"),
+})
+
+export type BulkAssignStaffInput = z.infer<typeof bulkAssignStaffSchema>
+
+export const transferBranchStaffSchema = z.object({
+  staffId: z.string().min(1, "Staf wajib dipilih"),
+  currentBranchId: z.string().optional(),
+  targetBranchId: z.string().min(1, "Cabang tujuan wajib dipilih"),
+  roleId: z.string().min(1, "Peran wajib dipilih"),
+})
+
+export type TransferBranchStaffInput = z.infer<typeof transferBranchStaffSchema>
+
+export const bulkTransferStaffSchema = z.object({
+  staffIds: z.array(z.string().min(1)).min(1, "Pilih setidaknya satu staf"),
+  targetBranchId: z.string().min(1, "Cabang tujuan wajib dipilih"),
+  roleId: z.string().min(1, "Peran wajib dipilih"),
+})
+
+export type BulkTransferStaffInput = z.infer<typeof bulkTransferStaffSchema>

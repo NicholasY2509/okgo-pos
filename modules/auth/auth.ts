@@ -6,10 +6,11 @@ import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { AuthService } from "./services/auth-service";
 
-class CustomAuthError extends CredentialsSignin {
+export class CustomAuthError extends CredentialsSignin {
   constructor(message: string) {
-    super();
+    super(message);
     this.code = message;
+    this.message = message;
   }
 }
 

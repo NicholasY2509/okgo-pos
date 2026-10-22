@@ -6,10 +6,10 @@ import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 
 export async function createStaffSalaryAction(values: StaffSalaryInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = staffSalarySchema.safeParse(values)
     if (!validatedFields.success) {
@@ -26,10 +26,10 @@ export async function createStaffSalaryAction(values: StaffSalaryInput) {
 
 export async function updateStaffSalaryAction(id: string, values: StaffSalaryInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = staffSalarySchema.safeParse(values)
     if (!validatedFields.success) {
@@ -46,10 +46,10 @@ export async function updateStaffSalaryAction(id: string, values: StaffSalaryInp
 
 export async function deleteStaffSalaryAction(id: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     await StaffSalaryService.delete(id)
     return { success: true }

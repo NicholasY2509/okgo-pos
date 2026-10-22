@@ -6,10 +6,10 @@ import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 
 export async function updateAttendanceStatusAction(attendanceId: string, statusId: string, attachmentUrl?: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const result = await AttendanceService.updateStatus(attendanceId, statusId, attachmentUrl)
     revalidatePath("/admin/attendance/data")

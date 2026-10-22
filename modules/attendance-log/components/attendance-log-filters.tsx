@@ -16,13 +16,13 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { useEffect } from "react"
 
 const ATTENDANCE_STATES = [
-  { value: "0", label: "Tidak Dikenal" },
-  { value: "1", label: "Masuk" },
-  { value: "2", label: "Mulai Istirahat" },
-  { value: "3", label: "Selesai Istirahat" },
-  { value: "4", label: "Pulang" },
-  { value: "5", label: "Mulai Lembur" },
-  { value: "6", label: "Selesai Lembur" },
+  { value: "0", label: "Scan Normal (0)" },
+  { value: "1", label: "Masuk (1)" },
+  { value: "2", label: "Mulai Istirahat (2)" },
+  { value: "3", label: "Selesai Istirahat (3)" },
+  { value: "4", label: "Pulang (4)" },
+  { value: "5", label: "Mulai Lembur (5)" },
+  { value: "6", label: "Selesai Lembur (6)" },
 ]
 
 interface AttendanceLogFiltersProps {

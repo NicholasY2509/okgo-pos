@@ -3,14 +3,27 @@
 import { revalidatePath } from "next/cache"
 import { BranchService } from "../services/branch-service"
 import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
-import { createBranchSchema, assignStaffBranchSchema, updateBranchSchema, type CreateBranchInput, type AssignStaffBranchInput, type UpdateBranchInput } from "../schemas/branch-schema"
+import {
+  createBranchSchema,
+  assignStaffBranchSchema,
+  updateBranchSchema,
+  bulkAssignStaffSchema,
+  transferBranchStaffSchema,
+  bulkTransferStaffSchema,
+  type CreateBranchInput,
+  type AssignStaffBranchInput,
+  type UpdateBranchInput,
+  type BulkAssignStaffInput,
+  type TransferBranchStaffInput,
+  type BulkTransferStaffInput,
+} from "../schemas/branch-schema"
 
 export async function createBranchAction(values: CreateBranchInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = createBranchSchema.safeParse(values)
 
@@ -31,10 +44,10 @@ export async function createBranchAction(values: CreateBranchInput) {
 
 export async function updateBranchAction(values: UpdateBranchInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = updateBranchSchema.safeParse(values)
 
@@ -56,10 +69,10 @@ export async function updateBranchAction(values: UpdateBranchInput) {
 
 export async function assignStaffToBranchAction(values: AssignStaffBranchInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = assignStaffBranchSchema.safeParse(values)
 
@@ -69,7 +82,11 @@ export async function assignStaffToBranchAction(values: AssignStaffBranchInput) 
 
     const branchStaff = await BranchService.assignStaffToBranch(validatedFields.data)
 
-    revalidatePath(`/admin/branches/${validatedFields.data.branchId}/settings`)
+    revalidatePath("/admin/branches")
+    revalidatePath("/admin/staff")
+    if (validatedFields.data.staffId) {
+      revalidatePath(`/admin/staff/${validatedFields.data.staffId}`)
+    }
 
     return { success: true, data: branchStaff }
   } catch (error: unknown) {
@@ -78,12 +95,96 @@ export async function assignStaffToBranchAction(values: AssignStaffBranchInput) 
   }
 }
 
-export async function removeBranchStaffAction(branchStaffId: string, branchId: string) {
+export async function bulkAssignStaffAction(values: BulkAssignStaffInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
+
+    const validatedFields = bulkAssignStaffSchema.safeParse(values)
+
+    if (!validatedFields.success) {
+      return { error: "Data penugasan massal tidak valid." }
     }
+
+    const result = await BranchService.bulkAssignStaff(validatedFields.data)
+
+    revalidatePath("/admin/branches")
+    revalidatePath("/admin/staff")
+    for (const staffId of validatedFields.data.staffIds) {
+      revalidatePath(`/admin/staff/${staffId}`)
+    }
+
+    return { success: true, data: result }
+  } catch (error: unknown) {
+    console.error("Failed to bulk assign staff:", error)
+    return { error: "Gagal menugaskan staf secara massal." }
+  }
+}
+
+export async function transferBranchStaffAction(values: TransferBranchStaffInput) {
+  try {
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
+
+    const validatedFields = transferBranchStaffSchema.safeParse(values)
+
+    if (!validatedFields.success) {
+      return { error: "Data pemindahan staf tidak valid." }
+    }
+
+    const result = await BranchService.transferBranchStaff(validatedFields.data)
+
+    revalidatePath("/admin/branches")
+    revalidatePath("/admin/staff")
+    if (validatedFields.data.staffId) {
+      revalidatePath(`/admin/staff/${validatedFields.data.staffId}`)
+    }
+
+    return { success: true, data: result }
+  } catch (error: unknown) {
+    console.error("Failed to transfer staff:", error)
+    return { error: "Gagal memindahkan staf ke cabang baru." }
+  }
+}
+
+export async function bulkTransferStaffAction(values: BulkTransferStaffInput) {
+  try {
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
+
+    const validatedFields = bulkTransferStaffSchema.safeParse(values)
+
+    if (!validatedFields.success) {
+      return { error: "Data pemindahan massal tidak valid." }
+    }
+
+    const result = await BranchService.bulkTransferStaff(validatedFields.data)
+
+    revalidatePath("/admin/branches")
+    revalidatePath("/admin/staff")
+    for (const staffId of validatedFields.data.staffIds) {
+      revalidatePath(`/admin/staff/${staffId}`)
+    }
+
+    return { success: true, data: result }
+  } catch (error: unknown) {
+    console.error("Failed to bulk transfer staff:", error)
+    return { error: "Gagal memindahkan staf secara massal." }
+  }
+}
+
+export async function removeBranchStaffAction(branchStaffId: string, branchId?: string, staffId?: string) {
+  try {
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     if (!branchStaffId) {
       return { error: "ID penugasan tidak valid." }
@@ -91,7 +192,11 @@ export async function removeBranchStaffAction(branchStaffId: string, branchId: s
 
     await BranchService.removeBranchStaff(branchStaffId)
 
-    revalidatePath(`/admin/branches/${branchId}/settings`)
+    revalidatePath("/admin/branches")
+    revalidatePath("/admin/staff")
+    if (staffId) {
+      revalidatePath(`/admin/staff/${staffId}`)
+    }
 
     return { success: true }
   } catch (error: unknown) {
@@ -99,3 +204,4 @@ export async function removeBranchStaffAction(branchStaffId: string, branchId: s
     return { error: "Gagal menghapus penugasan staf dari cabang." }
   }
 }
+

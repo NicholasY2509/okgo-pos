@@ -8,6 +8,75 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
+## 2026-10-22 — Attendance Machine Log Ingestion Filter & Trash Purge
+
+**Did:**
+1. Investigated root cause of trash raw records: visible light biometric terminals log every face detection attempt (passersby, strangers, visitors) with `UserID: ""`, `Status: 0`, and `CardName: ""`.
+2. Updated schema [`syncAttendanceSchema`](modules/attendance-log/schemas/sync-attendance-schema.ts) with `ignoreUnrecognized: boolean`.
+3. Extended [`AttendanceSyncRepository`](modules/attendance-log/repositories/attendance-sync-repository.ts) with `purgeUnrecognizedLogs` to delete raw machine logs without a valid user ID or matching name.
+4. Updated [`AttendanceSyncService`](modules/attendance-log/services/attendance-sync-service.ts):
+   - Added automatic filtering during ingestion when `ignoreUnrecognized` is active, tracking `unrecognizedSkipped`.
+   - Updated `ATTENDANCE_STATES[0]` from confusing `"Tidak Dikenal"` to `"Scan Normal"` (default verification state when employees scan without tapping punch state buttons).
+   - Added `purgeUnrecognizedLogs` service method.
+5. Added server action `purgeUnrecognizedLogsAction` in [`modules/attendance-log/actions/sync-attendance-action.ts`](modules/attendance-log/actions/sync-attendance-action.ts).
+6. Updated client hook [`useSyncAttendance`](modules/attendance-log/hooks/use-sync-attendance.ts) with `isPurging` and `purgeUnrecognized()`.
+7. Created [`PurgeUnrecognizedDialog`](modules/attendance-log/components/purge-unrecognized-dialog.tsx) with confirmation alert and integrated it into [`AttendanceLogPage`](app/admin/(main)/attendance-log/page.tsx).
+8. Added `ignoreUnrecognized` toggle to [`SyncAttendanceDialog`](modules/attendance-log/components/sync-attendance-dialog.tsx).
+9. Updated [`columns.tsx`](modules/attendance-log/components/columns.tsx) and [`attendance-log-filters.tsx`](modules/attendance-log/components/attendance-log-filters.tsx) to label State 0 as `"Scan Normal (0)"`.
+10. Executed purge on existing 84 unrecognized logs in database, keeping 59 valid employee attendance logs intact.
+11. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors).
+
+**Why:**
+Biometric terminals in high-traffic hotel environments continuously log unregistered passerby faces. Without ingestion filtering and purge capabilities, raw attendance logs quickly flood with hundreds of irrelevant records, obscuring actual employee check-ins.
+
+---
+
+## 2026-10-21 — Attendance Machine IP Registry & Raw Log Sync Pipeline (ADR-0004)
+
+**Did:**
+1. Documented [ADR-0004: Store Attendance Machine Network IP and Port](docs/adr/0004-store-attendance-machine-network-ip.md) and updated `docs/adr/README.md`.
+2. Extended `AttendanceMachine` data model in `prisma/schema/attendance.prisma` with `ipAddress String?` and `port Int? @default(80)`.
+3. Pushed schema changes to MySQL database with `npx prisma db push` and regenerated client via `npx prisma generate`.
+4. Updated existing machine `S118001804` in database with `ipAddress: "192.168.1.231"` and `port: 80`.
+5. Updated schema in `modules/attendance-machine/schemas/attendance-machine.ts` with optional `ipAddress` and `port`.
+6. Enhanced `modules/attendance-machine/components/machine-form.tsx` to include IP Address and Port inputs.
+7. Enhanced `modules/attendance-machine/components/machine-table.tsx` to display machine IP and Port in a dedicated column.
+8. Updated `modules/attendance-machine/hooks/use-attendance-machine.ts` to manage IP and Port form state.
+9. Implemented raw attendance log synchronization pipeline:
+   - Schema: `modules/attendance-log/schemas/sync-attendance-schema.ts`.
+   - Repository: `modules/attendance-log/repositories/attendance-sync-repository.ts`.
+   - Service: `modules/attendance-log/services/attendance-sync-service.ts` with native HTTP Digest Authentication fetcher.
+   - Action: `modules/attendance-log/actions/sync-attendance-action.ts`.
+   - Hook: `modules/attendance-log/hooks/use-sync-attendance.ts`.
+   - Component: `modules/attendance-log/components/sync-attendance-dialog.tsx` featuring 1-click registered machine selection and live sync metrics.
+10. Added "Tarik Log dari Mesin" button to `app/admin/(main)/attendance-log/page.tsx`.
+11. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors).
+
+**Why:**
+To allow each physical attendance machine to have its network address persisted in the database, eliminate hardcoded IPs, and enable 1-click on-demand synchronization of raw attendance records.
+
+---
+
+## 2026-10-20 — Staff & Branch Assignment Flow & UX Overhaul
+
+**Did:**
+1. Extended branch schemas with `bulkAssignStaffSchema`, `transferBranchStaffSchema`, and `bulkTransferStaffSchema` in [`modules/branch/schemas/branch-schema.ts`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/branch/schemas/branch-schema.ts).
+2. Added transactional bulk assignment (`bulkAssignStaff`), 1-step branch transfer (`transferBranchStaff`), and bulk branch transfer (`bulkTransferStaff`) to [`BranchRepository`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/branch/repositories/branch-repository.ts) and [`BranchService`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/branch/services/branch-service.ts).
+3. Created server actions `bulkAssignStaffAction`, `transferBranchStaffAction`, and `bulkTransferStaffAction` with comprehensive path revalidation (`/admin/branches`, `/admin/staff`, and staff detail) in [`modules/branch/actions/branch-action.ts`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/branch/actions/branch-action.ts).
+4. Created client hooks `useBulkAssignStaff`, `useTransferBranchStaff`, and `useBulkTransferStaff` in [`modules/branch/hooks/use-branch.ts`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/branch/hooks/use-branch.ts).
+5. Built [`TransferStaffDialog`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/branch/components/transfer-staff-dialog.tsx) enabling 1-click staff transfers from current branch to target branch with role selection.
+6. Built [`BulkAssignStaffDialog`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/branch/components/bulk-assign-staff-dialog.tsx) with search, filter, and multi-selection on the branch detail page ([`BranchStaffTab`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/branch/components/branch-staff-tab.tsx)).
+7. Built [`StaffBranchCard`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/staff/components/staff-branch-card.tsx) and [`AssignStaffToBranchDialog`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/staff/components/assign-staff-to-branch-dialog.tsx) on [`StaffDetailPage`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/app/admin/(main)/staff/[id]/page.tsx) enabling complete branch management (assign, transfer, unlink) directly from the staff profile.
+8. Enhanced [`StaffTable`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/staff/components/staff-table.tsx) and [`staffColumns`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/staff/components/staff-columns.tsx) with multi-row checkboxes, sticky bulk action bar ([`BulkTransferStaffDialog`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/staff/components/bulk-transfer-staff-dialog.tsx) and [`BulkAssignStaffModal`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/staff/components/bulk-assign-staff-modal.tsx)), quick transfer per row, and fixed admin detail URL navigation.
+9. Added `getRowId: (row) => row.id` in `useReactTable` to ensure staff IDs (not page-relative array indices `0, 1, ...`) are stored in `rowSelection`, preserving selected staff across pagination transitions.
+10. Built `getMatchingStaffIdsAction` and cross-page selection banner in [`StaffTable`](file:///Users/ny/Documents/Code/Okgo/nyenyak-pos/modules/staff/components/staff-table.tsx) allowing users to select all matching staff across all pages in 1 click.
+11. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors) and ESLint (0 errors).
+
+**Why:**
+Previously, assigning staff to a branch was strictly unidirectional from the branch detail page only, one staff at a time, requiring a cumbersome multi-page deletion and reassignment sequence whenever staff were switched between branches. Furthermore, staff selection on paginated tables mapped to page row indices without unique row IDs, causing selections to shift or break when changing pages.
+
+---
+
 ## 2026-10-19 — Booking Wizard: Minimalist Compacted Service Card & Intuitive Therapist Selection
 
 **Did:**

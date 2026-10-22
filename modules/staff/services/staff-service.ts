@@ -3,6 +3,7 @@ import {
   UpdateStaffInput,
 } from "../schemas/staff-schema"
 import { StaffRepository } from "../repositories/staff-repository"
+import { Prisma } from "@/lib/generated/prisma"
 import bcrypt from "bcryptjs"
 
 export interface GetStaffParams {
@@ -64,6 +65,19 @@ export class StaffService {
     return await StaffRepository.getActiveStaffForExport()
   }
 
+  static async getMatchingStaffIds({ search, branchId }: { search?: string; branchId?: string } = {}) {
+    const where: Prisma.StaffWhereInput = {
+      ...(branchId && { branchStaffs: { some: { branchId } } }),
+      ...(search && {
+        OR: [
+          { firstName: { contains: search } },
+          { lastName: { contains: search } },
+        ]
+      }),
+    }
+    return await StaffRepository.findStaffIds(where)
+  }
+
   static async createStaff(data: CreateStaffInput) {
     if (!data.staffIdNumber) {
       const lastStaff = await StaffRepository.getLastStaffIdNumber()
@@ -79,7 +93,13 @@ export class StaffService {
     }
 
     const { pin, ...staffData } = data
-    const payload: any = { ...staffData }
+    const payload: any = {
+      ...staffData,
+      username: staffData.username?.trim() ? staffData.username.trim() : null,
+      phone: staffData.phone?.trim() ? staffData.phone.trim() : null,
+      email: staffData.email?.trim() ? staffData.email.trim() : null,
+      level: staffData.level?.trim() ? staffData.level.trim() : null,
+    }
     if (pin) {
       payload.pinHash = await bcrypt.hash(pin, 10)
     }
@@ -89,7 +109,21 @@ export class StaffService {
 
   static async updateStaff(id: string, data: Omit<UpdateStaffInput, "id">) {
     const { pin, ...staffData } = data
-    const payload: any = { ...staffData }
+    const payload: any = {
+      ...staffData,
+      ...(staffData.username !== undefined && {
+        username: staffData.username?.trim() ? staffData.username.trim() : null,
+      }),
+      ...(staffData.phone !== undefined && {
+        phone: staffData.phone?.trim() ? staffData.phone.trim() : null,
+      }),
+      ...(staffData.email !== undefined && {
+        email: staffData.email?.trim() ? staffData.email.trim() : null,
+      }),
+      ...(staffData.level !== undefined && {
+        level: staffData.level?.trim() ? staffData.level.trim() : null,
+      }),
+    }
     if (pin) {
       payload.pinHash = await bcrypt.hash(pin, 10)
     } else if (pin === "") {

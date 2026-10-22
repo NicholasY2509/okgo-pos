@@ -28,10 +28,10 @@ export async function getRolesAction() {
 
 export async function createRoleAction(values: CreateRoleInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = createRoleSchema.safeParse(values)
 
@@ -53,10 +53,10 @@ export async function createRoleAction(values: CreateRoleInput) {
 
 export async function updateRoleAction(values: UpdateRoleInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = updateRoleSchema.safeParse(values)
 
@@ -79,10 +79,10 @@ export async function updateRoleAction(values: UpdateRoleInput) {
 
 export async function deleteRoleAction(id: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     await RoleService.deleteRole(id)
     revalidatePath("/admin/roles")

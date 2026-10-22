@@ -28,10 +28,11 @@ export default async function StaffPage({ searchParams }: StaffPageProps) {
   const search = typeof params.search === 'string' ? params.search : undefined;
   const branchId = typeof params.branchId === 'string' ? params.branchId : undefined;
 
-  const [staffData, workPositions, branches] = await Promise.all([
+  const [staffData, workPositions, branches, roles] = await Promise.all([
     StaffService.getAllStaffPaginated({ page, limit, search, branchId }),
     WorkPositionService.getAllWorkPositions(),
     BranchService.getAllBranches(),
+    BranchService.getAllRoles(),
   ])
 
   return (
@@ -52,7 +53,13 @@ export default async function StaffPage({ searchParams }: StaffPageProps) {
 
       <div className="w-full space-y-6">
         <StaffFilters branches={branches} />
-        <StaffTable data={staffData.staff} />
+        <StaffTable
+          data={staffData.staff}
+          branches={branches}
+          roles={roles}
+          totalCount={staffData.metadata.total}
+          currentFilter={{ search, branchId }}
+        />
         <DataTablePagination metadata={staffData.metadata} />
       </div>
     </div>

@@ -4,23 +4,27 @@ import { AuthRepository } from "../repositories/auth-repository";
 export class AuthService {
   /**
    * Verifies the email and password against the database.
-   * Returns the user object if valid, otherwise null.
+   * Returns the user object if valid, otherwise throws an error with the specific reason.
    */
   static async verifyCredentials(email?: string, password?: string, subdomain?: string) {
     if (!email || !password) {
-      return null;
+      throw new Error("Email dan kata sandi wajib diisi.");
     }
 
     const user = await AuthRepository.getUserByEmail(email);
 
-    if (!user || !user.password) {
-      return null;
+    if (!user) {
+      throw new Error("Email tidak terdaftar.");
+    }
+
+    if (!user.password) {
+      throw new Error("Akun ini belum memiliki kata sandi.");
     }
 
     const isValid = await bcrypt.compare(password, user.password);
 
     if (!isValid) {
-      return null;
+      throw new Error("Kata sandi yang Anda masukkan salah.");
     }
 
     let userRole = "Guest";
@@ -31,7 +35,7 @@ export class AuthService {
       const branch = await AuthRepository.getBranchBySubdomain(subdomain);
 
       if (!branch) {
-        throw new Error("Anda tidak mempunyai akses ke sistem ini");
+        throw new Error("Cabang tidak ditemukan atau tidak aktif.");
       }
 
       if (globalRole && (globalRole.name === "Super Admin" || globalRole.name === "Admin Pusat")) {
@@ -41,7 +45,7 @@ export class AuthService {
         const assignment = await AuthRepository.getBranchStaffAssignment(user.id, branch.id);
 
         if (!assignment) {
-          throw new Error("Anda tidak mempunyai akses ke sistem ini");
+          throw new Error("Anda tidak mempunyai akses ke cabang ini.");
         }
 
         userRole = assignment.role.name;
@@ -54,7 +58,7 @@ export class AuthService {
         const adminAssignment = await AuthRepository.getAdminAssignment(user.id);
 
         if (!adminAssignment) {
-          throw new Error("Anda tidak mempunyai akses ke sistem ini");
+          throw new Error("Anda tidak mempunyai akses ke portal admin.");
         }
 
         userRole = "Admin Pusat";

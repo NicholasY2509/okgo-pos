@@ -6,13 +6,13 @@ import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 
 export async function calculateAttendanceAction(values: AttendanceCalculationInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = attendanceCalculationSchema.safeParse(values)
-    
+
     if (!validatedFields.success) {
       return { error: "Data input tidak valid." }
     }

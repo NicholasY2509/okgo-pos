@@ -15,6 +15,8 @@ export function useAttendanceMachineForm(initialData?: any, onSuccess?: () => vo
       sn: initialData?.sn || "",
       name: initialData?.name || "",
       branchId: initialData?.branchId || "",
+      ipAddress: initialData?.ipAddress || "",
+      port: initialData?.port ?? 80,
       isActive: initialData?.isActive ?? true,
     },
   })

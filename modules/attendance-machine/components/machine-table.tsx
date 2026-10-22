@@ -61,6 +61,20 @@ export function MachineTable({ data, branches }: MachineTableProps) {
       cell: ({ row }) => <div>{row.original.branch?.name || "-"}</div>,
     },
     {
+      accessorKey: "ipAddress",
+      header: "Alamat IP / Port",
+      cell: ({ row }) => {
+        const ip = row.original.ipAddress
+        const port = row.original.port
+        if (!ip) return <span className="text-muted-foreground text-xs">-</span>
+        return (
+          <div className="font-mono text-xs">
+            {ip}{port && port !== 80 ? `:${port}` : ""}
+          </div>
+        )
+      },
+    },
+    {
       accessorKey: "isActive",
       header: "Status",
       cell: ({ row }) => {

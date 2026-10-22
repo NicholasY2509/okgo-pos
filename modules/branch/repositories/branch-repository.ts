@@ -1,7 +1,14 @@
 import { prisma } from "@/lib/prisma";
-import { AssignStaffBranchInput, CreateBranchInput, UpdateBranchInput } from "../schemas/branch-schema";
+import {
+  AssignStaffBranchInput,
+  BulkAssignStaffInput,
+  BulkTransferStaffInput,
+  CreateBranchInput,
+  TransferBranchStaffInput,
+  UpdateBranchInput,
+} from "../schemas/branch-schema";
 
-export let BranchRepository = {
+export const BranchRepository = {
     getAllBranches: async () => {
         return await prisma.branch.findMany({
           orderBy: { createdAt: 'desc' },
@@ -55,6 +62,86 @@ export let BranchRepository = {
           }
         })
         },
+    bulkAssignStaff: async (data: BulkAssignStaffInput) => {
+        return await prisma.$transaction(
+          data.staffIds.map((staffId) =>
+            prisma.branchStaff.upsert({
+              where: {
+                staffId_branchId: {
+                  staffId,
+                  branchId: data.branchId,
+                },
+              },
+              update: {
+                roleId: data.roleId,
+              },
+              create: {
+                staffId,
+                branchId: data.branchId,
+                roleId: data.roleId,
+              },
+            })
+          )
+        )
+    },
+    transferBranchStaff: async (data: TransferBranchStaffInput) => {
+        return await prisma.$transaction(async (tx) => {
+          if (data.currentBranchId && data.currentBranchId !== data.targetBranchId) {
+            await tx.branchStaff.deleteMany({
+              where: {
+                staffId: data.staffId,
+                branchId: data.currentBranchId,
+              },
+            })
+          }
+          return await tx.branchStaff.upsert({
+            where: {
+              staffId_branchId: {
+                staffId: data.staffId,
+                branchId: data.targetBranchId,
+              },
+            },
+            update: {
+              roleId: data.roleId,
+            },
+            create: {
+              staffId: data.staffId,
+              branchId: data.targetBranchId,
+              roleId: data.roleId,
+            },
+          })
+        })
+    },
+    bulkTransferStaff: async (data: BulkTransferStaffInput) => {
+        return await prisma.$transaction(async (tx) => {
+          await tx.branchStaff.deleteMany({
+            where: {
+              staffId: { in: data.staffIds },
+            },
+          })
+          return await Promise.all(
+            data.staffIds.map((staffId) =>
+              tx.branchStaff.create({
+                data: {
+                  staffId,
+                  branchId: data.targetBranchId,
+                  roleId: data.roleId,
+                },
+              })
+            )
+          )
+        })
+    },
+    getStaffBranchAssignments: async (staffId: string) => {
+        return await prisma.branchStaff.findMany({
+          where: { staffId },
+          include: {
+            branch: true,
+            role: true,
+          },
+          orderBy: { createdAt: "desc" },
+        })
+    },
     removeBranchStaff: async (branchStaffId: string) => {
         return await prisma.branchStaff.delete({
           where: { id: branchStaffId }
@@ -68,7 +155,12 @@ export let BranchRepository = {
     getAllStaffs: async () => {
         return await prisma.staff.findMany({
           orderBy: { firstName: 'asc' },
-          include: { workPosition: true }
+          include: {
+            workPosition: true,
+            branchStaffs: {
+              include: { branch: true },
+            },
+          },
         })
         }
 };

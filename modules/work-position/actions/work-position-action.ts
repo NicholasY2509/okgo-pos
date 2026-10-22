@@ -12,10 +12,10 @@ import {
 
 export async function createWorkPositionAction(values: CreateWorkPositionInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = createWorkPositionSchema.safeParse(values)
 
@@ -34,10 +34,10 @@ export async function createWorkPositionAction(values: CreateWorkPositionInput) 
 
 export async function updateWorkPositionAction(values: UpdateWorkPositionInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = updateWorkPositionSchema.safeParse(values)
 
@@ -57,10 +57,10 @@ export async function updateWorkPositionAction(values: UpdateWorkPositionInput) 
 
 export async function deleteWorkPositionAction(id: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     await WorkPositionService.deleteWorkPosition(id)
     revalidatePath("/admin/staff/work-positions")

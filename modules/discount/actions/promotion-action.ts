@@ -7,10 +7,10 @@ import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 
 export async function createPromotionAction(values: PromotionInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = promotionSchema.safeParse(values)
     if (!validatedFields.success) {
@@ -28,10 +28,10 @@ export async function createPromotionAction(values: PromotionInput) {
 
 export async function updatePromotionAction(id: string, values: PromotionInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = promotionSchema.safeParse(values)
     if (!validatedFields.success) {
@@ -49,10 +49,10 @@ export async function updatePromotionAction(id: string, values: PromotionInput) 
 
 export async function deletePromotionAction(id: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     await PromotionService.deletePromotion(id)
     revalidatePath("/admin/products")

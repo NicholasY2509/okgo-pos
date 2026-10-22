@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@/lib/generated/prisma"
 import { CreateStaffInput, UpdateStaffInput } from "../schemas/staff-schema"
 import { StaffAvailabilityService } from "../services/staff-availability-service"
 import { addMinutes } from "date-fns"
@@ -138,6 +139,7 @@ export const StaffRepository = {
         branchStaffs: {
           include: {
             branch: true,
+            role: true,
           }
         },
         staffUsers: {
@@ -184,5 +186,14 @@ export const StaffRepository = {
         staffIdNumber: true
       }
     })
+  },
+
+  async findStaffIds(where: Prisma.StaffWhereInput) {
+    const staff = await prisma.staff.findMany({
+      where,
+      select: { id: true },
+    })
+    return staff.map((s) => s.id)
   }
 }
+

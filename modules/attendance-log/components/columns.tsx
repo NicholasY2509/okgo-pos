@@ -18,7 +18,7 @@ export type AttendanceLog = {
 function getPunchTypeBadge(state: number) {
   switch (state) {
     case 0:
-      return <Badge variant="outline" className="bg-gray-500 text-white">Tidak Dikenal ({state})</Badge>
+      return <Badge variant="secondary">Scan Normal (0)</Badge>
     case 1:
       return <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">Masuk ({state})</Badge>
     case 2:

@@ -1,4 +1,11 @@
-import { AssignStaffBranchInput, CreateBranchInput, UpdateBranchInput } from "../schemas/branch-schema"
+import {
+  AssignStaffBranchInput,
+  BulkAssignStaffInput,
+  BulkTransferStaffInput,
+  CreateBranchInput,
+  TransferBranchStaffInput,
+  UpdateBranchInput,
+} from "../schemas/branch-schema"
 import { BranchRepository } from "../repositories/branch-repository";
 
 export class BranchService {
@@ -26,6 +33,22 @@ export class BranchService {
       return await BranchRepository.assignStaffToBranch(data);
   }
 
+  static async bulkAssignStaff(data: BulkAssignStaffInput) {
+      return await BranchRepository.bulkAssignStaff(data);
+  }
+
+  static async transferBranchStaff(data: TransferBranchStaffInput) {
+      return await BranchRepository.transferBranchStaff(data);
+  }
+
+  static async bulkTransferStaff(data: BulkTransferStaffInput) {
+      return await BranchRepository.bulkTransferStaff(data);
+  }
+
+  static async getStaffBranchAssignments(staffId: string) {
+      return await BranchRepository.getStaffBranchAssignments(staffId);
+  }
+
   static async removeBranchStaff(branchStaffId: string) {
       return await BranchRepository.removeBranchStaff(branchStaffId);
   }
@@ -38,3 +61,4 @@ export class BranchService {
       return await BranchRepository.getAllStaffs();
   }
 }
+

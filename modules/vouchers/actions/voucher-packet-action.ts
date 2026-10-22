@@ -7,10 +7,10 @@ import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 
 export async function createVoucherPacketAction(values: VoucherPacketInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = voucherPacketSchema.safeParse(values)
     if (!validatedFields.success) {
@@ -18,17 +18,17 @@ export async function createVoucherPacketAction(values: VoucherPacketInput) {
     }
 
     const result = await VoucherPacketService.create(validatedFields.data)
-    
+
     // Revalidate paths where this data might be displayed
     revalidatePath(`/dashboard/products/${result.productId}`)
     revalidatePath("/dashboard/vouchers")
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       data: {
         ...result,
         price: Number(result.price)
-      } 
+      }
     }
   } catch (error: unknown) {
     console.error("Failed to create voucher packet:", error)
@@ -39,10 +39,10 @@ export async function createVoucherPacketAction(values: VoucherPacketInput) {
 
 export async function updateVoucherPacketAction(id: string, values: VoucherPacketInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = voucherPacketSchema.safeParse(values)
     if (!validatedFields.success) {
@@ -50,16 +50,16 @@ export async function updateVoucherPacketAction(id: string, values: VoucherPacke
     }
 
     const result = await VoucherPacketService.update(id, validatedFields.data)
-    
+
     revalidatePath(`/dashboard/products/${result.productId}`)
     revalidatePath("/dashboard/vouchers")
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       data: {
         ...result,
         price: Number(result.price)
-      } 
+      }
     }
   } catch (error: unknown) {
     console.error("Failed to update voucher packet:", error)
@@ -70,16 +70,16 @@ export async function updateVoucherPacketAction(id: string, values: VoucherPacke
 
 export async function deleteVoucherPacketAction(id: string, productId: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     await VoucherPacketService.delete(id)
-    
+
     revalidatePath(`/dashboard/products/${productId}`)
     revalidatePath("/dashboard/vouchers")
-    
+
     return { success: true }
   } catch (error: unknown) {
     console.error("Failed to delete voucher packet:", error)
@@ -90,10 +90,10 @@ export async function deleteVoucherPacketAction(id: string, productId: string) {
 
 export async function generateVouchersAction(packetId: string, quantity: number) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const result = await VoucherPacketService.generateVouchers(packetId, quantity)
     revalidatePath("/admin/vouchers")

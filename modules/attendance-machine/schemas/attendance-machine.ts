@@ -4,6 +4,8 @@ export const attendanceMachineSchema = z.object({
   sn: z.string().min(1, "Serial Number wajib diisi"),
   name: z.string().min(1, "Nama mesin wajib diisi"),
   branchId: z.string().min(1, "Cabang wajib dipilih"),
+  ipAddress: z.string().optional().nullable(),
+  port: z.number().int().positive().optional().nullable(),
   isActive: z.boolean(),
 })
 

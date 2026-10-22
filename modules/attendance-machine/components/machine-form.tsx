@@ -54,6 +54,28 @@ export function MachineForm({ initialData, branches, onSuccess }: MachineFormPro
         )}
       </div>
 
+      <div className="grid grid-cols-3 gap-3">
+        <div className="col-span-2 space-y-2">
+          <Label>Alamat IP Mesin (Wi-Fi / LAN)</Label>
+          <Input placeholder="Contoh: 192.168.1.231" {...form.register("ipAddress")} />
+          {form.formState.errors.ipAddress && (
+            <p className="text-sm text-red-500">{form.formState.errors.ipAddress.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>Port</Label>
+          <Input
+            type="number"
+            placeholder="80"
+            {...form.register("port", { valueAsNumber: true })}
+          />
+          {form.formState.errors.port && (
+            <p className="text-sm text-red-500">{form.formState.errors.port.message}</p>
+          )}
+        </div>
+      </div>
+
       <div className="flex items-center space-x-2 pt-2">
         <Checkbox 
           id="isActive" 

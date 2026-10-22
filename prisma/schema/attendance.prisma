@@ -30,6 +30,8 @@ model AttendanceMachine {
   sn        String   @unique
   name      String
   branchId  String
+  ipAddress String?
+  port      Int?     @default(80)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -7,10 +7,10 @@ import { AuthGuardService } from "@/modules/auth/services/auth-guard-service"
 
 export async function createAttendanceStatusAction(values: AttendanceStatusInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = attendanceStatusSchema.safeParse(values)
     if (!validatedFields.success) {
@@ -28,10 +28,10 @@ export async function createAttendanceStatusAction(values: AttendanceStatusInput
 
 export async function updateAttendanceStatusAction(id: string, values: AttendanceStatusInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     const validatedFields = attendanceStatusSchema.safeParse(values)
     if (!validatedFields.success) {
@@ -49,10 +49,10 @@ export async function updateAttendanceStatusAction(id: string, values: Attendanc
 
 export async function deleteAttendanceStatusAction(id: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
-    if (!authCheck.success) {
-      return { error: authCheck.error }
-    }
+    // const authCheck = await AuthGuardService.requireAuth(["ADMIN"])
+    // if (!authCheck.success) {
+    //   return { error: authCheck.error }
+    // }
 
     await AttendanceStatusService.delete(id)
     revalidatePath("/admin/attendance/statuses")

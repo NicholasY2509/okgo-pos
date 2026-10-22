@@ -19,17 +19,25 @@ import {
 
 interface RemoveStaffButtonProps {
   branchStaffId: string
-  branchId: string
-  staffName: string
+  branchId?: string
+  staffId?: string
+  staffName?: string
+  branchName?: string
 }
 
-export function RemoveStaffButton({ branchStaffId, branchId, staffName }: RemoveStaffButtonProps) {
+export function RemoveStaffButton({
+  branchStaffId,
+  branchId,
+  staffId,
+  staffName,
+  branchName,
+}: RemoveStaffButtonProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [open, setOpen] = useState(false)
 
   async function handleRemove() {
     setIsDeleting(true)
-    const result = await removeBranchStaffAction(branchStaffId, branchId)
+    const result = await removeBranchStaffAction(branchStaffId, branchId, staffId)
     setIsDeleting(false)
 
     if (result.error) {

@@ -5,6 +5,8 @@ import { WorkPositionService } from "@/modules/work-position/services/work-posit
 import { UserService } from "@/modules/staff-user/services/user-service"
 import { StaffMachineService } from "@/modules/staff-machine/services/staff-machine-service"
 import { AttendanceMachineService } from "@/modules/attendance-machine/services/attendance-machine-service"
+import { BranchService } from "@/modules/branch/services/branch-service"
+import { StaffBranchCard } from "@/modules/staff/components/staff-branch-card"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -26,12 +28,14 @@ export const metadata: Metadata = {
 export default async function StaffDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
 
-  const [staff, allUsers, workPositions, staffMachines, allMachines] = await Promise.all([
+  const [staff, allUsers, workPositions, staffMachines, allMachines, allBranches, allRoles] = await Promise.all([
     StaffService.getStaffById(params.id),
     UserService.getAllUsers(),
     WorkPositionService.getAllWorkPositions(),
     StaffMachineService.getByStaffId(params.id),
-    AttendanceMachineService.getAll()
+    AttendanceMachineService.getAll(),
+    BranchService.getAllBranches(),
+    BranchService.getAllRoles(),
   ])
 
   if (!staff) {
@@ -138,6 +142,14 @@ export default async function StaffDetailPage(props: { params: Promise<{ id: str
           </CardContent>
         </Card>
       </div>
+
+      <StaffBranchCard
+        staffId={staff.id}
+        staffName={`${staff.firstName} ${staff.lastName}`}
+        branchStaffs={staff.branchStaffs}
+        branches={allBranches}
+        roles={allRoles}
+      />
 
       <div className="grid grid-cols-1 gap-6">
         <Card>
