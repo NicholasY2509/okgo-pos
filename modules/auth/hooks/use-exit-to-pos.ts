@@ -29,6 +29,15 @@ export function useExitToPos(tenantSlug: string, onSuccess?: () => void) {
     toast.success("Otorisasi berhasil. Mengalihkan ke POS...")
     onSuccess?.()
     form.reset()
+
+    if (typeof document !== "undefined" && document.fullscreenElement) {
+      try {
+        await document.exitFullscreen()
+      } catch {
+        // Ignore if browser prevents or already exited
+      }
+    }
+
     router.push("/pos")
   }
 

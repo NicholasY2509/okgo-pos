@@ -8,20 +8,23 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
-## 2026-10-25 — Unified Kiosk & Reviews Exit Flow to POS
+## 2026-10-25 — Unified Kiosk & Reviews Exit Flow & Fullscreen Splash
 
 **Did:**
 1. Unified credential requirements for exiting Kiosk (`/kiosk`) and Reviews (`/reviews`) pages on tenant branch portals.
 2. Updated [`kioskExitSchema`](modules/auth/schemas/kiosk-schema.ts) to validate `email` and `password` with localized validation messages and optional `subdomain`.
 3. Added server action [`exitToPosAction`](modules/auth/actions/kiosk-action.ts) that verifies staff/manager credentials against [`AuthService.verifyCredentials`](modules/auth/services/auth-service.ts), purges `staff_session` cookie, calls `signIn("credentials")`, and redirects to `/pos`.
-4. Created client hook [`useExitToPos`](modules/auth/hooks/use-exit-to-pos.ts) to manage form state, error surfacing, toast notifications, and redirect to `/pos`.
+4. Created client hook [`useExitToPos`](modules/auth/hooks/use-exit-to-pos.ts) to manage form state, error surfacing, toast notifications, fullscreen exit cleanup, and redirect to `/pos`.
 5. Updated [`KioskExitModal`](modules/auth/components/kiosk-exit-modal.tsx) to consume `useExitToPos` and adhere to design tokens (`text-destructive`, `rounded-2xl`).
 6. Updated [`ExitReviewsModal`](modules/service-session/components/exit-reviews-modal.tsx) to replace the staff PIN keypad with standard email and password authentication, consuming `useExitToPos` and redirecting to `/pos`.
-7. Created comprehensive unit test suite [`kiosk-action.test.ts`](modules/auth/actions/kiosk-action.test.ts) covering validation, invalid credentials, branch access guards, session cookie cleanup, and redirect behavior.
-8. Verified with `npm test` (7 test files, 35 tests pass) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
+7. Created [`FullscreenSplash`](components/fullscreen-splash.tsx) with branded ambient backdrop, animated loading state, and fullscreen trigger to hide browser address bar and prevent manual URL retyping on kiosk and review devices.
+8. Added persistent floating restore button in `FullscreenSplash` if fullscreen is exited while on kiosk or review modes.
+9. Integrated `FullscreenSplash` into [`KioskLayout`](app/[tenant]/kiosk/layout.tsx) and [`CustomerReviewPage`](app/[tenant]/reviews/page.tsx).
+10. Created comprehensive unit test suite [`kiosk-action.test.ts`](modules/auth/actions/kiosk-action.test.ts) covering validation, invalid credentials, branch access guards, session cookie cleanup, and redirect behavior.
+11. Verified with `npm test` (7 test files, 35 tests pass) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
 
 **Why:**
-Previously, exiting reviews required staff username and PIN (with a custom numpad) while kiosk exit required manager email and password, and redirection paths were inconsistent (`/${tenantSlug}/pos` causing 404s on subdomains vs `/pos`). Both now consistently require branch login credentials (email & password) and redirect to `/pos`.
+Previously, exiting reviews required staff username and PIN (with a custom numpad) while kiosk exit required manager email and password, and redirection paths were inconsistent (`/${tenantSlug}/pos` causing 404s on subdomains vs `/pos`). Additionally, leaving browser address bars exposed on tablet devices allowed unauthorized navigation/URL retyping; the new splash screen activates native fullscreen to lock out browser navigation until authorized exit back to POS.
 
 ---
 
