@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,13 @@ import { SessionList } from "@/modules/service-session/components/session-list"
 import { ActiveSessionView } from "@/modules/service-session/components/active-session-view"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HistoryList } from "@/modules/service-session/components/history-list"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { List } from "lucide-react"
 import { KioskNotificationListener } from "@/modules/service-session/components/kiosk-notification-listener"
 
@@ -22,59 +29,94 @@ export default async function KioskDashboardPage({
   const staffId = cookieStore.get("staff_session")?.value
 
   if (!staffId) {
-    redirect(`/${resolvedParams.tenant}/kiosk`)
+    redirect("/kiosk")
   }
 
   const staff = await StaffService.getStaffById(staffId)
   const branch = await BranchService.getBranchBySubdomain(resolvedParams.tenant)
 
   if (!staff) {
-    redirect(`/${resolvedParams.tenant}/kiosk`)
+    redirect("/kiosk")
   }
 
   const sessionsResponse = await getStaffDailySessionsAction(staff.id)
   const sessions = sessionsResponse.success ? sessionsResponse.data || [] : []
 
   // Find if there is an in-progress session
-  const inProgressSession = sessions.find((s: any) => s.status === "IN_PROGRESS")
-  const scheduledSessions = sessions.filter((s: any) => s.status === "SCHEDULED")
-  const completedSessions = sessions.filter((s: any) => s.status === "COMPLETED")
+  const inProgressSession = sessions.find(
+    (s: { status: string }) => s.status === "IN_PROGRESS"
+  )
+  const scheduledSessions = sessions.filter(
+    (s: { status: string }) => s.status === "SCHEDULED"
+  )
+  const completedSessions = sessions.filter(
+    (s: { status: string }) => s.status === "COMPLETED"
+  )
 
   return (
-    <div className="w-full h-screen p-6 bg-muted/20 flex flex-col">
+    <div className="flex h-screen w-full flex-col bg-muted/20 p-6">
       <KioskNotificationListener staffId={staff.id} />
-      <header className="flex justify-between items-center mb-6">
+      <header className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <img src="/logo-only.png" alt="Logo" className="h-8 object-contain" />
+          <Image
+            src="/logo-only.png"
+            alt="Logo"
+            width={32}
+            height={32}
+            className="h-8 w-auto object-contain"
+          />
           <div className="h-8 w-px bg-border"></div>
           <div>
-            <h1 className="text-xl font-light tracking-tight">{branch?.name || "Kiosk"}</h1>
-            <p className="text-sm text-muted-foreground">Terapis: {staff.firstName} {staff.lastName}</p>
+            <h1 className="text-xl font-light tracking-tight">
+              {branch?.name || "Kiosk"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Terapis: {staff.firstName} {staff.lastName}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="secondary">
-                <List className="w-4 h-4 mr-2" />
+                <List className="mr-2 h-4 w-4" />
                 Antrean & Riwayat
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md flex flex-col h-full overflow-hidden">
+            <SheetContent
+              side="right"
+              className="flex h-full w-full flex-col overflow-hidden sm:max-w-md"
+            >
               <SheetHeader className="mb-4">
                 <SheetTitle>Antrean & Riwayat</SheetTitle>
               </SheetHeader>
               <div className="px-4">
-                <Tabs defaultValue="queue" className="flex flex-col flex-1 overflow-hidden">
-                  <TabsList className="grid w-full grid-cols-2 mb-4">
-                    <TabsTrigger value="queue">Antrean ({scheduledSessions.length})</TabsTrigger>
-                    <TabsTrigger value="history">Riwayat ({completedSessions.length})</TabsTrigger>
+                <Tabs
+                  defaultValue="queue"
+                  className="flex flex-1 flex-col overflow-hidden"
+                >
+                  <TabsList className="mb-4 grid w-full grid-cols-2">
+                    <TabsTrigger value="queue">
+                      Antrean ({scheduledSessions.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="history">
+                      Riwayat ({completedSessions.length})
+                    </TabsTrigger>
                   </TabsList>
-                  <TabsContent value="queue" className="flex-1 overflow-y-auto mt-0">
-                    <SessionList sessions={scheduledSessions} tenantSlug={resolvedParams.tenant} />
+                  <TabsContent
+                    value="queue"
+                    className="mt-0 flex-1 overflow-y-auto"
+                  >
+                    <SessionList
+                      sessions={scheduledSessions}
+                      tenantSlug={resolvedParams.tenant}
+                    />
                   </TabsContent>
 
-                  <TabsContent value="history" className="flex-1 overflow-y-auto mt-0">
+                  <TabsContent
+                    value="history"
+                    className="mt-0 flex-1 overflow-y-auto"
+                  >
                     <HistoryList sessions={completedSessions} />
                   </TabsContent>
                 </Tabs>
@@ -82,12 +124,14 @@ export default async function KioskDashboardPage({
             </SheetContent>
           </Sheet>
 
-          <form action={async () => {
-            "use server"
-            const store = await cookies()
-            store.delete("staff_session")
-            redirect(`/${resolvedParams.tenant}/kiosk`)
-          }}>
+          <form
+            action={async () => {
+              "use server"
+              const store = await cookies()
+              store.delete("staff_session")
+              redirect("/kiosk")
+            }}
+          >
             <Button variant="outline" type="submit">
               Log Out Kiosk
             </Button>
@@ -97,23 +141,33 @@ export default async function KioskDashboardPage({
 
       <div className="flex-1 overflow-hidden">
         {/* Main Content Area */}
-        <div className="h-full flex flex-col bg-background rounded-2xl shadow-sm border overflow-y-auto">
+        <div className="flex h-full flex-col overflow-y-auto rounded-2xl border bg-background shadow-sm">
           {inProgressSession ? (
-            <ActiveSessionView session={inProgressSession} tenantSlug={resolvedParams.tenant} />
+            <ActiveSessionView
+              session={inProgressSession}
+              tenantSlug={resolvedParams.tenant}
+            />
           ) : scheduledSessions.length > 0 ? (
-            <div className="flex flex-col h-full items-center justify-center space-y-8 p-6">
-              <div className="text-center space-y-2">
+            <div className="flex h-full flex-col items-center justify-center space-y-8 p-6">
+              <div className="space-y-2 text-center">
                 <h2 className="text-3xl font-light">Layanan Menunggu</h2>
-                <p className="text-muted-foreground">Silakan mulai layanan untuk pelanggan Anda.</p>
+                <p className="text-muted-foreground">
+                  Silakan mulai layanan untuk pelanggan Anda.
+                </p>
               </div>
-              <div className="w-full max-w-lg bg-card border rounded-2xl shadow-sm overflow-hidden p-4">
-                <SessionList sessions={scheduledSessions} tenantSlug={resolvedParams.tenant} />
+              <div className="w-full max-w-lg overflow-hidden rounded-2xl border bg-card p-4 shadow-sm">
+                <SessionList
+                  sessions={scheduledSessions}
+                  tenantSlug={resolvedParams.tenant}
+                />
               </div>
             </div>
           ) : (
-            <div className="flex flex-col h-full items-center justify-center text-muted-foreground space-y-4 p-6">
+            <div className="flex h-full flex-col items-center justify-center space-y-4 p-6 text-muted-foreground">
               <p className="text-xl">Tidak ada layanan yang sedang berjalan.</p>
-              <p className="text-sm">Anda belum memiliki antrean layanan saat ini.</p>
+              <p className="text-sm">
+                Anda belum memiliki antrean layanan saat ini.
+              </p>
             </div>
           )}
         </div>
