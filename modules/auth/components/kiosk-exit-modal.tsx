@@ -15,7 +15,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-export function KioskExitModal({ tenantSlug }: { tenantSlug: string }) {
+interface KioskExitModalProps {
+  tenantSlug: string
+  trigger?: React.ReactNode
+}
+
+export function KioskExitModal({ tenantSlug, trigger }: KioskExitModalProps) {
   const [open, setOpen] = useState(false)
   const { form, onSubmit, isSubmitting, error, reset } = useExitToPos(
     tenantSlug,
@@ -34,14 +39,18 @@ export function KioskExitModal({ tenantSlug }: { tenantSlug: string }) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-4 bottom-4 opacity-50 hover:opacity-100"
-        >
-          <Lock className="h-5 w-5" />
-          <span className="sr-only">Exit Kiosk</span>
-        </Button>
+        {trigger ? (
+          trigger
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 rounded-full border-border/60 bg-background/80 shadow-sm backdrop-blur-md hover:bg-background"
+          >
+            <Lock className="h-4 w-4" />
+            <span className="text-xs">Keluar Kiosk</span>
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent className="overflow-hidden rounded-2xl border border-border/50 bg-background p-0 shadow-lg sm:max-w-md">

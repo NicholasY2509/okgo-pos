@@ -1,5 +1,4 @@
 import { ReactNode } from "react"
-import { KioskExitModal } from "@/modules/auth/components/kiosk-exit-modal"
 import { FullscreenSplash } from "@/components/fullscreen-splash"
 
 export default async function KioskLayout({
@@ -12,11 +11,9 @@ export default async function KioskLayout({
   const resolvedParams = await params
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-background">
+    <div className="relative min-h-screen w-full bg-background">
       <FullscreenSplash title="Mode Kiosk" tenantSlug={resolvedParams.tenant} />
       {children}
-
-      <KioskExitModal tenantSlug={resolvedParams.tenant} />
     </div>
   )
 }

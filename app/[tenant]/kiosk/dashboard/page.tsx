@@ -16,8 +16,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { List } from "lucide-react"
+import { List, Lock } from "lucide-react"
 import { KioskNotificationListener } from "@/modules/service-session/components/kiosk-notification-listener"
+import { KioskExitModal } from "@/modules/auth/components/kiosk-exit-modal"
 
 export default async function KioskDashboardPage({
   params,
@@ -133,9 +134,19 @@ export default async function KioskDashboardPage({
             }}
           >
             <Button variant="outline" type="submit">
-              Log Out Kiosk
+              Log Out Terapis
             </Button>
           </form>
+
+          <KioskExitModal
+            tenantSlug={resolvedParams.tenant}
+            trigger={
+              <Button variant="outline" className="gap-2">
+                <Lock className="h-4 w-4" />
+                Keluar Kiosk (ke POS)
+              </Button>
+            }
+          />
         </div>
       </header>
 
