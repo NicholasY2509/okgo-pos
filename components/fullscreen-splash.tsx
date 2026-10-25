@@ -20,6 +20,13 @@ function getInitialFullscreen(): boolean {
   )
 }
 
+interface KeyboardNavigator {
+  keyboard?: {
+    lock?: (keys?: string[]) => Promise<void>
+    unlock?: () => void
+  }
+}
+
 export function FullscreenSplash({
   title,
   subtitle = "Memuat tampilan layar penuh...",
@@ -48,6 +55,19 @@ export function FullscreenSplash({
       } else if (docEl.webkitRequestFullscreen) {
         await docEl.webkitRequestFullscreen()
       }
+
+      // Lock keyboard if supported (prevents ESC key from exiting fullscreen in Chromium)
+      const nav =
+        typeof navigator !== "undefined"
+          ? (navigator as unknown as KeyboardNavigator)
+          : undefined
+      if (nav?.keyboard?.lock) {
+        try {
+          await nav.keyboard.lock(["Escape"])
+        } catch {
+          // Ignore if lock failed
+        }
+      }
     } catch {
       // Browser rejected fullscreen request without direct user gesture
     }
@@ -59,11 +79,32 @@ export function FullscreenSplash({
       setIsFullscreen(active)
       if (active) {
         setIsVisible(false)
+        const nav =
+          typeof navigator !== "undefined"
+            ? (navigator as unknown as KeyboardNavigator)
+            : undefined
+        if (nav?.keyboard?.lock) {
+          nav.keyboard.lock(["Escape"]).catch(() => {})
+        }
+      } else {
+        // Enforce full screen: immediately re-show the splash overlay to lock the screen
+        setIsVisible(true)
+      }
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "F11") {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!checkFullscreen()) {
+          enterFullscreen()
+        }
       }
     }
 
     document.addEventListener("fullscreenchange", handleFullscreenChange)
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange)
+    window.addEventListener("keydown", handleKeyDown, { capture: true })
 
     // Attempt automatic fullscreen on entry
     enterFullscreen()
@@ -75,11 +116,19 @@ export function FullscreenSplash({
 
     return () => {
       clearTimeout(timer)
+      window.removeEventListener("keydown", handleKeyDown, { capture: true })
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
       document.removeEventListener(
         "webkitfullscreenchange",
         handleFullscreenChange
       )
+      const nav =
+        typeof navigator !== "undefined"
+          ? (navigator as unknown as KeyboardNavigator)
+          : undefined
+      if (nav?.keyboard?.unlock) {
+        nav.keyboard.unlock()
+      }
     }
   }, [checkFullscreen, enterFullscreen])
 
@@ -145,7 +194,9 @@ export function FullscreenSplash({
                 {title}
               </h2>
               <p className="text-sm font-light text-muted-foreground">
-                {subtitle}
+                {isReady && !isFullscreen
+                  ? "Layar penuh wajib untuk mode ini. Ketuk untuk mengaktifkan kembali."
+                  : subtitle}
               </p>
             </div>
 

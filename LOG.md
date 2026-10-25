@@ -24,8 +24,8 @@ session — it records what the code cannot say for itself.
 11. Fixed 404 error on "Log Out Kiosk" button and session guards in [`KioskDashboardPage`](app/[tenant]/kiosk/dashboard/page.tsx) where `redirect('/${resolvedParams.tenant}/kiosk')` caused double-subdomain URL rewrites (`/juanda/juanda/kiosk`), replacing it with standard tenant route `redirect('/kiosk')`.
 12. Added prominent Exit Kiosk controls:
     - Fixed top-left pill button (`fixed top-6 left-6 z-20`) and in-card action on [`KioskPage`](app/[tenant]/kiosk/page.tsx) to exit to `/pos` with email and password credentials.
-    - Added dedicated "Keluar Kiosk (ke POS)" button in [`KioskDashboardPage`](app/[tenant]/kiosk/dashboard/page.tsx) header alongside "Log Out Terapis" (which returns to PIN entry for shift handover).
-13. Verified with `npm test` (7 test files, 35 tests pass) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
+13. Enforced persistent fullscreen lock on [`FullscreenSplash`](components/fullscreen-splash.tsx) using modern Keyboard Lock API (`navigator.keyboard.lock(['Escape'])`), global keydown event suppression for Escape/F11, and automatic full-screen overlay lock whenever the browser exits fullscreen mode.
+14. Verified with `npm test` (7 test files, 35 tests pass) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
 
 **Why:**
 Previously, exiting reviews required staff username and PIN (with a custom numpad) while kiosk exit required manager email and password, and redirection paths were inconsistent (`/${tenantSlug}/pos` causing 404s on subdomains vs `/pos`). Additionally, leaving browser address bars exposed on tablet devices allowed unauthorized navigation/URL retyping; the new splash screen activates native fullscreen to lock out browser navigation until authorized exit back to POS.
