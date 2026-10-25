@@ -25,7 +25,8 @@ session — it records what the code cannot say for itself.
 12. Added prominent Exit Kiosk controls:
     - Fixed top-left pill button (`fixed top-6 left-6 z-20`) and in-card action on [`KioskPage`](app/[tenant]/kiosk/page.tsx) to exit to `/pos` with email and password credentials.
 13. Enforced persistent fullscreen lock on [`FullscreenSplash`](components/fullscreen-splash.tsx) using modern Keyboard Lock API (`navigator.keyboard.lock(['Escape'])`), global keydown event suppression for Escape/F11, and automatic full-screen overlay lock whenever the browser exits fullscreen mode.
-14. Verified with `npm test` (7 test files, 35 tests pass) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
+14. Ensured automatic exit from fullscreen mode when returning to POS via proactive user-gesture exit in [`useExitToPos`](modules/auth/hooks/use-exit-to-pos.ts) and mounted [`EnsureWindowedMode`](components/ensure-windowed-mode.tsx) in [`TenantLayout`](app/[tenant]/(main)/layout.tsx).
+15. Verified with `npm test` (7 test files, 35 tests pass) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
 
 **Why:**
 Previously, exiting reviews required staff username and PIN (with a custom numpad) while kiosk exit required manager email and password, and redirection paths were inconsistent (`/${tenantSlug}/pos` causing 404s on subdomains vs `/pos`). Additionally, leaving browser address bars exposed on tablet devices allowed unauthorized navigation/URL retyping; the new splash screen activates native fullscreen to lock out browser navigation until authorized exit back to POS.
