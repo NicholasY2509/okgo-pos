@@ -1,160 +1,114 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
 import { Lock, ChevronLeft, Loader2 } from "lucide-react"
-import { kioskLoginSchema, type KioskLoginInput } from "@/modules/auth/schemas/kiosk-schema"
-import { verifyKioskPinAction } from "@/modules/auth/actions/kiosk-action"
+import { useExitToPos } from "@/modules/auth/hooks/use-exit-to-pos"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog"
 
 export function ExitReviewsModal({ tenantSlug }: { tenantSlug: string }) {
-  const router = useRouter()
-  const [isOpen, setIsOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
+  const { form, onSubmit, isSubmitting, error, reset } = useExitToPos(
+    tenantSlug,
+    () => {
+      setOpen(false)
+    }
+  )
 
-  const form = useForm<KioskLoginInput>({
-    resolver: zodResolver(kioskLoginSchema),
-    defaultValues: { username: "", pin: "" },
-  })
-
-  async function onSubmit(values: KioskLoginInput) {
-    setError(null)
-    const result = await verifyKioskPinAction(values)
-
-    if (result.error) {
-      setError(result.error)
-      toast.error(result.error)
-    } else {
-      toast.success("Otorisasi berhasil.")
-      setIsOpen(false)
-      form.reset()
-      router.push(`/${tenantSlug}/pos`)
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (!isOpen) {
+      reset()
     }
   }
-
-  const handleNumpadClick = (num: string) => {
-    const currentPin = form.getValues("pin") || ""
-    form.setValue("pin", currentPin + num)
-  }
-
-  const handleBackspace = () => {
-    const currentPin = form.getValues("pin") || ""
-    form.setValue("pin", currentPin.slice(0, -1))
-  }
-
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open)
-    if (!open) {
-      form.reset()
-      setError(null)
-    }
-  }
-
-  const isSubmitting = form.formState.isSubmitting
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <button className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group focus:outline-none">
-          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        <button className="group flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus:outline-none">
+          <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
           Keluar
         </button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden rounded-[2rem] border border-border/50 bg-background shadow-lg">
-        <div className="p-8 flex flex-col items-center">
-          <div className="w-16 h-16 bg-muted/30 border border-border/50 rounded-full flex items-center justify-center mb-6 text-foreground">
-            <Lock className="w-8 h-8 stroke-1" />
+      <DialogContent className="overflow-hidden rounded-2xl border border-border/50 bg-background p-0 shadow-lg sm:max-w-md">
+        <div className="flex flex-col items-center p-8">
+          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-border/50 bg-muted/30 text-foreground">
+            <Lock className="h-8 w-8 stroke-1" />
           </div>
 
-          <DialogHeader className="text-center mb-8">
-            <DialogTitle className="text-2xl font-display font-light text-foreground mb-1">Otorisasi Staf</DialogTitle>
-            <DialogDescription className="text-muted-foreground font-light text-sm">
-              Masukkan Username dan PIN Anda untuk kembali ke POS.
+          <DialogHeader className="mb-6 text-center">
+            <DialogTitle className="mb-1 font-display text-2xl font-light text-foreground">
+              Otorisasi Keluar Ulasan
+            </DialogTitle>
+            <DialogDescription className="text-sm font-light text-muted-foreground">
+              Masukkan email dan kata sandi staf Anda untuk kembali ke POS.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+          <form onSubmit={onSubmit} className="w-full space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-xs text-muted-foreground uppercase tracking-widest">Username</Label>
+              <Label
+                htmlFor="review-exit-email"
+                className="text-xs tracking-widest text-muted-foreground uppercase"
+              >
+                Email
+              </Label>
               <Input
-                id="username"
-                placeholder="e.g. johndoe"
-                {...form.register("username")}
-                className="text-center text-lg py-6 bg-muted/20 border-border/50 focus-visible:ring-1 focus-visible:ring-primary/40 rounded-xl"
+                id="review-exit-email"
+                type="email"
+                placeholder="nama@okgo.com"
+                autoComplete="email"
+                className="rounded-xl border-border/50 bg-muted/20"
+                {...form.register("email")}
               />
-              {form.formState.errors.username && (
-                <p className="text-red-500 text-xs text-center mt-1">{form.formState.errors.username.message}</p>
+              {form.formState.errors.email && (
+                <p className="mt-1 text-sm text-destructive">
+                  {form.formState.errors.email.message}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pin" className="text-xs text-muted-foreground uppercase tracking-widest">PIN</Label>
+              <Label
+                htmlFor="review-exit-password"
+                className="text-xs tracking-widest text-muted-foreground uppercase"
+              >
+                Kata Sandi
+              </Label>
               <Input
-                id="pin"
+                id="review-exit-password"
                 type="password"
-                placeholder="••••••"
-                readOnly
-                {...form.register("pin")}
-                className="text-center text-2xl tracking-[0.5em] py-6 bg-muted/20 border-border/50 focus-visible:ring-1 focus-visible:ring-primary/40 rounded-xl"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                className="rounded-xl border-border/50 bg-muted/20"
+                {...form.register("password")}
               />
-              {form.formState.errors.pin && (
-                <p className="text-red-500 text-xs text-center mt-1">{form.formState.errors.pin.message}</p>
+              {form.formState.errors.password && (
+                <p className="mt-1 text-sm text-destructive">
+                  {form.formState.errors.password.message}
+                </p>
               )}
             </div>
 
-            {error && <p className="text-red-500 text-sm text-center bg-red-50/50 p-2 rounded-lg">{error}</p>}
+            {error && (
+              <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-center text-sm text-destructive">
+                {error}
+              </div>
+            )}
 
-            <div className="grid grid-cols-3 gap-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  className="h-14 text-xl font-light rounded-xl border border-border/50 bg-background hover:bg-muted/50 transition-colors active:scale-95"
-                  onClick={() => handleNumpadClick(num.toString())}
-                >
-                  {num}
-                </button>
-              ))}
-              <button
-                type="button"
-                className="h-14 text-xl font-light rounded-xl border border-border/50 bg-background hover:bg-muted/50 transition-colors active:scale-95 text-muted-foreground"
-                onClick={handleBackspace}
-              >
-                ⌫
-              </button>
-              <button
-                type="button"
-                className="h-14 text-xl font-light rounded-xl border border-border/50 bg-background hover:bg-muted/50 transition-colors active:scale-95"
-                onClick={() => handleNumpadClick("0")}
-              >
-                0
-              </button>
-              <button
-                type="button"
-                className="h-14 text-xl font-light rounded-xl border border-border/50 bg-background hover:bg-muted/50 transition-colors active:scale-95 text-muted-foreground"
-                onClick={() => form.setValue("pin", "")}
-              >
-                C
-              </button>
-            </div>
-
-            <button
+            <Button
               type="submit"
-              className="w-full h-14 text-sm font-medium tracking-[0.1em] uppercase rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="mt-4 h-12 w-full rounded-full text-sm font-medium tracking-[0.1em] uppercase"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -163,9 +117,9 @@ export function ExitReviewsModal({ tenantSlug }: { tenantSlug: string }) {
                   MEMVERIFIKASI...
                 </>
               ) : (
-                "VERIFIKASI"
+                "KEMBALI KE POS"
               )}
-            </button>
+            </Button>
           </form>
         </div>
       </DialogContent>

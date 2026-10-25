@@ -8,6 +8,23 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
+## 2026-10-25 — Unified Kiosk & Reviews Exit Flow to POS
+
+**Did:**
+1. Unified credential requirements for exiting Kiosk (`/kiosk`) and Reviews (`/reviews`) pages on tenant branch portals.
+2. Updated [`kioskExitSchema`](modules/auth/schemas/kiosk-schema.ts) to validate `email` and `password` with localized validation messages and optional `subdomain`.
+3. Added server action [`exitToPosAction`](modules/auth/actions/kiosk-action.ts) that verifies staff/manager credentials against [`AuthService.verifyCredentials`](modules/auth/services/auth-service.ts), purges `staff_session` cookie, calls `signIn("credentials")`, and redirects to `/pos`.
+4. Created client hook [`useExitToPos`](modules/auth/hooks/use-exit-to-pos.ts) to manage form state, error surfacing, toast notifications, and redirect to `/pos`.
+5. Updated [`KioskExitModal`](modules/auth/components/kiosk-exit-modal.tsx) to consume `useExitToPos` and adhere to design tokens (`text-destructive`, `rounded-2xl`).
+6. Updated [`ExitReviewsModal`](modules/service-session/components/exit-reviews-modal.tsx) to replace the staff PIN keypad with standard email and password authentication, consuming `useExitToPos` and redirecting to `/pos`.
+7. Created comprehensive unit test suite [`kiosk-action.test.ts`](modules/auth/actions/kiosk-action.test.ts) covering validation, invalid credentials, branch access guards, session cookie cleanup, and redirect behavior.
+8. Verified with `npm test` (7 test files, 35 tests pass) and `npm run typecheck` (`tsc --noEmit`, 0 errors).
+
+**Why:**
+Previously, exiting reviews required staff username and PIN (with a custom numpad) while kiosk exit required manager email and password, and redirection paths were inconsistent (`/${tenantSlug}/pos` causing 404s on subdomains vs `/pos`). Both now consistently require branch login credentials (email & password) and redirect to `/pos`.
+
+---
+
 ## 2026-10-22 — Attendance Machine Log Ingestion Filter & Trash Purge
 
 **Did:**

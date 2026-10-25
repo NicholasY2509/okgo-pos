@@ -1,16 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-import { Lock } from "lucide-react"
-
-import { kioskExitSchema, type KioskExitInput } from "../schemas/kiosk-schema"
-import { exitKioskAction } from "../actions/kiosk-action"
-import { loginAction } from "../actions/login-action" // Assuming this exists for manager login
-
+import { Lock, Loader2 } from "lucide-react"
+import { useExitToPos } from "../hooks/use-exit-to-pos"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,84 +16,116 @@ import {
 } from "@/components/ui/dialog"
 
 export function KioskExitModal({ tenantSlug }: { tenantSlug: string }) {
-  const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const form = useForm<KioskExitInput>({
-    resolver: zodResolver(kioskExitSchema),
-    defaultValues: { email: "", password: "" },
-  })
-
-  async function onSubmit(values: KioskExitInput) {
-    setError(null)
-
-    // We attempt to verify the manager's credentials. 
-    // Re-using the standard login action to verify authority.
-    const result = await loginAction({ ...values, subdomain: tenantSlug })
-
-    // loginAction returns a string on error, otherwise it redirects
-    if (typeof result === "string") {
-      setError(result)
-      toast.error("Invalid Manager Credentials")
-      return
+  const { form, onSubmit, isSubmitting, error, reset } = useExitToPos(
+    tenantSlug,
+    () => {
+      setOpen(false)
     }
+  )
 
-    // If manager is verified (which would normally redirect), exit kiosk mode
-    await exitKioskAction()
-    setOpen(false)
-    toast.success("Exited Kiosk Mode")
-    router.push(`/${tenantSlug}/pos`)
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (!isOpen) {
+      reset()
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="absolute bottom-4 right-4 opacity-50 hover:opacity-100">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-4 bottom-4 opacity-50 hover:opacity-100"
+        >
           <Lock className="h-5 w-5" />
           <span className="sr-only">Exit Kiosk</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Admin Override</DialogTitle>
-          <DialogDescription>
-            Enter manager credentials to exit Kiosk Mode and return to the POS.
-          </DialogDescription>
-        </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Manager Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="manager@okgo.com"
-              {...form.register("email")}
-            />
-            {form.formState.errors.email && (
-              <p className="text-red-500 text-sm">{form.formState.errors.email.message}</p>
-            )}
+      <DialogContent className="overflow-hidden rounded-2xl border border-border/50 bg-background p-0 shadow-lg sm:max-w-md">
+        <div className="flex flex-col items-center p-8">
+          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-border/50 bg-muted/30 text-foreground">
+            <Lock className="h-8 w-8 stroke-1" />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              {...form.register("password")}
-            />
-            {form.formState.errors.password && (
-              <p className="text-red-500 text-sm">{form.formState.errors.password.message}</p>
+          <DialogHeader className="mb-6 text-center">
+            <DialogTitle className="mb-1 font-display text-2xl font-light text-foreground">
+              Otorisasi Keluar Kiosk
+            </DialogTitle>
+            <DialogDescription className="text-sm font-light text-muted-foreground">
+              Masukkan email dan kata sandi staf Anda untuk kembali ke POS.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={onSubmit} className="w-full space-y-4">
+            <div className="space-y-2">
+              <Label
+                htmlFor="kiosk-exit-email"
+                className="text-xs tracking-widest text-muted-foreground uppercase"
+              >
+                Email
+              </Label>
+              <Input
+                id="kiosk-exit-email"
+                type="email"
+                placeholder="nama@okgo.com"
+                autoComplete="email"
+                className="rounded-xl border-border/50 bg-muted/20"
+                {...form.register("email")}
+              />
+              {form.formState.errors.email && (
+                <p className="mt-1 text-sm text-destructive">
+                  {form.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="kiosk-exit-password"
+                className="text-xs tracking-widest text-muted-foreground uppercase"
+              >
+                Kata Sandi
+              </Label>
+              <Input
+                id="kiosk-exit-password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                className="rounded-xl border-border/50 bg-muted/20"
+                {...form.register("password")}
+              />
+              {form.formState.errors.password && (
+                <p className="mt-1 text-sm text-destructive">
+                  {form.formState.errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-center text-sm text-destructive">
+                {error}
+              </div>
             )}
-          </div>
 
-          {error && <p className="text-red-500 text-sm bg-red-50 p-2 rounded">{error}</p>}
-
-          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Verifying..." : "Authorize Exit"}
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              className="mt-4 h-12 w-full rounded-full text-sm font-medium tracking-[0.1em] uppercase"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  MEMVERIFIKASI...
+                </>
+              ) : (
+                "KEMBALI KE POS"
+              )}
+            </Button>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   )
