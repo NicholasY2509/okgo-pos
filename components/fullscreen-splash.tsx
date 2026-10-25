@@ -55,37 +55,26 @@ export function FullscreenSplash({
       } else if (docEl.webkitRequestFullscreen) {
         await docEl.webkitRequestFullscreen()
       }
-
-      // Lock keyboard if supported (prevents ESC key from exiting fullscreen in Chromium)
-      const nav =
-        typeof navigator !== "undefined"
-          ? (navigator as unknown as KeyboardNavigator)
-          : undefined
-      if (nav?.keyboard?.lock) {
-        try {
-          await nav.keyboard.lock(["Escape"])
-        } catch {
-          // Ignore if lock failed
-        }
-      }
     } catch {
       // Browser rejected fullscreen request without direct user gesture
     }
   }, [])
 
   useEffect(() => {
+    // Unlock any leftover keyboard locks to avoid persistent Chrome banner
+    const nav =
+      typeof navigator !== "undefined"
+        ? (navigator as unknown as KeyboardNavigator)
+        : undefined
+    if (nav?.keyboard?.unlock) {
+      nav.keyboard.unlock()
+    }
+
     const handleFullscreenChange = () => {
       const active = checkFullscreen()
       setIsFullscreen(active)
       if (active) {
         setIsVisible(false)
-        const nav =
-          typeof navigator !== "undefined"
-            ? (navigator as unknown as KeyboardNavigator)
-            : undefined
-        if (nav?.keyboard?.lock) {
-          nav.keyboard.lock(["Escape"]).catch(() => {})
-        }
       } else {
         // Enforce full screen: immediately re-show the splash overlay to lock the screen
         setIsVisible(true)
