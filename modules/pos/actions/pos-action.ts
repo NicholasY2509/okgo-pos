@@ -33,6 +33,7 @@ export async function createPosTransactionAction(values: PosCheckoutInput) {
 
 export async function payExistingTransactionAction(values: {
   transactionId: string;
+  cashierId?: string | null;
   payments: {
     paymentMethodId: string;
     amount: number;
@@ -42,6 +43,14 @@ export async function payExistingTransactionAction(values: {
   }[];
 }) {
   try {
+    const session = await auth();
+    if (session?.user?.id && !values.cashierId) {
+      const staffUser = await StaffUserService.findByUserId(session.user.id);
+      if (staffUser) {
+        values.cashierId = staffUser.staffId;
+      }
+    }
+
     const result = await PosService.payExistingTransaction(values);
     return { success: true, transactionId: result.id };
   } catch (error: unknown) {

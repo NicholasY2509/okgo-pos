@@ -1,5 +1,6 @@
 import { getJournalEntriesAction } from "@/modules/accounting/actions/journal-entry-action"
 import { getLedgerAccountsAction } from "@/modules/accounting/actions/ledger-account-action"
+import { BranchRepository } from "@/modules/branch/repositories/branch-repository"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { format } from "date-fns"
@@ -18,10 +19,12 @@ export default async function AdminJournalPage({ searchParams }: AdminJournalPag
   const limit = typeof params.limit === 'string' ? Number(params.limit) : 10;
   const startDate = typeof params.startDate === 'string' ? new Date(params.startDate) : undefined;
   const endDate = typeof params.endDate === 'string' ? new Date(params.endDate) : undefined;
+  const branchId = typeof params.branchId === 'string' && params.branchId !== 'all' ? params.branchId : undefined;
 
-  const [entriesResult, accountsResult] = await Promise.all([
-    getJournalEntriesAction({ page, limit, startDate, endDate }),
-    getLedgerAccountsAction()
+  const [entriesResult, accountsResult, branches] = await Promise.all([
+    getJournalEntriesAction({ branchId, page, limit, startDate, endDate }),
+    getLedgerAccountsAction(),
+    BranchRepository.getAllBranches(),
   ])
 
   const entries = entriesResult.data || []
@@ -41,8 +44,8 @@ export default async function AdminJournalPage({ searchParams }: AdminJournalPag
       </PageHeader>
 
       <div className="grid grid-cols-1 gap-6">
-        <JournalFilters />
-        <JournalTable entries={entries} isAdmin={true} />
+        <JournalFilters branches={branches} />
+        <JournalTable entries={entries} isAdmin={true} branchId={branchId} />
         <DataTablePagination metadata={metadata} />
       </div>
     </div>

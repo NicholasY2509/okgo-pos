@@ -18,9 +18,10 @@ import { CoaCombobox } from "@/modules/accounting/components/coa-combobox"
 
 export function JournalCreateForm({ branchId, accounts }: { branchId: string, accounts: any[] }) {
   const router = useRouter()
+  const returnUrl = branchId === "admin" ? "/admin/accounting/journal" : "/accounting/journal"
 
   const { form, lineFields, append, remove, onSubmit, isSubmitting, error } = useJournalEntryForm(branchId, () => {
-    router.push(`/${branchId}/accounting/journal`)
+    router.push(returnUrl)
   })
 
   // Calculate totals
@@ -36,7 +37,7 @@ export function JournalCreateForm({ branchId, accounts }: { branchId: string, ac
         title={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild className="-ml-2 h-8 w-8">
-              <Link href={`/${branchId}/accounting/journal`}>
+              <Link href={returnUrl}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
@@ -240,7 +241,7 @@ export function JournalCreateForm({ branchId, accounts }: { branchId: string, ac
                     type="button"
                     variant="ghost"
                     className="w-full text-muted-foreground"
-                    onClick={() => router.push(`/${branchId}/accounting/journal`)}
+                    onClick={() => router.push(returnUrl)}
                   >
                     Batalkan
                   </Button>

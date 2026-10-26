@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 export const PosPaymentRepository = {
   async payExistingTransaction(input: {
     transactionId: string;
+    cashierId?: string | null;
     payments: {
       paymentMethodId: string;
       amount: number;
@@ -133,6 +134,7 @@ export const PosPaymentRepository = {
       const updatedTransaction = await tx.transaction.update({
         where: { id: transaction.id },
         data: {
+          ...(input.cashierId ? { cashierId: input.cashierId } : {}),
           paidAmount: newPaidAmount,
           changeAmount,
           status: isCompleted ? "COMPLETED" : "PENDING"

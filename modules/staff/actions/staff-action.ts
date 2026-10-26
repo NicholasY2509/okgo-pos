@@ -103,3 +103,18 @@ export async function getMatchingStaffIdsAction(params: { search?: string; branc
   }
 }
 
+export async function getBranchHrisRosterAction(branchId: string) {
+  try {
+    const authCheck = await AuthGuardService.requireAuth()
+    if (!authCheck.success) {
+      return { error: authCheck.error }
+    }
+
+    const roster = await StaffService.getBranchHrisRoster(branchId)
+    return { success: true, data: roster }
+  } catch (error: unknown) {
+    console.error("Failed to fetch branch HRIS roster:", error)
+    return { error: "Gagal mengambil data roster karyawan cabang." }
+  }
+}
+

@@ -35,6 +35,19 @@ export const BranchRepository = {
           where: { subdomain },
         })
         },
+    getBranchById: async (id: string) => {
+        return await prisma.branch.findUnique({
+          where: { id },
+          select: { id: true, name: true, subdomain: true },
+        })
+        },
+    getBranchesByIds: async (ids: string[]) => {
+        if (!ids.length) return []
+        return await prisma.branch.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, name: true, subdomain: true },
+        })
+        },
     getBranchStaffs: async (branchId: string) => {
         return await prisma.branchStaff.findMany({
           where: { branchId },

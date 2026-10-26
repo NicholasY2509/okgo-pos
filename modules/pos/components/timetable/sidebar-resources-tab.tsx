@@ -94,7 +94,7 @@ export function SidebarResourcesTab() {
   const emptyRoomCount = roomStatusList.length - occupiedRoomCount;
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {/* Sub-tabs & Search */}
       <div className="p-3 border-b border-border space-y-2 shrink-0 bg-background/50">
         <div className="grid grid-cols-2 gap-1 p-0.5 bg-muted rounded-lg text-xs font-medium">
@@ -164,8 +164,8 @@ export function SidebarResourcesTab() {
       </div>
 
       {/* List content */}
-      <ScrollArea className="flex-1 p-3">
-        <div className="space-y-2 pb-4">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="space-y-2 p-3 pb-4">
           {activeSegment === "staff" ? (
             filteredStaff.length === 0 ? (
               <div className="text-center text-xs text-muted-foreground py-8">

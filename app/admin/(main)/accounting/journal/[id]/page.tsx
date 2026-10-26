@@ -57,7 +57,7 @@ export default async function AdminJournalDetailPage({ params }: { params: Promi
             {entry.branchId && (
               <div className="col-span-2 mt-2">
                 <div className="text-sm font-medium text-muted-foreground">Cabang</div>
-                <div className="mt-1 font-mono">{entry.branchId}</div>
+                <div className="mt-1 font-medium">{entry.branch?.name || entry.branchName || entry.branchId}</div>
               </div>
             )}
           </div>

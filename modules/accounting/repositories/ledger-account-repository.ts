@@ -13,7 +13,7 @@ export const LedgerAccountRepository = {
     })
   },
 
-  async findAllWithBalances(tenantId?: string) {
+  async findAllWithBalances(tenantId?: string, branchId?: string) {
     const accounts = await prisma.ledgerAccount.findMany({
       where: { tenantId },
       orderBy: { code: "asc" },
@@ -21,10 +21,15 @@ export const LedgerAccountRepository = {
 
     const lines = await prisma.journalLine.groupBy({
       by: ['ledgerAccountId'],
+      where: branchId ? {
+        journalEntry: {
+          branchId,
+        },
+      } : undefined,
       _sum: {
         debit: true,
         credit: true,
-      }
+      },
     });
 
     return accounts.map(acc => {

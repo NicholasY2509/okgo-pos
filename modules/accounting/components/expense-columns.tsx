@@ -17,7 +17,9 @@ export const getExpenseColumns = (isAdmin: boolean, branchId?: string): ColumnDe
         <div className="text-sm">
           {format(new Date(entry.date), "dd MMM yyyy")}
           {isAdmin && entry.branchId && (
-            <div className="text-xs text-muted-foreground font-mono mt-1">Cabang: {entry.branchId}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Cabang: <span className="font-medium text-foreground">{entry.branch?.name || entry.branchName || entry.branchId}</span>
+            </div>
           )}
         </div>
       )
@@ -85,7 +87,7 @@ export const getExpenseColumns = (isAdmin: boolean, branchId?: string): ColumnDe
       const entry = row.original
       const href = isAdmin
         ? `/admin/accounting/journal/${entry.id}`
-        : `/${branchId}/accounting/journal/${entry.id}`
+        : `/accounting/journal/${entry.id}`
       return (
         <div className="text-right">
           <Button variant="ghost" size="sm" asChild>

@@ -18,9 +18,10 @@ const formatCurrency = (amount: number) => {
 
 interface GetColumnsProps {
   onView: (transaction: any) => void;
+  showBranch?: boolean;
 }
 
-export const getTransactionHistoryColumns = ({ onView }: GetColumnsProps): ColumnDef<any>[] => [
+export const getTransactionHistoryColumns = ({ onView, showBranch }: GetColumnsProps): ColumnDef<any>[] => [
   {
     accessorKey: "createdAt",
     header: "Waktu",
@@ -36,7 +37,17 @@ export const getTransactionHistoryColumns = ({ onView }: GetColumnsProps): Colum
     accessorKey: "transactionNumber",
     header: "No. Transaksi",
     cell: ({ row }) => {
-      return <div className="font-mono font-medium">{row.original.transactionNumber}</div>;
+      const branchDisplayName = row.original.branch?.name || row.original.branchName;
+      return (
+        <div>
+          <div className="font-mono font-medium">{row.original.transactionNumber}</div>
+          {showBranch && branchDisplayName && (
+            <div className="text-xs text-muted-foreground mt-0.5">
+              Cabang: <span className="font-medium text-foreground">{branchDisplayName}</span>
+            </div>
+          )}
+        </div>
+      );
     },
   },
   {
@@ -69,7 +80,13 @@ export const getTransactionHistoryColumns = ({ onView }: GetColumnsProps): Colum
     cell: ({ row }) => {
       return (
         <Badge
-          variant={row.original.status === "COMPLETED" ? "default" : "secondary"}
+          variant={
+            row.original.status === "COMPLETED"
+              ? "default"
+              : row.original.status === "CANCELLED" || row.original.status === "VOIDED"
+              ? "destructive"
+              : "secondary"
+          }
           className="text-[10px]"
         >
           {row.original.status}

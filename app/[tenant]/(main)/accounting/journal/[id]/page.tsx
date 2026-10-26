@@ -1,4 +1,5 @@
 import { getJournalEntryByIdAction } from "@/modules/accounting/actions/journal-entry-action"
+import { BranchService } from "@/modules/branch/services/branch-service"
 import { notFound } from "next/navigation"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
@@ -9,13 +10,16 @@ import { PageHeader } from "@/components/page-header"
 export default async function TenantJournalDetailPage({ params }: { params: Promise<{ tenant: string, id: string }> }) {
   const { tenant, id } = await params
 
+  const branch = await BranchService.getBranchBySubdomain(tenant)
+  if (!branch) return notFound()
+
   const result = await getJournalEntryByIdAction(id)
   const entry = result.data
 
   if (!entry) return notFound()
 
   // Ensure this journal entry belongs to this tenant branch if applicable
-  if (entry.branchId && entry.branchId !== tenant) {
+  if (entry.branchId && entry.branchId !== branch.id) {
     return notFound()
   }
 
@@ -24,12 +28,12 @@ export default async function TenantJournalDetailPage({ params }: { params: Prom
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.001
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild className="-ml-2 h-8 w-8">
-              <Link href={`/${tenant}/accounting/journal`}>
+              <Link href="/accounting/journal">
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>

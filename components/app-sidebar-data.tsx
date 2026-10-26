@@ -64,6 +64,41 @@ export const branchNav = [
     ]
   },
   {
+    label: "Akuntansi",
+    items: [
+      {
+        title: "Ringkasan",
+        url: "/accounting",
+        icon: (<Book />),
+        roles: ["Admin", "Manager"],
+      },
+      {
+        title: "Jurnal",
+        url: "/accounting/journal",
+        icon: (<Book />),
+        roles: ["Admin", "Manager"],
+      },
+      {
+        title: "Chart of Account (COA)",
+        url: "/accounting/coa",
+        icon: (<Banknote />),
+        roles: ["Admin", "Manager"],
+      },
+      {
+        title: "Pengeluaran",
+        url: "/accounting/expenses",
+        icon: (<FileText />),
+        roles: ["Admin", "Manager"],
+      },
+      {
+        title: "Laporan",
+        url: "/accounting/reports",
+        icon: (<FileText />),
+        roles: ["Admin", "Manager"],
+      },
+    ]
+  },
+  {
     label: "Manajemen",
     items: [
       {
@@ -72,12 +107,6 @@ export const branchNav = [
         icon: (<UsersIcon />),
         roles: ["Admin", "Manager"],
       },
-      {
-        title: "Accounting",
-        url: "/accounting",
-        icon: (<Book />),
-        roles: ["Admin", "Manager"],
-      }
     ]
   }
 ]

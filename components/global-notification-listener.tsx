@@ -15,6 +15,15 @@ export function GlobalNotificationListener({ branchId }: GlobalNotificationListe
   useEffect(() => {
     const socket = io(process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined);
 
+    const joinBranchRoom = () => {
+      if (branchId) {
+        socket.emit("join_branch", branchId);
+      }
+    };
+
+    joinBranchRoom();
+    socket.on("connect", joinBranchRoom);
+
     const handleStatusChanged = (data: any) => {
       const audio = new Audio("/notification.ogg");
       audio.play().catch(e => console.error("Error playing sound:", e));
@@ -32,10 +41,10 @@ export function GlobalNotificationListener({ branchId }: GlobalNotificationListe
     };
 
     const handleNewBooking = (data: any) => {
-      if (data.branchId === branchId) {
+      if (!data?.branchId || data.branchId === branchId) {
         const audio = new Audio("/notification.ogg");
         audio.play().catch(e => console.error("Error playing sound:", e));
-        toast.success(`Booking baru dari ${data.customerName}!`, {
+        toast.success(`Booking baru dari ${data?.customerName || "Customer"}!`, {
           description: "Silakan cek halaman jadwal.",
           duration: 10000,
         });
@@ -48,6 +57,7 @@ export function GlobalNotificationListener({ branchId }: GlobalNotificationListe
     socket.on("new_booking", handleNewBooking);
 
     return () => {
+      socket.off("connect", joinBranchRoom);
       socket.off("service_status_changed", handleStatusChanged);
       socket.off("new_booking", handleNewBooking);
       socket.disconnect();

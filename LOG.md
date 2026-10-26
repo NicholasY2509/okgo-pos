@@ -8,6 +8,219 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
+## 2026-10-25 — Month Filtering for Tenant Accounting Module
+
+**Did:**
+1. Enhanced and Integrated MonthPicker Component ([`components/ui/month-picker.tsx`](components/ui/month-picker.tsx)):
+   - Enhanced existing `MonthPicker` with Indonesian locale month formatting, `className`, `disabled`, and explicit `type="button"` attributes.
+   - Built Month Filter Bar ([`modules/accounting/components/accounting-month-filter.tsx`](modules/accounting/components/accounting-month-filter.tsx)) utilizing `MonthPicker` alongside quick previous/next chevrons and a "Bulan Ini" reset button.
+   - Synchronized with Next.js router query parameters (`?month=YYYY-MM`).
+2. Updated Branch Accounting Hub ([`app/[tenant]/(main)/accounting/page.tsx`](app/[tenant]/(main)/accounting/page.tsx)):
+   - Accepted `searchParams` and parsed `month` (defaulting to current month).
+   - Filtered Profit & Loss (`ReportService.generateProfitAndLoss`) and Journal Entries (`JournalEntryService.getAllByBranch`) strictly by the selected month's date boundaries (`startOfMonth` to `endOfMonth`).
+   - Updated metric cards (Pendapatan, Pengeluaran, Laba Bersih, Total Jurnal) and recent journal activity to reflect the selected month.
+   - Forwarded `?month=YYYY-MM` to Jurnal Umum, Pengeluaran, and Laporan Keuangan feature links.
+3. Enhanced Journal & Expense Filters ([`modules/accounting/components/journal-filters.tsx`](modules/accounting/components/journal-filters.tsx)):
+   - Integrated `MonthPicker` into `JournalFilters` so users can select a month via the 12-month calendar grid or continue using custom date pickers.
+   - Updated [`app/[tenant]/(main)/accounting/journal/page.tsx`](app/[tenant]/(main)/accounting/journal/page.tsx) and [`app/[tenant]/(main)/accounting/expenses/page.tsx`](app/[tenant]/(main)/accounting/expenses/page.tsx) to resolve `month` parameter if explicit `startDate`/`endDate` are omitted.
+4. Enhanced Financial Reports Date Filter ([`modules/accounting/components/reports/report-date-filter.tsx`](modules/accounting/components/reports/report-date-filter.tsx) and [`app/[tenant]/(main)/accounting/reports/page.tsx`](app/[tenant]/(main)/accounting/reports/page.tsx)):
+   - Integrated `MonthPicker` into `ReportDateFilter` for period-based financial reports (Profit & Loss, Trial Balance, Balance Sheet).
+   - Resolved `month` parameter in reports route to set date ranges or as-of dates.
+5. Verification:
+   - Verified clean typecheck (`npm run typecheck`, 0 errors) and test suite (`npm test`, 43 passing tests across 9 test suites).
+
+**Why:**
+Branch managers and accountants need to review accounting summaries, profit & loss, expenses, and journal entries on a month-by-month basis, as monthly reporting is the standard financial accounting cadence.
+
+---
+
+## 2026-10-25 — Branch HRIS Module Implementation for Tenant Portals
+
+**Did:**
+1. Created Domain Types ([`modules/staff/types/hris-types.ts`](modules/staff/types/hris-types.ts)):
+   - Defined `StaffActivityStatus` (`status: "BUSY" | "AVAILABLE" | "OFFLINE"`, `currentSession` with treatment name, room name, customer name, and elapsed/scheduled duration).
+   - Defined `StaffTodayAttendance` (clock-in, clock-out, status code, late duration).
+   - Defined `StaffAttendanceRecap` (attendance rate %, total days, count of Hadir, Terlambat, Izin/Sakit, and Absen).
+   - Defined `BranchStaffHrisItem` and `BranchHrisSummary` data structures.
+2. Extended Repository & Service Layers:
+   - Added `StaffRepository.getBranchHrisRoster(branchId)` in [`staff-repository.ts`](modules/staff/repositories/staff-repository.ts): queries active staff for the branch with their `workPosition` and `user.role`, loads concurrent `ServiceSession` records (in progress or scheduled for current time) mapped to treatments (`Product`) and `Room` records to determine live busy vs available status, and aggregates today's `AttendanceRecord` alongside 30-day month-to-date attendance metrics.
+   - Added `StaffService.getBranchHrisRoster(branchId)` in [`staff-service.ts`](modules/staff/services/staff-service.ts).
+   - Added server action `getBranchHrisRosterAction(branchId)` in [`staff-action.ts`](modules/staff/actions/staff-action.ts).
+3. Built Branch HRIS Client UI ([`modules/staff/components/branch-hris-client.tsx`](modules/staff/components/branch-hris-client.tsx)):
+   - Metric summary cards: Total Karyawan, Sedang Melayani (Sibuk - live pulsating indicator), Tersedia (Standby), and Hadir Hari Ini.
+   - Quick filter tabs (Semua, Sedang Sibuk, Tersedia, Hadir Hari Ini) and position dropdown filtering.
+   - Staff roster cards with avatar initials, employee ID, role badge, live activity status badge and active session detail (room, service, customer, time), today's clock-in/out badge, and monthly attendance recap percentage pill and breakdown tooltip.
+4. Integrated Tenant Portal Routes:
+   - Replaced old placeholder page in [`app/[tenant]/(main)/hris/page.tsx`](app/[tenant]/(main)/hris/page.tsx) with branch resolution via `BranchService.getBranchBySubdomain(tenant)` and rendered `BranchHrisClient`.
+   - Updated [`app/[tenant]/(main)/hris/attendance/page.tsx`](app/[tenant]/(main)/hris/attendance/page.tsx) to resolve branch by subdomain and provide clear roster navigation.
+5. Verification:
+   - Verified clean typecheck (`npm run typecheck`, 0 errors) and test suite (`npm test`, 43 passing tests across 9 test suites).
+
+**Why:**
+Branch managers and front desk staff need immediate visibility into the branch's employees: who is on shift, what position they hold, their real-time operational availability (whether they are actively in a service session/busy or available), and their current and monthly attendance recap.
+
+---
+
+## 2026-10-25 — Branch Accounting Module Implementation for Tenant Portals
+
+**Did:**
+1. Extended [`LedgerAccountRepository`](modules/accounting/repositories/ledger-account-repository.ts), [`LedgerAccountService`](modules/accounting/services/ledger-account-service.ts), and [`getLedgerAccountsWithBalancesAction`](modules/accounting/actions/ledger-account-action.ts):
+   - Added optional `branchId` filtering to `findAllWithBalances`.
+   - Filtered journal line aggregates using `journalEntry: { branchId }` so Chart of Accounts (COA) balances reflect the specific branch when viewed from a branch portal.
+   - Added unit test suite [`ledger-account-service.test.ts`](modules/accounting/services/ledger-account-service.test.ts).
+2. Resolved Branch CUID vs Subdomain Routing Bug:
+   - Previously, tenant accounting pages passed the subdomain slug (e.g. `'amir-hamzah'`) directly to database queries expecting branch CUIDs (`branchId`), returning 0 records or triggering false 404s in detail checks.
+   - Updated [`app/[tenant]/(main)/accounting/journal/page.tsx`](app/[tenant]/(main)/accounting/journal/page.tsx), [`[id]/page.tsx`](app/[tenant]/(main)/accounting/journal/[id]/page.tsx), [`create/page.tsx`](app/[tenant]/(main)/accounting/journal/create/page.tsx), [`expenses/page.tsx`](app/[tenant]/(main)/accounting/expenses/page.tsx), [`expenses/create/page.tsx`](app/[tenant]/(main)/accounting/expenses/create/page.tsx), [`coa/page.tsx`](app/[tenant]/(main)/accounting/coa/page.tsx), [`coa/[id]/page.tsx`](app/[tenant]/(main)/accounting/coa/[id]/page.tsx), and [`reports/page.tsx`](app/[tenant]/(main)/accounting/reports/page.tsx) to resolve `branch = await BranchService.getBranchBySubdomain(tenant)` and use `branch.id` across all repository queries and forms.
+3. Created Branch Accounting Hub Page ([`app/[tenant]/(main)/accounting/page.tsx`](app/[tenant]/(main)/accounting/page.tsx)):
+   - Replaced old static placeholder table with a comprehensive branch accounting overview.
+   - Displays real-time KPI metrics: Pendapatan Hari Ini, Pengeluaran Hari Ini, Laba Bersih Bulan Ini (MTD), and Total Jurnal Terposting.
+   - Displays feature navigation cards linking to Jurnal Umum, Pengeluaran, Bagan Akun (COA), and Laporan Keuangan.
+   - Displays recent journal transactions table for the branch with quick-view links.
+4. Corrected Tenant Subdomain Link Hrefs:
+   - Fixed relative link structures across [`journal-columns.tsx`](modules/accounting/components/journal-columns.tsx), [`expense-columns.tsx`](modules/accounting/components/expense-columns.tsx), [`journal-create-form.tsx`](modules/accounting/components/journal-create-form.tsx), and [`expense-create-form.tsx`](modules/accounting/components/expense-create-form.tsx) so non-admin users navigate directly to `/accounting/...` without prepending redundant tenant slugs that produce 404s on subdomains.
+5. Enhanced Navigation in [`TenantLayout`](app/[tenant]/(main)/layout.tsx) and [`branchNav`](components/app-sidebar-data.tsx):
+   - Added dedicated "Akuntansi" dropdown menu in the top navigation bar with direct links to Ringkasan Akuntansi, Jurnal Umum, Pengeluaran, Bagan Akun (COA), and Laporan Keuangan.
+   - Configured `branchNav` in `app-sidebar-data.tsx` to include the complete "Akuntansi" section for branch managers and admins.
+6. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors) and `npm test` (43 passing tests across 9 test suites).
+
+**Why:**
+The tenant branch portals previously had an incomplete mock accounting page, lacked dedicated accounting navigation, and passed raw subdomain strings to database queries expecting branch CUIDs, preventing branch managers from viewing or recording journals, tracking operational expenses, or inspecting branch-level COA balances.
+
+---
+
+## 2026-10-25 — Branch Filtering on Admin Transactions Page
+
+**Did:**
+1. Updated [`TransactionFilterInput`](modules/pos/services/transaction-service.ts) and [`TransactionService.getBranchTransactions`](modules/pos/services/transaction-service.ts):
+   - Changed `branchId` to optional in `TransactionFilterInput`.
+   - Conditioned `where.branchId` so passing `"all"` or `undefined` queries across all branches.
+   - Enriched transactions with `branch` and `branchName` via [`BranchRepository.getBranchesByIds`](modules/branch/repositories/branch-repository.ts).
+2. Updated [`useTransactions`](modules/pos/hooks/use-transactions.ts):
+   - Added `selectedBranchId` state and `setSelectedBranchId` setter.
+   - Handled effective branch fallback (`fixedBranchId ?? (selectedBranchId === "all" ? undefined : selectedBranchId)`).
+   - Re-queries debounced when `effectiveBranchId` changes; resets to `fixedBranchId` in `handleResetFilter`.
+3. Updated [`TransactionHistoryClient`](modules/pos/components/transaction-history-client.tsx):
+   - Added optional `branches?: BranchOption[]` and `isAdmin?: boolean` props.
+   - Rendered a branch selector dropdown (`Select`) populated with branches and "Semua Cabang" option.
+   - Enabled `showBranch: isAdmin || !branchId` on [`getTransactionHistoryColumns`](modules/pos/components/transaction-history-columns.tsx).
+4. Updated [`TransactionDetailDialog`](modules/pos/components/transaction-detail-dialog.tsx):
+   - Added branch row in general information section displaying `transaction.branch?.name || transaction.branchName`.
+5. Updated [`AdminTransactionsPage`](app/admin/(main)/transactions/page.tsx):
+   - Fetched all branches via [`BranchRepository.getAllBranches()`](modules/branch/repositories/branch-repository.ts) and passed them with `isAdmin={true}` to `TransactionHistoryClient`.
+6. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors) and `npm test` (41 passing tests).
+
+**Why:**
+Administrators need to filter POS transaction history by specific branch or view all branch transactions enterprise-wide, while viewing the branch origin for each transaction in the list and detail dialog.
+
+---
+
+## 2026-10-25 — Branch Filtering on Accounting Journal & Expenses Pages
+
+**Did:**
+1. Updated [`JournalFilters`](modules/accounting/components/journal-filters.tsx):
+   - Added optional `branches?: BranchFilterOption[]` prop.
+   - Rendered a branch selector dropdown (`Select`) populated with branches and "Semua Cabang" fallback.
+   - Synchronized branch changes with the URL search params (`branchId`), preserving existing date range selections and resetting `page` to 1.
+   - Updated `clearFilters` and filter active indicator to handle `branchId`.
+2. Updated [`AdminJournalPage`](app/admin/(main)/accounting/journal/page.tsx):
+   - Fetched all active branches via [`BranchRepository.getAllBranches()`](modules/branch/repositories/branch-repository.ts).
+   - Passed `branchId` to [`getJournalEntriesAction`](modules/accounting/actions/journal-entry-action.ts).
+   - Provided `branches` to [`JournalFilters`](modules/accounting/components/journal-filters.tsx) and `branchId` to [`JournalTable`](modules/accounting/components/journal-table.tsx).
+3. Updated [`AdminExpensesPage`](app/admin/(main)/accounting/expenses/page.tsx):
+   - Added branch filter support to admin operational expenses view.
+4. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors) and `npm test` (41 passing tests).
+
+**Why:**
+Administrators need to filter journal entries and expenses by specific branch or view all branches combined across the enterprise.
+
+---
+
+## 2026-10-25 — Resolve Branch Name in Admin Accounting Views
+
+**Did:**
+1. Extended [`BranchRepository`](modules/branch/repositories/branch-repository.ts) with `getBranchById` and `getBranchesByIds` methods to query branch details (`id`, `name`, `subdomain`).
+2. Updated [`JournalEntryService`](modules/accounting/services/journal-entry-service.ts):
+   - Added `enrichWithBranches` helper that batch-fetches branch metadata for unique `branchId`s via `BranchRepository.getBranchesByIds`.
+   - Enriched journal results in `getAllByBranch`, `getById`, `getByAccountId`, and `getExpenseEntries` with `branch` object and `branchName`.
+3. Updated UI columns and pages:
+   - [`modules/accounting/components/journal-columns.tsx`](modules/accounting/components/journal-columns.tsx): replaced raw `entry.branchId` monospace label with `{entry.branch?.name || entry.branchName || entry.branchId}`.
+   - [`modules/accounting/components/expense-columns.tsx`](modules/accounting/components/expense-columns.tsx): replaced raw `entry.branchId` monospace label with `{entry.branch?.name || entry.branchName || entry.branchId}`.
+   - [`app/admin/(main)/accounting/journal/[id]/page.tsx`](app/admin/(main)/accounting/journal/[id]/page.tsx): displayed `{entry.branch?.name || entry.branchName || entry.branchId}` in journal detail view.
+4. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors) and `npm test` (41 passing tests).
+
+**Why:**
+The admin journal and expense lists displayed raw database CUID identifiers (e.g. `Cabang: cms03m2t1000201mdzbfxsdso`) instead of human-readable branch names (e.g. `Cabang: Juanda`). Resolving the branch relations at the service layer and displaying the branch names improves usability and readability for administrators.
+
+---
+
+## 2026-10-25 — Transaction Cancellation (2-Day Window) & Accounting Reversal
+
+**Did:**
+1. Extended [`JournalEntryAutomation`](modules/accounting/services/journal-entry-automation.ts) with `handleTransactionCancelled`:
+   - Queries original sales journal entries matching the transaction number (`Penjualan POS #${transaction.transactionNumber}`).
+   - Generates a symmetrical reversal journal entry (`Reversal / Pembatalan Penjualan POS #${transaction.transactionNumber}`) swapping debits and credits on account codes to bring net ledger balances back to zero without deleting historical entries.
+   - Added unit test suite in [`journal-entry-automation.test.ts`](modules/accounting/services/journal-entry-automation.test.ts).
+2. Updated [`PosTransactionRepository.cancelTransaction`](modules/pos/repositories/pos-transaction-repository.ts):
+   - Enforced 2-day (48-hour) cancellation cutoff (`diffInMs > 2 * 24 * 60 * 60 * 1000`).
+   - Marks transaction and all linked service sessions as `CANCELLED`.
+   - If originated from a booking, marks parent `Booking` as `CANCELLED`.
+   - Enforced strict voucher packet rule: a voucher packet purchase transaction can ONLY be cancelled if **every single voucher inside has not been used** (100% untouched balance, 0 redemptions, active status). If any voucher was redeemed (e.g. 1 out of 12), cancellation is blocked with a detailed error. If all are untouched, all generated vouchers are voided (`VOID`).
+   - Restores any vouchers that were redeemed *by* this transaction.
+   - Deletes linked staff incentives (`StaffIncentive`).
+   - Triggers `JournalEntryAutomation.handleTransactionCancelled(tx, transaction)`.
+   - Added unit test suite in [`pos-transaction-repository.test.ts`](modules/pos/repositories/pos-transaction-repository.test.ts).
+3. Created server action [`cancelTransactionAction`](modules/pos/actions/transaction-action.ts) with `AuthGuardService.requireAuth()` check.
+4. Updated [`TransactionDetailDialog`](modules/pos/components/transaction-detail-dialog.tsx) and [`transaction-history-columns.tsx`](modules/pos/components/transaction-history-columns.tsx):
+   - Added `Batalkan Transaksi` trigger with confirmation [`AlertDialog`](components/ui/alert-dialog.tsx) outlining consequences.
+   - Automatically disables cancellation for transactions older than 2 days or already cancelled, displaying an informative notice.
+   - Wired `onTransactionCancelled` to refresh table and summary metrics in [`TransactionHistoryClient`](modules/pos/components/transaction-history-client.tsx).
+   - Filtered out `CANCELLED` and `VOIDED` transactions from sales and count aggregates in [`TransactionRepository.aggregateSums`](modules/pos/repositories/transaction-repository.ts) and [`TransactionService.getBranchTransactions`](modules/pos/services/transaction-service.ts).
+5. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors) and `npm test` (37 passing tests).
+
+**Why:**
+Transactions needed a secure mechanism to be cancelled within 48 hours while guaranteeing double-entry accounting integrity, voucher balance restorations, session cancellations, and commission cleanups.
+
+---
+
+## 2026-10-25 — Cashier Assignment on Booking Settlement & Online Booking Indicator
+
+**Did:**
+1. Updated [`payExistingTransactionAction`](modules/pos/actions/pos-action.ts) to resolve the active cashier's session via `auth()` and `StaffUserService.findByUserId`, passing `cashierId` into the service.
+2. Updated [`PosPaymentService.payExistingTransaction`](modules/pos/services/pos-payment-service.ts) and [`PosPaymentRepository.payExistingTransaction`](modules/pos/repositories/pos-payment-repository.ts) to accept `cashierId` and persist it to `transaction.cashierId` upon payment settlement.
+3. Updated [`TransactionService.getBranchTransactions`](modules/pos/services/transaction-service.ts) to detect booking transactions (`i.serviceSessions.some(s => s.bookingId)`) where `cashierId` is null, defaulting the cashier representation to `"Booking Online"` instead of leaving it empty/blank.
+4. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors) and `npm test` (35 passing tests).
+
+**Why:**
+Transactions originating from online customer bookings are initialized with `cashierId: null`. When paid at the branch through the existing transaction payment modal, the cashier was previously never captured. This change ensures that settlements record the cashier on duty, while pending or historical booking transactions clearly indicate `"Booking Online"`.
+
+---
+
+## 2026-10-25 — Real-time Branch Notification for Marketing Bookings
+
+**Did:**
+1. Fixed WebSocket multi-tenant room isolation for branch notifications by subscribing to `join_branch` in [`GlobalNotificationListener`](components/global-notification-listener.tsx) and [`TimetableClient`](modules/pos/components/timetable-client.tsx).
+2. Ensured reconnection stability with `socket.on("connect", joinBranchRoom)` so client re-joins its designated branch room upon network or server reconnects.
+3. Removed unused legacy imports in [`PosClient`](modules/pos/components/pos-client.tsx).
+4. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors).
+
+**Why:**
+`socket-server.js` was updated previously to emit `new_booking` events to room-specific channels (`io.to(String(branchId))`). However, client-side listeners never called `socket.emit("join_branch", branchId)`, causing `io.to(branchId)` broadcasts from the marketing booking flow to be dropped on an empty room.
+
+---
+
+## 2026-10-25 — Resolve Cashier Name in Transaction Detail Dialog
+
+**Did:**
+1. Extended [`TransactionRepository`](modules/pos/repositories/transaction-repository.ts) with `findCashiersByIds` (querying `prisma.staff`) and `findUsersByIds` (querying `prisma.user` fallback).
+2. Updated [`TransactionService.getBranchTransactions`](modules/pos/services/transaction-service.ts) to batch resolve `cashierId` values against staff/user profiles, mapping full names and attaching `cashier` and `cashierName` to serialized transaction objects.
+3. Updated [`TransactionDetailDialog`](modules/pos/components/transaction-detail-dialog.tsx) to display `transaction.cashier?.name || transaction.cashierName || transaction.cashierId || "-"` instead of showing the raw CUID cashier ID.
+4. Verified with `npm run typecheck` (`tsc --noEmit`, 0 errors) and `npm test` (35 passing tests).
+
+**Why:**
+Transactions store `cashierId` (pointing to staff ID). Previously, the detail modal directly rendered `transaction.cashierId` (e.g. `cms044kq6000801mdni64vcek`), which was confusing for branch managers and staff reviewing transaction history.
+
+---
+
 ## 2026-10-25 — Unified Kiosk & Reviews Exit Flow & Fullscreen Splash
 
 **Did:**

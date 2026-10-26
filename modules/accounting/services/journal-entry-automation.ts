@@ -126,5 +126,51 @@ export class JournalEntryAutomation {
       });
     }
   }
+
+  static async handleTransactionCancelled(tx: any, transaction: any) {
+    const originalEntries = await tx.journalEntry.findMany({
+      where: {
+        reference: transaction.transactionNumber,
+        description: { startsWith: "Penjualan POS" }
+      },
+      include: {
+        lines: true
+      }
+    });
+
+    if (!originalEntries || originalEntries.length === 0) {
+      return;
+    }
+
+    for (const originalEntry of originalEntries) {
+      const existingReversal = await tx.journalEntry.findFirst({
+        where: {
+          reference: transaction.transactionNumber,
+          description: { startsWith: "Reversal / Pembatalan Penjualan POS" }
+        }
+      });
+      if (existingReversal) continue;
+
+      const reversalLines = originalEntry.lines.map((line: any) => ({
+        ledgerAccountId: line.ledgerAccountId,
+        debit: Number(line.credit),
+        credit: Number(line.debit)
+      }));
+
+      await tx.journalEntry.create({
+        data: {
+          journalNumber: AccountingUtils.generateJournalNumber(),
+          date: new Date(),
+          description: `Reversal / Pembatalan Penjualan POS #${transaction.transactionNumber}`,
+          reference: transaction.transactionNumber,
+          branchId: transaction.branchId,
+          tenantId: transaction.tenantId,
+          lines: {
+            create: reversalLines
+          }
+        }
+      });
+    }
+  }
 }
 

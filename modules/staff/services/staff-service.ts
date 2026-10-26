@@ -137,4 +137,8 @@ export class StaffService {
   static async deleteStaff(id: string) {
     return await StaffRepository.deleteStaff(id)
   }
+
+  static async getBranchHrisRoster(branchId: string) {
+    return await StaffRepository.getBranchHrisRoster(branchId)
+  }
 }

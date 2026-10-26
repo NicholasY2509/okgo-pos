@@ -6,11 +6,12 @@ interface UseTransactionsProps {
   branchId?: string;
 }
 
-export function useTransactions({ branchId }: UseTransactionsProps) {
+export function useTransactions({ branchId: fixedBranchId }: UseTransactionsProps = {}) {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filters
+  const [selectedBranchId, setSelectedBranchId] = useState<string | undefined>(fixedBranchId);
   const [searchTerm, setSearchTerm] = useState("");
   const [date, setDate] = useState<Date | undefined>(new Date());
 
@@ -20,9 +21,11 @@ export function useTransactions({ branchId }: UseTransactionsProps) {
   const [pagination, setPagination] = useState({ total: 0, totalPages: 0 });
   const [summary, setSummary] = useState({ totalTransactions: 0, totalSales: 0, totalDiscounts: 0 });
 
+  const effectiveBranchId = fixedBranchId ?? (selectedBranchId === "all" ? undefined : selectedBranchId);
+
   const fetchTransactions = async () => {
     setLoading(true);
-    const filters: any = { branchId, page, limit };
+    const filters: any = { branchId: effectiveBranchId, page, limit };
 
     if (searchTerm) filters.search = searchTerm;
     if (date) {
@@ -55,17 +58,20 @@ export function useTransactions({ branchId }: UseTransactionsProps) {
     }, 400); // 400ms debounce
     return () => clearTimeout(handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branchId, searchTerm, date, page, limit]);
+  }, [effectiveBranchId, searchTerm, date, page, limit]);
 
   const handleResetFilter = () => {
     setSearchTerm("");
     setDate(new Date());
+    setSelectedBranchId(fixedBranchId);
     setPage(1);
   };
 
   return {
     transactions,
     loading,
+    selectedBranchId,
+    setSelectedBranchId,
     searchTerm,
     setSearchTerm,
     date,

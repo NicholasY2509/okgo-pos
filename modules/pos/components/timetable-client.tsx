@@ -44,13 +44,22 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandS
 
     const socket = io(process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined);
 
+    const joinBranchRoom = () => {
+      if (branchId) {
+        socket.emit("join_branch", branchId);
+      }
+    };
+
+    joinBranchRoom();
+    socket.on("connect", joinBranchRoom);
+
     const handleStatusChanged = (data: any) => {
       fetchSessions();
       fetchPendingBookings();
     };
 
     const handleNewBooking = (data: any) => {
-      if (data.branchId === branchId) {
+      if (!data?.branchId || data.branchId === branchId) {
         fetchSessions();
         fetchPendingBookings();
       }
@@ -61,6 +70,7 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandS
 
     return () => {
       clearInterval(interval);
+      socket.off("connect", joinBranchRoom);
       socket.off("service_status_changed", handleStatusChanged);
       socket.off("new_booking", handleNewBooking);
       socket.disconnect();
@@ -76,7 +86,7 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandS
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Gantt Chart Area */}
         <TimetableGrid />
 

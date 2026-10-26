@@ -42,14 +42,14 @@ export async function getLedgerAccountsAction(tenantId?: string) {
   }
 }
 
-export async function getLedgerAccountsWithBalancesAction(tenantId?: string) {
+export async function getLedgerAccountsWithBalancesAction(tenantId?: string, branchId?: string) {
   try {
     const authCheck = await AuthGuardService.requireAuth()
     if (!authCheck.success) {
       return { error: authCheck.error }
     }
 
-    const accounts = await LedgerAccountService.getAllWithBalances(tenantId)
+    const accounts = await LedgerAccountService.getAllWithBalances(tenantId, branchId)
     return { success: true, data: accounts }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An unexpected error occurred."

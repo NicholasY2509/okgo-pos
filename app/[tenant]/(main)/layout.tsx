@@ -86,17 +86,45 @@ export default async function TenantLayout({
 
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary focus:outline-none active:scale-95">
+                Akuntansi <ChevronDown size={16} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 rounded-xl">
+                <DropdownMenuItem asChild>
+                  <Link href="/accounting" className="w-full cursor-pointer font-medium">
+                    Ringkasan Akuntansi
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/accounting/journal" className="w-full cursor-pointer">
+                    Jurnal Umum
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/accounting/expenses" className="w-full cursor-pointer">
+                    Pengeluaran
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/accounting/coa" className="w-full cursor-pointer">
+                    Bagan Akun (COA)
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/accounting/reports" className="w-full cursor-pointer">
+                    Laporan Keuangan
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary focus:outline-none active:scale-95">
                 Manajemen <ChevronDown size={16} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 rounded-xl">
                 <DropdownMenuItem asChild>
-                  <Link href={`/hris`} className="w-full cursor-pointer">
+                  <Link href="/hris" className="w-full cursor-pointer">
                     HRIS
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/accounting`} className="w-full cursor-pointer">
-                    Accounting
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>

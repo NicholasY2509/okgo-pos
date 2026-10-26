@@ -19,15 +19,25 @@ import {
   PaginationPrevious,
   PaginationEllipsis
 } from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface BranchOption {
+  id: string;
+  name: string;
+}
 
 interface TransactionHistoryClientProps {
   branchId?: string;
+  branches?: BranchOption[];
+  isAdmin?: boolean;
 }
 
-export function TransactionHistoryClient({ branchId }: TransactionHistoryClientProps) {
+export function TransactionHistoryClient({ branchId, branches, isAdmin }: TransactionHistoryClientProps) {
   const {
     transactions,
     loading,
+    selectedBranchId,
+    setSelectedBranchId,
     searchTerm,
     setSearchTerm,
     date,
@@ -37,6 +47,7 @@ export function TransactionHistoryClient({ branchId }: TransactionHistoryClientP
     pagination,
     summary,
     handleResetFilter,
+    refresh,
   } = useTransactions({ branchId });
 
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
@@ -148,6 +159,30 @@ export function TransactionHistoryClient({ branchId }: TransactionHistoryClientP
               </Button>
             </div>
           </div>
+          {branches && branches.length > 0 && (
+            <div className="space-y-2 w-full md:w-auto">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Cabang</label>
+              <Select
+                value={selectedBranchId || "all"}
+                onValueChange={(val) => {
+                  setSelectedBranchId(val === "all" ? undefined : val);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Semua Cabang" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Cabang</SelectItem>
+                  {branches.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={handleResetFilter} title="Reset Filter">
               <FilterX className="w-4 h-4" />
@@ -162,6 +197,7 @@ export function TransactionHistoryClient({ branchId }: TransactionHistoryClientP
             setSelectedTransaction(transaction);
             setIsDialogOpen(true);
           },
+          showBranch: isAdmin || !branchId,
         })}
         data={transactions}
         emptyMessage={loading ? "Memuat transaksi..." : "Tidak ada transaksi ditemukan."}
@@ -223,6 +259,9 @@ export function TransactionHistoryClient({ branchId }: TransactionHistoryClientP
         transaction={selectedTransaction}
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
+        onTransactionCancelled={() => {
+          refresh();
+        }}
       />
     </div>
   );

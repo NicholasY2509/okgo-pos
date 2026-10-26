@@ -17,7 +17,7 @@ import { CoaCombobox } from "@/modules/accounting/components/coa-combobox"
 
 export function ExpenseCreateForm({ branchId, accounts }: { branchId: string, accounts: any[] }) {
   const router = useRouter()
-  const returnUrl = branchId === "admin" ? "/admin/accounting/expenses" : `/${branchId}/accounting/expenses`
+  const returnUrl = branchId === "admin" ? "/admin/accounting/expenses" : "/accounting/expenses"
 
   const { form, onSubmit, isSubmitting, error } = useExpenseForm(branchId, () => {
     router.push(returnUrl)

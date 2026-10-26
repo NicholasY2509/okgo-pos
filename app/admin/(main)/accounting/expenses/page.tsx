@@ -1,4 +1,5 @@
 import { getExpenseEntriesAction } from "@/modules/accounting/actions/journal-entry-action"
+import { BranchRepository } from "@/modules/branch/repositories/branch-repository"
 import { format } from "date-fns"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
@@ -18,9 +19,13 @@ export default async function AdminExpensesPage({ searchParams }: AdminExpensesP
   const limit = typeof params.limit === 'string' ? Number(params.limit) : 10;
   const startDate = typeof params.startDate === 'string' ? new Date(params.startDate) : undefined;
   const endDate = typeof params.endDate === 'string' ? new Date(params.endDate) : undefined;
+  const branchId = typeof params.branchId === 'string' && params.branchId !== 'all' ? params.branchId : undefined;
 
-  // Fetch expense-related journal entries across all branches (no branchId filter)
-  const entriesResult = await getExpenseEntriesAction({ page, limit, startDate, endDate })
+  // Fetch expense-related journal entries across all branches or filtered by branch
+  const [entriesResult, branches] = await Promise.all([
+    getExpenseEntriesAction({ branchId, page, limit, startDate, endDate }),
+    BranchRepository.getAllBranches(),
+  ])
   const entries = entriesResult.data || []
   const metadata = entriesResult.metadata || { total: 0, page, limit, totalPages: 0 }
 
@@ -39,8 +44,8 @@ export default async function AdminExpensesPage({ searchParams }: AdminExpensesP
       </PageHeader>
 
       <div className="grid grid-cols-1 gap-6">
-        <JournalFilters />
-        <ExpenseTable entries={entries} isAdmin={true} />
+        <JournalFilters branches={branches} />
+        <ExpenseTable entries={entries} isAdmin={true} branchId={branchId} />
         <DataTablePagination metadata={metadata} />
       </div>
     </div>

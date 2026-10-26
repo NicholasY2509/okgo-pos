@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { format, setMonth, setYear } from "date-fns"
+import { id as localeId } from "date-fns/locale"
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -16,12 +17,16 @@ interface MonthPickerProps {
   value?: string // YYYY-MM format
   onChange: (value: string) => void
   placeholder?: string
+  className?: string
+  disabled?: boolean
 }
 
 export function MonthPicker({
   value,
   onChange,
-  placeholder = "Select month",
+  placeholder = "Pilih bulan",
+  className,
+  disabled = false,
 }: MonthPickerProps) {
   const [open, setOpen] = React.useState(false)
   
@@ -42,8 +47,8 @@ export function MonthPicker({
   }, [value])
 
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+    "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
   ]
 
   const handleMonthSelect = (monthIndex: number) => {
@@ -63,23 +68,36 @@ export function MonthPicker({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant={"outline"}
+          disabled={disabled}
           className={cn(
             "w-full justify-start text-left font-normal bg-background",
-            !value && "text-muted-foreground"
+            !value && "text-muted-foreground",
+            className
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {value ? format(viewDate, "MMMM yyyy") : <span>{placeholder}</span>}
+          <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-primary" />
+          {value ? format(viewDate, "MMMM yyyy", { locale: localeId }) : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[280px] p-4" align="start">
         <div className="flex items-center justify-between mb-4">
-          <Button variant="outline" className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100" onClick={handlePrevYear}>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            onClick={handlePrevYear}
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <div className="font-medium text-sm">{format(viewDate, "yyyy")}</div>
-          <Button variant="outline" className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100" onClick={handleNextYear}>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            onClick={handleNextYear}
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -88,6 +106,7 @@ export function MonthPicker({
             const isSelected = selectedYear === viewDate.getFullYear() && selectedMonth === idx
             return (
               <Button
+                type="button"
                 key={month}
                 variant={isSelected ? "default" : "ghost"}
                 className="h-9 w-full text-sm font-normal"

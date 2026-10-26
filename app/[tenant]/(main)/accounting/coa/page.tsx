@@ -1,9 +1,10 @@
 import { getLedgerAccountsWithBalancesAction } from "@/modules/accounting/actions/ledger-account-action"
 import { CoaFormDialog } from "@/modules/accounting/components/coa-form-dialog"
+import { BranchService } from "@/modules/branch/services/branch-service"
+import { notFound } from "next/navigation"
 import { Lock, FileText, Tag, Shield, TrendingUp, ShoppingCart } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
-
 import { PageHeader } from "@/components/page-header"
 
 const typeConfig: Record<string, { label: string, Icon: any }> = {
@@ -17,7 +18,12 @@ const typeConfig: Record<string, { label: string, Icon: any }> = {
 
 export default async function CoaPage({ params }: { params: Promise<{ tenant: string }> }) {
   const { tenant } = await params
-  const result = await getLedgerAccountsWithBalancesAction(tenant)
+  const branch = await BranchService.getBranchBySubdomain(tenant)
+  if (!branch) {
+    notFound()
+  }
+
+  const result = await getLedgerAccountsWithBalancesAction(undefined, branch.id)
   const accounts = result.data || []
 
   const accountTypes = ["ALL", "ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]
@@ -26,7 +32,7 @@ export default async function CoaPage({ params }: { params: Promise<{ tenant: st
   const renderCardGrid = (typeAccounts: any[]) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {typeAccounts.map((acc: any) => (
-        <Link key={acc.id} href={`/${tenant}/accounting/coa/${acc.id}`} className="block group">
+        <Link key={acc.id} href={`/accounting/coa/${acc.id}`} className="block group">
           <div className="relative flex items-center justify-between p-4 rounded-xl border bg-card hover:border-primary/50 transition-colors shadow-sm">
             <div className="flex items-center gap-3">
               <div className="bg-muted text-muted-foreground font-mono text-xs font-semibold px-2 py-1 rounded-md">
@@ -47,12 +53,12 @@ export default async function CoaPage({ params }: { params: Promise<{ tenant: st
   )
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title="Bagan Akun (COA)"
-        description="Kelola akun buku besar untuk cabang ini."
+        description={`Kelola akun buku besar dan lihat saldo berjalan untuk cabang ${branch.name}.`}
       >
-        <CoaFormDialog branchId={tenant} />
+        <CoaFormDialog branchId={branch.id} />
       </PageHeader>
 
       <Tabs defaultValue="ALL" className="w-full">
@@ -114,4 +120,3 @@ export default async function CoaPage({ params }: { params: Promise<{ tenant: st
     </div>
   )
 }
-

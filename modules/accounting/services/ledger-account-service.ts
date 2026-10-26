@@ -14,8 +14,8 @@ export class LedgerAccountService {
     return await LedgerAccountRepository.findAll(tenantId)
   }
 
-  static async getAllWithBalances(tenantId?: string) {
-    return await LedgerAccountRepository.findAllWithBalances(tenantId)
+  static async getAllWithBalances(tenantId?: string, branchId?: string) {
+    return await LedgerAccountRepository.findAllWithBalances(tenantId, branchId)
   }
 
   static async getById(id: string) {

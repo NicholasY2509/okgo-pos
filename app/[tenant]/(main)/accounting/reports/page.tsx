@@ -6,6 +6,7 @@ import { BalanceSheetTab } from "@/modules/accounting/components/reports/balance
 import { TrialBalanceTab } from "@/modules/accounting/components/reports/trial-balance-tab"
 import { getDailyReportAction, getProfitAndLossAction, getBalanceSheetAction, getTrialBalanceAction } from "@/modules/accounting/actions/report-action"
 import { BranchService } from "@/modules/branch/services/branch-service"
+import { notFound } from "next/navigation"
 
 export default async function TenantReportsPage({
   params,
@@ -19,13 +20,23 @@ export default async function TenantReportsPage({
 
   const branch = await BranchService.getBranchBySubdomain(p.tenant)
   if (!branch) {
-    return <div>Cabang tidak ditemukan</div>
+    notFound()
   }
 
   const tab = typeof sp.tab === "string" ? sp.tab : "daily"
-  const dateStr = typeof sp.date === "string" ? sp.date : undefined
-  const startDateStr = typeof sp.startDate === "string" ? sp.startDate : undefined
-  const endDateStr = typeof sp.endDate === "string" ? sp.endDate : undefined
+  let dateStr = typeof sp.date === "string" ? sp.date : undefined
+  let startDateStr = typeof sp.startDate === "string" ? sp.startDate : undefined
+  let endDateStr = typeof sp.endDate === "string" ? sp.endDate : undefined
+  const monthStr = typeof sp.month === "string" ? sp.month : undefined
+
+  if (monthStr && /^\d{4}-\d{2}$/.test(monthStr)) {
+    const [y, m] = monthStr.split("-").map(Number)
+    const mStart = new Date(y, m - 1, 1, 0, 0, 0, 0)
+    const mEnd = new Date(y, m, 0, 23, 59, 59, 999)
+    if (!startDateStr) startDateStr = mStart.toISOString()
+    if (!endDateStr) endDateStr = mEnd.toISOString()
+    if (!dateStr) dateStr = mEnd.toISOString()
+  }
 
   // Base options for fetching
   const options = {
