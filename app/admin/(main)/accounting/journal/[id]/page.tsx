@@ -21,17 +21,10 @@ export default async function AdminJournalDetailPage({ params }: { params: Promi
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title={
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild className="-ml-2 h-8 w-8">
-              <Link href="/admin/accounting/journal">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <span>Detail Jurnal</span>
-          </div>
-        }
+        title="Detail Jurnal"
         description={`Melihat rincian jurnal ${entry.reference || ''}`}
+        backHref="/admin/accounting/journal"
+        backLabel="Kembali ke Jurnal"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

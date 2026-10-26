@@ -22,15 +22,51 @@ export function AppSidebar({ portalType = "branch", session, ...props }: React.C
   const { state } = useSidebar()
 
   const isAdminPortal = portalType === "admin"
-  const navigationData = isAdminPortal ? adminNav : branchNav
+  const isDirectAdminPath = pathname.startsWith("/admin")
+  const navigationData = (isAdminPortal ? adminNav : branchNav) as {
+    label: string
+    items: {
+      title: string
+      url: string
+      icon?: React.ReactNode
+      roles?: string[]
+      items?: { title: string; url: string; isActive?: boolean }[]
+    }[]
+  }[]
+
+  const normalize = (p: string) => p.replace(/^\/admin/, "") || "/"
+  const cleanCurrent = normalize(pathname)
 
   const navMainGroups = navigationData.map(group => ({
     ...group,
-    items: group.items.map(link => ({
-      ...link,
-      isActive: pathname === link.url || pathname?.startsWith(`${link.url}/`),
-    }))
+    items: group.items.map(link => {
+      const cleanLinkUrl = normalize(link.url)
+      const isActive = cleanLinkUrl === "/" ? cleanCurrent === "/" : (cleanCurrent === cleanLinkUrl || cleanCurrent.startsWith(`${cleanLinkUrl}/`))
+
+      const targetUrl = isAdminPortal && isDirectAdminPath
+        ? (cleanLinkUrl === "/" ? "/admin" : `/admin${cleanLinkUrl}`)
+        : link.url
+
+      return {
+        ...link,
+        url: targetUrl,
+        isActive,
+        items: link.items?.map((sub: { title: string; url: string }) => {
+          const cleanSubUrl = normalize(sub.url)
+          const isSubActive = cleanSubUrl === "/" ? cleanCurrent === "/" : (cleanCurrent === cleanSubUrl || cleanCurrent.startsWith(`${cleanSubUrl}/`))
+          const subTargetUrl = isAdminPortal && isDirectAdminPath
+            ? (cleanSubUrl === "/" ? "/admin" : `/admin${cleanSubUrl}`)
+            : sub.url
+          return {
+            ...sub,
+            url: subTargetUrl,
+            isActive: isSubActive,
+          }
+        })
+      }
+    })
   }))
+
 
   const user = {
     name: session?.user?.name || "Guest User",

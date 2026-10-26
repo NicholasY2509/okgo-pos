@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PaymentMethodForm } from "./payment-method-form";
 import { PageHeader } from "@/components/page-header";
+import { Plus } from "lucide-react";
 
 export function PaymentMethodList({ data, accounts }: { data: any[], accounts: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,46 +65,42 @@ export function PaymentMethodList({ data, accounts }: { data: any[], accounts: a
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col gap-6">
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) setEditingItem(null);
+      }}>
         <PageHeader
           title="Metode Pembayaran"
-          description="Kelola metode pembayaran dan akun yang terhubung."
+          description="Kelola metode pembayaran kasir dan akun buku besar yang terhubung."
         >
-          <Dialog open={isOpen} onOpenChange={(open) => {
-            setIsOpen(open);
-            if (!open) setEditingItem(null);
-          }}>
-            <DialogTrigger asChild>
-              <Button>Add Payment Method</Button>
-            </DialogTrigger>
-          </Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Metode Pembayaran
+            </Button>
+          </DialogTrigger>
         </PageHeader>
-        <Dialog open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) setEditingItem(null);
-        }}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingItem ? "Edit Payment Method" : "Add Payment Method"}</DialogTitle>
-            </DialogHeader>
-            <PaymentMethodForm
-              initialData={editingItem}
-              accounts={accounts}
-              onSuccess={() => {
-                setIsOpen(false);
-                setEditingItem(null);
-              }}
-              onCancel={() => {
-                setIsOpen(false);
-                setEditingItem(null);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingItem ? "Edit Metode Pembayaran" : "Tambah Metode Pembayaran"}</DialogTitle>
+          </DialogHeader>
+          <PaymentMethodForm
+            initialData={editingItem}
+            accounts={accounts}
+            onSuccess={() => {
+              setIsOpen(false);
+              setEditingItem(null);
+            }}
+            onCancel={() => {
+              setIsOpen(false);
+              setEditingItem(null);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
 
-      <DataTable columns={columns} data={data} />
+      <DataTable columns={columns} data={data} emptyMessage="Tidak ada metode pembayaran yang terdaftar." />
     </div>
   );
 }

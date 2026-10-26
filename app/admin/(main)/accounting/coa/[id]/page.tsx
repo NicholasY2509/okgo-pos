@@ -45,19 +45,12 @@ export default async function AdminAccountLedgerPage({ params }: { params: Promi
   }).reverse(); // Reverse back for descending display
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
-        title={
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild className="-ml-2 h-8 w-8">
-              <Link href="/admin/accounting/coa">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <span>Buku Besar: {account.code} - {account.name}</span>
-          </div>
-        }
+        title={`Buku Besar: ${account.code} - ${account.name}`}
         description={`Melihat semua transaksi untuk akun ${account.type.toLowerCase()} ini.`}
+        backHref="/admin/accounting/coa"
+        backLabel="Kembali ke Bagan Akun"
       />
 
       <div className="rounded-md border bg-card">

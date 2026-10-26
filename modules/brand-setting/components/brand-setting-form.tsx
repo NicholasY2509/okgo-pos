@@ -14,8 +14,6 @@ interface BrandSettingFormProps {
 export function BrandSettingForm({ initialData }: BrandSettingFormProps) {
   const { form, onSubmit, isSubmitting, error } = useBrandSetting({ initialData });
 
-  console.log("Form errors:", form.formState.errors);
-
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -34,7 +32,7 @@ export function BrandSettingForm({ initialData }: BrandSettingFormProps) {
                   {...form.register("businessStartTime")}
                 />
                 {form.formState.errors.businessStartTime && (
-                  <p className="text-sm text-red-500">{form.formState.errors.businessStartTime.message}</p>
+                  <p className="text-sm text-destructive">{form.formState.errors.businessStartTime.message}</p>
                 )}
               </div>
 
@@ -46,7 +44,7 @@ export function BrandSettingForm({ initialData }: BrandSettingFormProps) {
                   {...form.register("businessEndTime")}
                 />
                 {form.formState.errors.businessEndTime && (
-                  <p className="text-sm text-red-500">{form.formState.errors.businessEndTime.message}</p>
+                  <p className="text-sm text-destructive">{form.formState.errors.businessEndTime.message}</p>
                 )}
               </div>
             </CardContent>
@@ -55,12 +53,7 @@ export function BrandSettingForm({ initialData }: BrandSettingFormProps) {
       </div>
 
       <div className="flex flex-col items-end gap-2">
-        {Object.keys(form.formState.errors).length > 0 && (
-          <div className="text-sm text-red-500 bg-red-50 p-2 rounded-md mb-2">
-            Form Errors: {JSON.stringify(form.formState.errors)}
-          </div>
-        )}
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Menyimpan..." : "Simpan Pengaturan"}
         </Button>

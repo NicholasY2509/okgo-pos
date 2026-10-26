@@ -45,15 +45,15 @@ export default async function BranchesPage() {
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
               <div className="flex items-start gap-3 text-sm">
-                <MapPin className="h-4 w-4 shrink-0 text-gray-400 mt-0.5" />
+                <MapPin className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
                 <span className="leading-snug">{branch.address || "Tidak ada alamat"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <Phone className="h-4 w-4 shrink-0 text-gray-400" />
+                <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span>{branch.phone || "Tidak ada telepon"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <Users className="h-4 w-4 shrink-0 text-gray-400" />
+                <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span>{branch._count.branchStaffs} Staf Ditugaskan</span>
               </div>
             </CardContent>
@@ -66,7 +66,7 @@ export default async function BranchesPage() {
                     Kunjungi
                   </Button>
                 </Link>
-                <Link href={`/branches/${branch.subdomain}`}>
+                <Link href={`/admin/branches/${branch.subdomain}`}>
                   <Button variant="default" size="sm" className="h-8 shadow-sm">Kelola</Button>
                 </Link>
               </div>

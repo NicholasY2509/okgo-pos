@@ -10,13 +10,13 @@ export default async function OnboardStaffPage() {
   ]);
 
   return (
-    <div className="">
-      <div className="mb-8">
-        <PageHeader
-          title="Onboard Staff Member"
-          description="Create a new staff member, assign them to a branch, and optionally create a login account."
-        />
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Onboard Staf Baru"
+        description="Daftarkan anggota staf baru, tentukan posisi, tugaskan ke cabang, dan buat akun login sistem."
+        backHref="/admin/staff"
+        backLabel="Kembali ke Manajemen Staf"
+      />
 
       <StaffOnboardingForm
         branches={branches}

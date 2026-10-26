@@ -25,15 +25,14 @@ export default async function StaffSalariesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-between items-start">
-        <PageHeader
-          title="Gaji Pokok Staf"
-          description="Kelola gaji pokok untuk setiap staf di sistem Anda."
-        />
-        <Link href="/admin/payroll/components">
-          <Button variant="outline">Kelola Komponen Gaji</Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Gaji Pokok Staf"
+        description="Kelola gaji pokok untuk setiap staf di sistem Anda."
+      >
+        <Button variant="outline" asChild>
+          <Link href="/admin/payroll/components">Kelola Komponen Gaji</Link>
+        </Button>
+      </PageHeader>
 
       <StaffSalariesTable data={tableData} />
     </div>

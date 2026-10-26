@@ -218,33 +218,33 @@ export const adminNav = [
       },
       {
         title: "Kehadiran",
-        url: "/admin/attendance",
+        url: "/attendance",
         icon: (<Calendar1 />),
         roles: ["Admin"],
         items: [
           {
             title: "Data Kehadiran",
-            url: "/admin/attendance/data",
+            url: "/attendance/data",
           },
           {
             title: "Master Status",
-            url: "/admin/attendance/statuses",
+            url: "/attendance/statuses",
           },
           {
             title: "Master Jam Kerja",
-            url: "/admin/attendance/working-hours",
+            url: "/attendance/working-hours",
           },
           {
             title: "Jadwal Shift",
-            url: "/admin/attendance/schedules",
+            url: "/attendance/schedules",
           },
           {
             title: "Log Mesin Absensi",
-            url: "/admin/attendance-log",
+            url: "/attendance-log",
           },
           {
             title: "Mesin Absensi",
-            url: "/admin/attendance/machines",
+            url: "/attendance/machines",
           }
         ]
       },
@@ -267,13 +267,13 @@ export const adminNav = [
       },
       {
         title: "Insentif",
-        url: "/admin/incentives",
+        url: "/incentives",
         icon: (<Banknote />),
         roles: ["Admin"],
       },
       {
         title: "Komponen Gaji",
-        url: "/admin/payroll/components",
+        url: "/payroll/components",
         icon: (<CalculatorIcon />),
         roles: ["Admin"],
       },
@@ -282,6 +282,12 @@ export const adminNav = [
   {
     label: "Akuntansi",
     items: [
+      {
+        title: "Ringkasan",
+        url: "/accounting",
+        icon: (<Book />),
+        roles: ["Admin"],
+      },
       {
         title: "Jurnal",
         url: "/accounting/journal",
@@ -297,7 +303,7 @@ export const adminNav = [
       {
         title: "Pengeluaran",
         url: "/accounting/expenses",
-        icon: (<FileText />), // Assuming FileText for expenses, could also be receipt or something
+        icon: (<FileText />),
         roles: ["Admin"],
       },
       {
@@ -322,3 +328,4 @@ export const adminNav = [
   },
 
 ]
+

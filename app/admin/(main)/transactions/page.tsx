@@ -7,7 +7,7 @@ export default async function AdminTransactionsPage() {
   const branches = await BranchRepository.getAllBranches();
 
   return (
-    <div className="max-w-7xl mx-auto w-full">
+    <div className="w-full flex flex-col gap-6">
       <TransactionHistoryClient branches={branches} isAdmin={true} />
     </div>
   );

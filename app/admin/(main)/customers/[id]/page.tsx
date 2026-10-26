@@ -36,6 +36,8 @@ export default async function CustomerDetailPage({ params, searchParams }: Custo
       <PageHeader
         title="Detail Pelanggan"
         description="Lihat informasi pelanggan, voucher, dan riwayat transaksi."
+        backHref="/admin/customers"
+        backLabel="Kembali ke Daftar Pelanggan"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -48,11 +50,11 @@ export default async function CustomerDetailPage({ params, searchParams }: Custo
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3 text-sm">
-              <Phone className="h-4 w-4 shrink-0 text-gray-500" />
+              <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span>{customer.phone || "Tidak ada telepon"}</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
-              <Mail className="h-4 w-4 shrink-0 text-gray-500" />
+              <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span>{customer.email || "Tidak ada email"}</span>
             </div>
           </CardContent>

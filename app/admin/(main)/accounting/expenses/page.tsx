@@ -36,7 +36,7 @@ export default async function AdminExpensesPage({ searchParams }: AdminExpensesP
         description="Lihat dan catat pengeluaran operasional secara global."
       >
         <Button asChild>
-          <Link href="/accounting/expenses/create">
+          <Link href="/admin/accounting/expenses/create">
             <Plus className="mr-2 h-4 w-4" />
             Catat Pengeluaran
           </Link>

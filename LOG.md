@@ -8,6 +8,43 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
+## 2026-10-26 — Admin Design & Layout Harmonization
+
+**Did:**
+1. Standardized Admin Header & Navigation ([`app/admin/(main)/layout.tsx`](app/admin/(main)/layout.tsx)):
+   - Replaced static placeholder breadcrumb ("Build Your Application > Data Fetching") with dynamic [`components/admin-breadcrumb.tsx`](components/admin-breadcrumb.tsx) parsing URL paths into localized Indonesian route labels.
+   - Standardized main content container (`max-w-[1600px] w-full mx-auto p-4 md:p-6 flex flex-col gap-6`) across the admin portal.
+   - Added subtle "Portal Admin" status pill indicator in the header.
+2. Standardized PageHeader Primitive ([`components/page-header.tsx`](components/page-header.tsx)):
+   - Corrected typography class typos (`space-y-0.5d` -> `space-y-1`, `text-smd` -> `text-sm text-muted-foreground`).
+   - Aligned title typography with DESIGN.md standard (`text-2xl md:text-3xl font-bold tracking-tight text-foreground`).
+   - Added built-in `backHref` and `backLabel` properties for seamless, consistent back navigation across detail and creation pages.
+   - Made header layout responsive (`flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between`).
+3. Revamped Admin Dashboard ([`app/admin/(main)/page.tsx`](app/admin/(main)/page.tsx)):
+   - Replaced empty gray aspect-video placeholder boxes with an executive admin command center.
+   - Added live KPI cards: Total Pendapatan Sukses, Cabang Aktif / Total Cabang, Layanan & Produk Aktif, and Staf Aktif.
+   - Added Cabang Operasional cards with staff count, address, active badge, and manage link.
+   - Added Transaksi Terbaru feed with branch name, customer, timestamp, IDR total, and semantic status badge.
+4. Revamped Admin Accounting Hub ([`app/admin/(main)/accounting/page.tsx`](app/admin/(main)/accounting/page.tsx)):
+   - Replaced hardcoded static mock table (with raw hex/gray classes) with a full Admin Accounting Hub matching DESIGN.md tokens.
+   - Added live financial metrics for selected month: Pendapatan, Pengeluaran, Laba Bersih, and Total Jurnal.
+   - Added quick navigation cards to Jurnal Umum, Pengeluaran, Bagan Akun (COA), Laporan Keuangan, and Metode Pembayaran.
+   - Added live recent journal entries feed across all branches.
+5. Harmonized Admin Sub-Pages & Components:
+   - Fixed ad-hoc back buttons and wrappers in `branches/[slug]`, `products/[id]`, `customers/[id]`, `salaries`, `staff/onboard`, `payroll/[monthPeriod]`, `accounting/coa/[id]`, and `accounting/journal/[id]`.
+   - Unified Dialog nesting and PageHeader structure in [`modules/payment-method/components/payment-method-list.tsx`](modules/payment-method/components/payment-method-list.tsx).
+   - Removed debug dumps and raw color classes in [`modules/brand-setting/components/brand-setting-form.tsx`](modules/brand-setting/components/brand-setting-form.tsx).
+   - Replaced raw colors (`text-gray-400`, `text-gray-500`, hardcoded amber) with semantic theme tokens.
+   - Integrated `PageHeader` into [`modules/pos/components/transaction-history-client.tsx`](modules/pos/components/transaction-history-client.tsx).
+   - Normalized admin sidebar navigation URL matching in [`components/app-sidebar.tsx`](components/app-sidebar.tsx) and [`components/nav-main.tsx`](components/nav-main.tsx) to ensure active states highlight accurately whether accessed via `/admin/*` path or subdomain.
+6. Verification:
+   - Verified clean typecheck (`npm run typecheck`, 0 errors).
+
+**Why:**
+The admin portal had significant visual and architectural inconsistencies across pages: placeholder starter templates, hardcoded mock tables, mismatched container padding, missing dynamic breadcrumbs, ad-hoc back buttons, and conflicting dialog wrappers. Standardizing on `PageHeader` and unified layout tokens ensures an executive-grade, consistent user experience.
+
+---
+
 ## 2026-10-25 — Month Filtering for Tenant Accounting Module
 
 **Did:**

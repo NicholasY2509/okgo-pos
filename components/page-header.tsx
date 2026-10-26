@@ -1,21 +1,51 @@
 import React from "react"
+import Link from "next/link"
+import { ChevronLeft } from "lucide-react"
 
 interface PageHeaderProps {
   title: React.ReactNode
   description?: React.ReactNode
   children?: React.ReactNode
+  backHref?: string
+  backLabel?: string
+  className?: string
 }
 
-export function PageHeader({ title, description, children }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  children,
+  backHref,
+  backLabel,
+  className = "",
+}: PageHeaderProps) {
   return (
-    <div className="flex flex-row flex-1 justify-between items-center">
-      <div className="flex-1 space-y-0.5d">
-        <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
-        {description && <p className="text-smd text-muted-foreground">{description}</p>}
+    <div className={`flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${className}`}>
+      <div className="space-y-1">
+        {backHref && (
+          <div className="mb-1">
+            <Link
+              href={backHref}
+              className="inline-flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 mr-1 transition-transform group-hover:-translate-x-0.5" />
+              <span>{backLabel || "Kembali"}</span>
+            </Link>
+          </div>
+        )}
+        <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          {title}
+        </h1>
+        {description && (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        )}
       </div>
-      <div>
-        {children}
-      </div>
+      {children && (
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {children}
+        </div>
+      )}
     </div>
   )
 }
+

@@ -46,27 +46,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/admin/products" className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-fit">
-        <ChevronLeft className="w-4 h-4 mr-1" />
-        Kembali ke Layanan
-      </Link>
-
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <PageHeader
-          title={product.name}
-          description="Lihat detail produk dan lacak metrik kinerja."
-        >
-          <div className="flex gap-2">
-            <ProductDialog initialData={product} categories={categories}>
-              <Button variant="outline">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Detail
-              </Button>
-            </ProductDialog>
-          </div>
-        </PageHeader>
-
-      </div>
+      <PageHeader
+        title={product.name}
+        description="Lihat detail produk dan lacak metrik kinerja."
+        backHref="/admin/products"
+        backLabel="Kembali ke Layanan"
+      >
+        <div className="flex gap-2">
+          <ProductDialog initialData={product} categories={categories}>
+            <Button variant="outline">
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Detail
+            </Button>
+          </ProductDialog>
+        </div>
+      </PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1 space-y-6">
@@ -103,7 +97,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   <h3 className="text-sm font-medium text-muted-foreground">Tipe Layanan</h3>
                   <div className="mt-1">
                     {product.isVip ? (
-                      <Badge variant="outline" className="border-amber-500 text-amber-700 bg-amber-50">
+                      <Badge variant="outline" className="border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10">
                         VIP
                       </Badge>
                     ) : (

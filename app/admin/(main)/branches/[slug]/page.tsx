@@ -28,14 +28,11 @@ export default async function BranchSettingsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/admin/branches" className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-fit">
-        <ChevronLeft className="w-4 h-4 mr-1" />
-        Kembali ke Daftar Cabang
-      </Link>
-
       <PageHeader
         title={`${branch.name}`}
         description="Kelola performa dan staf untuk cabang ini."
+        backHref="/admin/branches"
+        backLabel="Kembali ke Daftar Cabang"
       />
 
       <Tabs value={tab} className="w-full">

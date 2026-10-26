@@ -32,6 +32,7 @@ export function NavMain({
       items?: {
         title: string
         url: string
+        isActive?: boolean
       }[]
     }[]
   }[]
@@ -81,7 +82,7 @@ export function NavMain({
                     <CollapsibleContent>
                       <SidebarMenuSub>
                         {item.items?.map((subItem) => {
-                          const isSubActive = pathname === subItem.url || pathname?.startsWith(`${subItem.url}/`)
+                          const isSubActive = subItem.isActive ?? (pathname === subItem.url || pathname?.startsWith(`${subItem.url}/`))
                           return (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton asChild isActive={isSubActive}>
@@ -98,6 +99,7 @@ export function NavMain({
                 </Collapsible>
               )
             })}
+
           </SidebarMenu>
         </SidebarGroup>
       ))}

@@ -58,7 +58,7 @@ export default async function AdminReportsPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title="Laporan Keuangan"
         description="Lihat laporan harian, laba/rugi, neraca, dan neraca saldo."

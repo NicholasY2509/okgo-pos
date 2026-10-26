@@ -12,7 +12,7 @@ export default async function PaymentMethodsPage() {
   const accounts = await LedgerAccountService.getAll(); // get global or all accounts
 
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex flex-col gap-6">
       <PaymentMethodList data={paymentMethods} accounts={accounts} />
     </div>
   );

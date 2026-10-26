@@ -25,17 +25,12 @@ export default async function PayrollMonthDetailsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center space-x-2">
-        <Link href="/admin/payroll">
-          <Button variant="ghost" size="icon" className="mb-1">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <PageHeader
-          title={`Detail Penggajian - ${monthPeriod}`}
-          description="Lihat dan kelola detail slip gaji staf untuk bulan ini."
-        />
-      </div>
+      <PageHeader
+        title={`Detail Penggajian - ${monthPeriod}`}
+        description="Lihat dan kelola detail slip gaji staf untuk bulan ini."
+        backHref="/admin/payroll"
+        backLabel="Kembali ke Penggajian"
+      />
 
       <div className="w-full space-y-6">
         <PayrollTable data={payrolls} />

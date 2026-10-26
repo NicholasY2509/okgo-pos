@@ -20,6 +20,7 @@ import {
   PaginationEllipsis
 } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageHeader } from "@/components/page-header";
 
 interface BranchOption {
   id: string;
@@ -69,12 +70,10 @@ export function TransactionHistoryClient({ branchId, branches, isAdmin }: Transa
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Riwayat Transaksi</h2>
-          <p className="text-muted-foreground mt-1">Kelola dan lihat riwayat transaksi cabang Anda.</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Riwayat Transaksi"
+        description={isAdmin ? "Kelola dan pantau seluruh transaksi penjualan di semua cabang." : "Kelola dan lihat riwayat transaksi cabang Anda."}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-card border rounded-xl p-4 shadow-sm flex items-center space-x-4">

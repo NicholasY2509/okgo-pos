@@ -39,7 +39,7 @@ export default async function IssuedVouchersPage({ searchParams }: PageProps) {
   const products = rawProducts.products.map((p: any) => ({ id: p.id, name: p.name }));
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title="Daftar Voucher"
         description="Lihat semua voucher yang telah diberikan kepada pelanggan beserta statusnya."
