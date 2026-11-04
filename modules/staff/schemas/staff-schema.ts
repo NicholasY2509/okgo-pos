@@ -20,3 +20,20 @@ export const updateStaffSchema = createStaffSchema.extend({
 })
 
 export type UpdateStaffInput = z.input<typeof updateStaffSchema>
+
+export const portalBranchStaffFacesQuerySchema = z.object({
+  branchId: z.string().min(1, "ID cabang wajib diisi."),
+})
+
+export type PortalBranchStaffFacesQuery = z.infer<typeof portalBranchStaffFacesQuerySchema>
+
+export const registerStaffFaceSchema = z.object({
+  staffId: z.string().min(1, "ID staf wajib diisi."),
+  branchId: z.string().min(1, "ID cabang wajib diisi."),
+  embedding: z
+    .array(z.number().finite("Nilai vektor harus berupa angka valid."))
+    .min(64, "Dimensi vektor wajah minimal 64.")
+    .max(512, "Dimensi vektor wajah maksimal 512."),
+})
+
+export type RegisterStaffFaceInput = z.infer<typeof registerStaffFaceSchema>

@@ -82,7 +82,12 @@ export function StaffCombobox({ value, onChange, branchId, serviceId, excludeSes
                   }}
                   className="flex justify-between items-center w-full"
                 >
-                  <span>{staff.firstName} {staff.lastName}</span>
+                  <span className="flex items-center gap-1.5">
+                    <span>{staff.firstName} {staff.lastName}</span>
+                    {staff.workPosition?.name && (
+                      <span className="text-[10px] text-muted-foreground font-normal">({staff.workPosition.name})</span>
+                    )}
+                  </span>
                   {staff.attendances?.[0]?.clockIn ? (
                     <span className="text-[10px] text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded-sm">
                       {new Date(staff.attendances[0].clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

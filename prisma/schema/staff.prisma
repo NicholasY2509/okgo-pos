@@ -93,6 +93,10 @@ model Staff {
   pinHash  String?
   imageUrl String?
 
+  // Biometric Face Embedding (192D L2-normalized MobileFaceNet vector)
+  faceEmbedding    Json?
+  faceRegisteredAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

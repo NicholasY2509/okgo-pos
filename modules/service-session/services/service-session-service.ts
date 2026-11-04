@@ -1,7 +1,17 @@
-import { ServiceSessionRepository } from "../repositories/service-session-repository"
-import { prisma } from "@/lib/prisma"
+import {
+  ServiceSessionRepository,
+  type GetServiceSessionsParams,
+} from "../repositories/service-session-repository"
 
 export class ServiceSessionService {
+  static async getServiceSessions(params: GetServiceSessionsParams) {
+    return await ServiceSessionRepository.getServiceSessions(params)
+  }
+
+  static async getServiceSessionFilterOptions(branchId: string) {
+    return await ServiceSessionRepository.getServiceSessionFilterOptions(branchId)
+  }
+
   static async getStaffDailySessions(staffId: string) {
     return await ServiceSessionRepository.getStaffDailySessions(staffId)
   }
@@ -14,7 +24,7 @@ export class ServiceSessionService {
     const session = await ServiceSessionRepository.getById(sessionId)
     if (!session) throw new Error("Session not found")
 
-    let commissionAmount = 0;
+    const commissionAmount = 0;
     // FIXME: Commission calculation needs to be updated to use IncentiveRule
     // The previous BrandSetting properties (therapistIncentiveType, etc.) have been removed.
 

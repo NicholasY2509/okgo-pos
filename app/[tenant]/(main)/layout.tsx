@@ -63,6 +63,14 @@ export default async function TenantLayout({
                     Riwayat Transaksi
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={`/service-sessions`}
+                    className="w-full cursor-pointer"
+                  >
+                    Sesi Layanan
+                  </Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 

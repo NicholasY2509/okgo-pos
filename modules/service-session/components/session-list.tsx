@@ -24,7 +24,14 @@ export function SessionList({ sessions, tenantSlug }: { sessions: any[], tenantS
 
       // Notify POS and other clients
       const socket = io(process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined);
-      socket.emit("service_status_changed", { sessionId, action: "start", serviceName, staffName });
+      socket.emit("service_status_changed", {
+        sessionId,
+        branchId: sessionObj?.branchId,
+        roomId: sessionObj?.roomId,
+        action: "start",
+        serviceName,
+        staffName,
+      });
       setTimeout(() => socket.disconnect(), 1000);
     }
     setLoadingId(null)

@@ -22,7 +22,8 @@ export const AuthRepository = {
         branchId,
       },
       include: {
-        role: true
+        role: true,
+        branch: true,
       }
     });
   },
@@ -38,7 +39,8 @@ export const AuthRepository = {
         }
       },
       include: {
-        role: true
+        role: true,
+        branch: true,
       }
     });
   },
@@ -50,7 +52,10 @@ export const AuthRepository = {
           staffUsers: { some: { userId } }
         }
       },
-      include: { role: true }
+      include: {
+        role: true,
+        branch: true,
+      }
     });
   },
 

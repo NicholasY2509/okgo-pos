@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { toast } from "sonner";
+import { io } from "socket.io-client";
 import {
   getSessionsByDateAction,
   completeSessionAction,
@@ -9,6 +10,23 @@ import {
   updateSessionStaffAction
 } from "../actions/timetable-action";
 import { updateBookingStatusAction } from "@/modules/booking/actions/booking-list-actions";
+
+function broadcastRoomSessionUpdate(payload: {
+  branchId?: string | null;
+  roomId?: string | null;
+  sessionId?: string;
+  action?: string;
+}) {
+  if (typeof window === "undefined") return;
+  const socketUrl =
+    process.env.NEXT_PUBLIC_SOCKET_URL ||
+    `${window.location.protocol}//${window.location.hostname}:3001`;
+  const socket = io(socketUrl, {
+    transports: ["websocket", "polling"],
+  });
+  socket.emit("service_status_changed", payload);
+  setTimeout(() => socket.disconnect(), 1000);
+}
 
 interface TimetableState {
   branchId: string | null;
@@ -127,27 +145,44 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   },
 
   handleComplete: async (sessionId: string) => {
+    const { branchId, sessions } = get();
+    const target = sessions.find((s) => s.id === sessionId);
     const res = await completeSessionAction(sessionId);
     if (res.error) {
       toast.error(res.error);
     } else {
       toast.success("Sesi selesai");
+      broadcastRoomSessionUpdate({
+        branchId,
+        roomId: target?.roomId,
+        sessionId,
+        action: "complete",
+      });
       get().fetchSessions();
     }
   },
 
   handleStart: async (sessionId: string) => {
+    const { branchId, sessions } = get();
+    const target = sessions.find((s) => s.id === sessionId);
     const res = await startSessionAction(sessionId);
     if (res.error) {
       toast.error(res.error);
     } else {
       toast.success("Sesi dimulai");
+      broadcastRoomSessionUpdate({
+        branchId,
+        roomId: target?.roomId,
+        sessionId,
+        action: "start",
+      });
       get().fetchSessions();
     }
   },
 
   handleUpdateSessionTime: async (sessionId: string, newStart: Date, newEnd: Date) => {
-    const { sessions } = get();
+    const { branchId, sessions } = get();
+    const target = sessions.find((s) => s.id === sessionId);
     const previousSessions = [...sessions];
 
     // Optimistic update
@@ -166,11 +201,17 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
       set({ sessions: previousSessions });
     } else {
       toast.success("Waktu sesi diperbarui");
+      broadcastRoomSessionUpdate({
+        branchId,
+        roomId: target?.roomId,
+        sessionId,
+        action: "time_updated",
+      });
     }
   },
 
   handleProcessBooking: async (bookingId: string) => {
-    const { fetchPendingBookings, fetchSessions, pendingBookings } = get();
+    const { branchId, fetchPendingBookings, fetchSessions, pendingBookings } = get();
     const booking = pendingBookings.find(b => b.id === bookingId);
     if (booking && !booking.isAssignedToTimetable) {
       // If the booking hasn't been assigned to the timetable yet (no services selected)
@@ -181,6 +222,7 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
     const res = await updateBookingStatusAction(bookingId, 'PROCESSED');
     if (res.success) {
       toast.success("Booking berhasil diproses");
+      broadcastRoomSessionUpdate({ branchId, action: "booking_processed" });
       fetchPendingBookings();
       fetchSessions();
     } else {
@@ -189,7 +231,8 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   },
 
   handleUpdateSessionStaff: async (sessionId: string, staffId: string) => {
-    const { fetchSessions, selectedSessionForInfo } = get();
+    const { branchId, sessions, fetchSessions, selectedSessionForInfo } = get();
+    const target = sessions.find((s) => s.id === sessionId);
 
     if (selectedSessionForInfo && selectedSessionForInfo.id === sessionId) {
       set({ selectedSessionForInfo: { ...selectedSessionForInfo, staffId } });
@@ -199,6 +242,12 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
     const res = await updateSessionStaffAction(sessionId, staffId);
     if (res.success) {
       toast.success("Terapis berhasil diubah");
+      broadcastRoomSessionUpdate({
+        branchId,
+        roomId: target?.roomId,
+        sessionId,
+        action: "staff_updated",
+      });
       fetchSessions();
     } else {
       toast.error(res.error || "Gagal mengubah terapis");
@@ -206,7 +255,8 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   },
 
   handleUpdateSessionRoom: async (sessionId: string, roomId: string) => {
-    const { fetchSessions, selectedSessionForInfo } = get();
+    const { branchId, sessions, fetchSessions, selectedSessionForInfo } = get();
+    const previousRoomId = sessions.find((s) => s.id === sessionId)?.roomId;
 
     if (selectedSessionForInfo && selectedSessionForInfo.id === sessionId) {
       set({ selectedSessionForInfo: { ...selectedSessionForInfo, roomId } });
@@ -216,6 +266,20 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
     const res = await updateSessionRoomAction(sessionId, roomId);
     if (res.success) {
       toast.success("Ruangan berhasil dipindahkan");
+      if (previousRoomId && previousRoomId !== roomId) {
+        broadcastRoomSessionUpdate({
+          branchId,
+          roomId: previousRoomId,
+          sessionId,
+          action: "room_moved_out",
+        });
+      }
+      broadcastRoomSessionUpdate({
+        branchId,
+        roomId,
+        sessionId,
+        action: "room_assigned",
+      });
       fetchSessions();
     } else {
       toast.error(res.error || "Gagal memindahkan ruangan");

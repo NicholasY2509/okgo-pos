@@ -113,11 +113,13 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
     } else {
       toast.success("Transaksi berhasil disimpan!");
 
-      // Notify kiosks
+      // Notify kiosks and room portal devices
       const socket = io(process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined);
       cart.items.forEach((item: any) => {
-        if (item.staffId) {
+        if (item.staffId || item.roomId) {
           socket.emit("service_assigned", {
+            branchId: branchId || cart.branchId,
+            roomId: item.roomId,
             staffId: item.staffId,
             serviceName: item.name || "Layanan"
           });

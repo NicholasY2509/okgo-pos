@@ -42,7 +42,16 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandS
       fetchPendingBookings();
     }, 60000);
 
-    const socket = io(process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined);
+    const socketUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      (typeof window !== "undefined"
+        ? `${window.location.protocol}//${window.location.hostname}:3001`
+        : "http://localhost:3001");
+
+    const socket = io(socketUrl, {
+      transports: ["websocket", "polling"],
+      autoConnect: true,
+    });
 
     const joinBranchRoom = () => {
       if (branchId) {
@@ -53,7 +62,7 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandS
     joinBranchRoom();
     socket.on("connect", joinBranchRoom);
 
-    const handleStatusChanged = (data: any) => {
+    const handleStatusChanged = () => {
       fetchSessions();
       fetchPendingBookings();
     };
@@ -66,12 +75,14 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandS
     };
 
     socket.on("service_status_changed", handleStatusChanged);
+    socket.on("service_assigned", handleStatusChanged);
     socket.on("new_booking", handleNewBooking);
 
     return () => {
       clearInterval(interval);
       socket.off("connect", joinBranchRoom);
       socket.off("service_status_changed", handleStatusChanged);
+      socket.off("service_assigned", handleStatusChanged);
       socket.off("new_booking", handleNewBooking);
       socket.disconnect();
     };
