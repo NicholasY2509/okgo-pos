@@ -36,10 +36,10 @@ export default function MarketingPage() {
 
       {/* Main Content Card */}
       <div className="relative z-10 w-full max-w-xl my-auto text-center flex flex-col items-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card/60 backdrop-blur-md text-xs uppercase tracking-widest text-muted-foreground mb-6 shadow-xs">
+        {/* <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-card/60 backdrop-blur-md text-xs uppercase tracking-widest text-muted-foreground mb-6 shadow-xs">
           <Clock className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
           <span>Pemberitahuan Sistem</span>
-        </div>
+        </div> */}
 
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-light text-foreground tracking-tight mb-4">
           Sedang Dalam Pembaruan
@@ -48,7 +48,7 @@ export default function MarketingPage() {
         <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-md mb-8">
           Kami sedang melakukan peningkatan untuk menghadirkan pengalaman yang lebih baik bagi Anda. Terima kasih atas kesabaran dan pengertian Anda.
         </p>
-
+        {/* 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
           <Link
             href="https://wa.me/6281234567890"
@@ -59,7 +59,7 @@ export default function MarketingPage() {
             <MessageCircle className="w-4 h-4" aria-hidden="true" />
             <span>Hubungi via WhatsApp</span>
           </Link>
-        </div>
+        </div> */}
       </div>
 
       {/* Footer */}
