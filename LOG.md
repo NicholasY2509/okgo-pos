@@ -8,6 +8,16 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
+## 2026-11-04 — Marketing Landing Page Maintenance Notice
+
+**Did:**
+1. Replaced the public marketing landing page ([`app/(marketing)/page.tsx`](app/(marketing)/page.tsx)) with a dedicated maintenance / system update view in Indonesian:
+   - Header with Nyenyak logo (`/logo-long.webp`).
+   - "Sedang Dalam Pembaruan" headline with copy: "Kami sedang melakukan peningkatan untuk menghadirkan pengalaman yang lebih baik bagi Anda. Terima kasih atas kesabaran dan pengertian Anda."
+   - Quick WhatsApp inquiry link (`https://wa.me/6281234567890`) for urgent guest needs.
+   - Clean, lightweight server component layout adhering to DESIGN.md tokens without decorative emojis or heavy client animations.
+2. Verified production compilation via `tsc --noEmit` and `next build`.
+
 ## 2026-10-26 — Admin Design & Layout Harmonization
 
 **Did:**
