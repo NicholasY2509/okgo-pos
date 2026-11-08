@@ -30,6 +30,12 @@ export const BranchRepository = {
           data,
         })
         },
+    updateBranchWhatsappInstance: async (branchId: string, whatsappInstanceName: string | null) => {
+        return await prisma.branch.update({
+          where: { id: branchId },
+          data: { whatsappInstanceName },
+        })
+        },
     getBranchBySubdomain: async (subdomain: string) => {
         return await prisma.branch.findUnique({
           where: { subdomain },

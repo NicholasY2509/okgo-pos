@@ -23,6 +23,7 @@ const ROUTE_LABELS: Record<string, string> = {
   bookings: "Booking",
   marketing: "Marketing",
   "brand-settings": "Pengaturan Brand",
+  whatsapp: "Integrasi WhatsApp",
   staff: "Staf",
   onboard: "Onboard Staf",
   "work-positions": "Posisi Pekerjaan",

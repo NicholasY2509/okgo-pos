@@ -4,7 +4,7 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 const connectionString = process.env.DATABASE_URL || "mysql://dummy:dummy@localhost:3306/dummy";
 
-const PRISMA_SCHEMA_REVISION = "2026-11-01-staff-face-embedding";
+const PRISMA_SCHEMA_REVISION = "2026-11-08-branch-whatsapp-instance";
 
 const globalForPrisma = global as unknown as { 
   prisma: PrismaClient;

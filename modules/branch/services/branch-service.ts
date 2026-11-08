@@ -21,6 +21,10 @@ export class BranchService {
       return await BranchRepository.updateBranch(id, data);
   }
 
+  static async updateBranchWhatsappInstance(branchId: string, whatsappInstanceName: string | null) {
+      return await BranchRepository.updateBranchWhatsappInstance(branchId, whatsappInstanceName);
+  }
+
   static async getBranchBySubdomain(subdomain: string) {
       return await BranchRepository.getBranchBySubdomain(subdomain);
   }

@@ -3,8 +3,9 @@ model Branch {
   name      String
   subdomain String   @unique
   address   String?
-  phone     String?
-  isActive  Boolean  @default(true)
+  phone                String?
+  whatsappInstanceName String?
+  isActive             Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
