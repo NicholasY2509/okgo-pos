@@ -16,9 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Ban, Loader2 } from "lucide-react";
+import { Ban, Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { cancelTransactionAction } from "../actions/transaction-action";
+import { SendWhatsappInvoiceDialog } from "./send-whatsapp-invoice-dialog";
 
 interface TransactionDetailDialogProps {
   transaction: any | null;
@@ -35,6 +36,7 @@ export function TransactionDetailDialog({
 }: TransactionDetailDialogProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isWhatsappOpen, setIsWhatsappOpen] = useState(false);
 
   if (!transaction) return null;
 
@@ -230,6 +232,17 @@ export function TransactionDetailDialog({
             </div>
 
             <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsWhatsappOpen(true)}
+                className="text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+              >
+                <MessageSquare className="w-4 h-4 mr-1.5" />
+                Kirim Struk WA
+              </Button>
+
               {canCancel && (
                 <Button
                   variant="destructive"
@@ -290,6 +303,12 @@ export function TransactionDetailDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <SendWhatsappInvoiceDialog
+        open={isWhatsappOpen}
+        onOpenChange={setIsWhatsappOpen}
+        transaction={transaction}
+      />
     </>
   );
 }

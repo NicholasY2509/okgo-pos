@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { createPosTransactionAction } from "../actions/pos-action";
 import { io } from "socket.io-client";
 
-export function usePosPayment(cart: any, branchId: string, paymentMethods: any[], onSuccess: () => void) {
+export function usePosPayment(cart: any, branchId: string, paymentMethods: any[], onSuccess: (data?: any) => void) {
   const [payment, setPayment] = useState({
     paymentMethodId: "",
     amount: cart.amountDue ?? cart.totalAmount,
@@ -127,7 +127,11 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
       });
       setTimeout(() => socket.disconnect(), 1000);
 
-      onSuccess();
+      onSuccess({
+        id: res.transactionId,
+        transactionNumber: res.transactionNumber,
+        customerId: cart.customerId,
+      });
     }
   };
 

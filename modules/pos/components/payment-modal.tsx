@@ -18,7 +18,7 @@ interface PaymentModalProps {
   onClose: () => void;
   branchId: string;
   paymentMethods: any[];
-  onSuccess: () => void;
+  onSuccess: (data?: any) => void;
 }
 
 export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSuccess }: PaymentModalProps) {

@@ -23,7 +23,11 @@ export async function createPosTransactionAction(values: PosCheckoutInput) {
 
     const result = await PosService.checkout(validatedFields.data);
 
-    return { success: true, transactionId: result.id };
+    return {
+      success: true,
+      transactionId: result.id,
+      transactionNumber: result.transactionNumber,
+    };
   } catch (error: unknown) {
     console.error("POS Checkout Error:", error);
     const message = error instanceof Error ? error.message : "An unexpected error occurred.";
