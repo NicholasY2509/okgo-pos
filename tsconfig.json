@@ -31,5 +31,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "nyenyak-portal"]
+  "exclude": ["node_modules", "nyenyak-portal", "nyenyak-print"]
 }
