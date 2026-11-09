@@ -4,6 +4,8 @@ import { AttendanceService } from "@/modules/attendance/services/attendance-serv
 import { AttendanceDataClient } from "@/modules/attendance/components/attendance-data-client"
 import { AttendanceStatusService } from "@/modules/attendance-status/services/attendance-status-service"
 import { AttendanceCalculatorDialog } from "@/modules/attendance/components/attendance-calculator-dialog"
+import { AttendanceMachineService } from "@/modules/attendance-machine/services/attendance-machine-service"
+import { SyncFingerspotDialog } from "@/modules/fingerspot/components/sync-fingerspot-dialog"
 
 export const dynamic = "force-dynamic"
 
@@ -31,13 +33,22 @@ export default async function AttendanceDataPage({ searchParams }: AttendanceDat
   let endDate = endDateStr ? new Date(endDateStr) : new Date(today);
   endDate.setHours(23, 59, 59, 999);
 
-  const data = await AttendanceService.getAttendances({ page, limit, search, startDate, endDate, statusId })
-  const rawStatuses = await AttendanceStatusService.getAll()
+  const [data, rawStatuses, machines] = await Promise.all([
+    AttendanceService.getAttendances({ page, limit, search, startDate, endDate, statusId }),
+    AttendanceStatusService.getAll(),
+    AttendanceMachineService.getAll(),
+  ])
 
   // Cast Decimal to Number for Client Component
   const statuses = rawStatuses.map(status => ({
     ...status,
     penaltyAmount: status.penaltyAmount ? Number(status.penaltyAmount) : 0
+  }))
+
+  const mappedMachines = machines.map(m => ({
+    id: m.id,
+    name: m.name,
+    sn: m.sn,
   }))
 
   return (
@@ -46,7 +57,10 @@ export default async function AttendanceDataPage({ searchParams }: AttendanceDat
         title="Data Kehadiran"
         description="Pusat data absensi harian yang sudah diolah dari log mesin absensi."
       >
-        <AttendanceCalculatorDialog />
+        <div className="flex items-center gap-2">
+          <SyncFingerspotDialog machines={mappedMachines} />
+          <AttendanceCalculatorDialog />
+        </div>
       </PageHeader>
 
       <AttendanceDataClient data={data} statuses={statuses} />

@@ -8,6 +8,7 @@ import { BranchService } from "@/modules/branch/services/branch-service"
 import { AttendanceLogFilters } from "@/modules/attendance-log/components/attendance-log-filters"
 import { AttendanceMachineService } from "@/modules/attendance-machine/services/attendance-machine-service"
 import { SyncAttendanceDialog } from "@/modules/attendance-log/components/sync-attendance-dialog"
+import { SyncFingerspotDialog } from "@/modules/fingerspot/components/sync-fingerspot-dialog"
 import { PurgeUnrecognizedDialog } from "@/modules/attendance-log/components/purge-unrecognized-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -54,6 +55,7 @@ export default async function AttendanceLogPage({ searchParams }: AttendanceLogP
       >
         <div className="flex items-center gap-2">
           <PurgeUnrecognizedDialog branchId={branchId} />
+          <SyncFingerspotDialog machines={mappedMachines} />
           <SyncAttendanceDialog machines={mappedMachines} />
         </div>
       </PageHeader>

@@ -39,6 +39,7 @@ export async function getAttlogAction(values: FingerspotAttlogInput) {
 
     const result = await FingerspotService.getAttlog(validated.data)
     revalidatePath("/admin/attendance/fingerspot")
+    revalidatePath("/admin/attendance/data")
     revalidatePath("/admin/attendance-log")
     return { success: true, data: result }
   } catch (error) {

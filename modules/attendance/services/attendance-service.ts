@@ -3,10 +3,10 @@ import { AttendanceInput } from "../schemas/attendance"
 import { prisma } from "@/lib/prisma"
 
 export class AttendanceService {
-  static async processPunch(staffId: string, punchTime: Date, punchType: string, machineId: string) {
+  static async processPunch(staffId: string, punchTime: Date, punchType?: string, machineId?: string) {
     let attendance = await AttendanceRepository.findByStaffAndDate(staffId, punchTime)
 
-    // Normalisasikan punchTime ke Date biasa untuk pencarian startOfDay
+    // Normalisasikan punchTime ke Date awal hari (UTC) agar konsisten dengan attendanceDate
     const normalizedDate = new Date(punchTime)
     normalizedDate.setUTCHours(0, 0, 0, 0)
     const endOfDay = new Date(normalizedDate)
@@ -36,20 +36,32 @@ export class AttendanceService {
 
     const updates: Partial<AttendanceInput> = {}
 
-    // Helper untuk memformat UTC time ke "HH:mm" agar bisa dibandingan dengan string "HH:mm"
+    // Helper untuk memformat waktu ke "HH:mm" berbasis timezone Asia/Jakarta (WIB)
     const getHHMM = (d: Date) => {
-      return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`
+      try {
+        const parts = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Asia/Jakarta",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }).formatToParts(d)
+        const hour = parts.find(p => p.type === "hour")?.value || "00"
+        const minute = parts.find(p => p.type === "minute")?.value || "00"
+        return `${hour}:${minute}`
+      } catch {
+        return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+      }
     }
 
-    if (punchType === "1" || punchType === "0" || !attendance.clockIn) {
-      // Masuk
+    // 1. Belum ada Clock-In sama sekali -> PUNCH PERTAMA = CLOCK IN
+    if (!attendance.clockIn) {
       updates.clockIn = punchTime
-      updates.clockInMachineId = machineId
+      if (machineId) updates.clockInMachineId = machineId
 
-      // Tentukan status
+      // Tentukan status kehadiran (Hadir vs Terlambat)
       let statusStr = "H" // Default Hadir
 
-      if (schedule && schedule.workingHour) {
+      if (schedule && schedule.workingHour?.clockIn) {
         const punchHHMM = getHHMM(punchTime)
         // Bandingkan "08:15" > "08:00" = Terlambat
         if (punchHHMM > schedule.workingHour.clockIn) {
@@ -57,21 +69,45 @@ export class AttendanceService {
         }
       }
 
-      // Ambil ID dari status string tersebut
-      const statusObj = await prisma.attendanceStatus.findUnique({ where: { code: statusStr } })
+      // Ambil ID dari master status (mendukung kode H/PRESENT dan T/LATE)
+      const statusObj = await prisma.attendanceStatus.findFirst({
+        where: {
+          OR: [
+            { code: statusStr },
+            { code: statusStr === "H" ? "PRESENT" : "LATE" }
+          ]
+        }
+      })
       if (statusObj) {
         updates.statusId = statusObj.id
       }
-    } else if (punchType === "4" || punchType === "1") {
-      // Pulang
-      updates.clockOut = punchTime
-      updates.clockOutMachineId = machineId
+    }
+    // 2. Clock-In sudah ada -> PUNCH BERIKUTNYA = CLOCK OUT
+    else {
+      const existingClockInTime = new Date(attendance.clockIn).getTime()
+      const currentPunchTime = new Date(punchTime).getTime()
+      const diffMinutes = (currentPunchTime - existingClockInTime) / (1000 * 60)
 
-      // Saat absen pulang, status tidak perlu diubah, biarkan yang sudah ditetapkan (Hadir/Terlambat/dsb)
+      // Hanya proses sebagai clock-out jika berselisih minimal 2 menit dari clock-in (mencegah accidental double scan)
+      if (diffMinutes >= 2) {
+        // Jika belum ada clockOut, atau punch baru terjadi lebih lambat dari clockOut lama -> perbarui ke waktu pulang terbaru
+        if (!attendance.clockOut || currentPunchTime >= new Date(attendance.clockOut).getTime()) {
+          updates.clockOut = punchTime
+          if (machineId) updates.clockOutMachineId = machineId
+        }
+      } else if (currentPunchTime < existingClockInTime) {
+        // Jika log yang masuk ternyata lebih awal dari clockIn yang tercatat sebelumnya
+        updates.clockIn = punchTime
+        if (!attendance.clockOut) {
+          updates.clockOut = attendance.clockIn
+          if (attendance.clockInMachineId) updates.clockOutMachineId = attendance.clockInMachineId
+        }
+        if (machineId) updates.clockInMachineId = machineId
+      }
     }
 
     if (Object.keys(updates).length > 0) {
-      await AttendanceRepository.update(attendance.id, updates)
+      attendance = await AttendanceRepository.update(attendance.id, updates)
     }
 
     return attendance

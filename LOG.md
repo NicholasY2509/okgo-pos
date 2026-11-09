@@ -12,7 +12,14 @@ session — it records what the code cannot say for itself.
 
 **Did:**
 1. Documented architecture decisions in [`docs/adr/0005-fingerspot-developer-cloud-integration.md`](docs/adr/0005-fingerspot-developer-cloud-integration.md).
-2. Adapted the webhook receiver in [`app/api/attendance/webhook/route.ts`](app/api/attendance/webhook/route.ts):
+2. Refined punch processing in [`modules/attendance/services/attendance-service.ts`](modules/attendance/services/attendance-service.ts):
+   - Converted punch calculation to be purely timestamp-conditional rather than relying on hardware state buttons.
+   - First scan of the day sets `clockIn` and evaluates On-time vs Late against shift working hours.
+   - Any scan >= 2 minutes later updates `clockOut` with the latest departure time without overwriting `clockIn`.
+3. Created reusable cloud sync component [`modules/fingerspot/components/sync-fingerspot-dialog.tsx`](modules/fingerspot/components/sync-fingerspot-dialog.tsx):
+   - Integrated "Tarik Fingerspot Cloud" dialog into both Data Kehadiran ([`app/admin/(main)/attendance/data/page.tsx`](app/admin/(main)/attendance/data/page.tsx)) and Log Mesin Absensi ([`app/admin/(main)/attendance-log/page.tsx`](app/admin/(main)/attendance-log/page.tsx)).
+4. Added background automated cron endpoint at [`app/api/cron/sync-fingerspot-attendance/route.ts`](app/api/cron/sync-fingerspot-attendance/route.ts) to periodically backfill missing scans across active machines.
+5. Adapted the webhook receiver in [`app/api/attendance/webhook/route.ts`](app/api/attendance/webhook/route.ts):
    - Added support for Fingerspot Cloud real-time punch events (`type === "attlog"`), mapping status scan directions (`0` -> Masuk/Clock-in, `1` -> Pulang/Clock-out) and biometric verification types (Face, Fingerprint, RFID card).
    - Preserved backward compatibility for direct hardware push payloads.
    - Handled asynchronous command callbacks (`get_userinfo`, `get_userid_list`).
