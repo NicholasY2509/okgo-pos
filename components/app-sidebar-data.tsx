@@ -245,6 +245,10 @@ export const adminNav = [
           {
             title: "Mesin Absensi",
             url: "/attendance/machines",
+          },
+          {
+            title: "Fingerspot Cloud",
+            url: "/attendance/fingerspot",
           }
         ]
       },

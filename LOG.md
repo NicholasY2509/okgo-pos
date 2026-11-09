@@ -8,6 +8,24 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
+## 2026-11-09 — Fingerspot Cloud Developer Integration
+
+**Did:**
+1. Documented architecture decisions in [`docs/adr/0005-fingerspot-developer-cloud-integration.md`](docs/adr/0005-fingerspot-developer-cloud-integration.md).
+2. Adapted the webhook receiver in [`app/api/attendance/webhook/route.ts`](app/api/attendance/webhook/route.ts):
+   - Added support for Fingerspot Cloud real-time punch events (`type === "attlog"`), mapping status scan directions (`0` -> Masuk/Clock-in, `1` -> Pulang/Clock-out) and biometric verification types (Face, Fingerprint, RFID card).
+   - Preserved backward compatibility for direct hardware push payloads.
+   - Handled asynchronous command callbacks (`get_userinfo`, `get_userid_list`).
+3. Implemented a dedicated 5-layer module [`modules/fingerspot/`](modules/fingerspot/):
+   - `schemas/fingerspot-schema.ts`: Request/response schemas for device info, attlog queries, and user requests.
+   - `repositories/fingerspot-repository.ts`: Clean data access queries for machine lookups and attendance logs.
+   - `services/fingerspot-service.ts`: REST API integration with `developer.fingerspot.io` (`/api/get_device`, `/api/get_attlog`, `/api/get_userid_list`, `/api/get_userinfo`).
+   - `actions/fingerspot-action.ts`: Server actions for client interactions.
+   - `hooks/use-fingerspot.ts`: State management and feedback handling for the test dashboard.
+   - `components/fingerspot-dashboard.tsx`: Comprehensive UI featuring live punch log monitoring, on-demand cloud attlog pulling, and user PIN/credential queries.
+4. Added the integration page at [`app/admin/(main)/attendance/fingerspot/page.tsx`](app/admin/(main)/attendance/fingerspot/page.tsx) and registered "Fingerspot Cloud" under the Kehadiran sidebar navigation.
+5. Ran verification gate: `npm run typecheck` (`tsc --noEmit`) passed with zero errors.
+
 ## 2026-11-04 — Marketing Landing Page Maintenance Notice
 
 **Did:**

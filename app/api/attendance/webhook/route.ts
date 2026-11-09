@@ -12,6 +12,26 @@ const ATTENDANCE_STATES: Record<number, string> = {
   6: "Selesai Lembur"
 };
 
+const VERIFY_TYPES: Record<number, string> = {
+  1: "Sidik Jari",
+  2: "Password",
+  3: "Kartu RFID",
+  4: "Wajah",
+  6: "Telapak Tangan / Vena",
+  7: "QR Code"
+};
+
+// Map Fingerspot status_scan to Okgo standard attendanceState
+// Fingerspot: 0=Masuk, 1=Keluar, 2=Istirahat Keluar, 3=Istirahat Masuk, 4=Lembur Masuk, 5=Lembur Keluar
+const FINGERSPOT_STATUS_MAP: Record<number, number> = {
+  0: 1, // Masuk -> 1 (Masuk)
+  1: 4, // Keluar -> 4 (Pulang)
+  2: 2, // Mulai Istirahat -> 2
+  3: 3, // Selesai Istirahat -> 3
+  4: 5, // Mulai Lembur -> 5
+  5: 6  // Selesai Lembur -> 6
+};
+
 export async function POST(req: NextRequest) {
   try {
     const headers = Object.fromEntries(req.headers);
@@ -119,6 +139,94 @@ export async function POST(req: NextRequest) {
           }
         } catch (dbError) {
           console.error("❌ GAGAL MENYIMPAN KE DATABASE:", dbError);
+        }
+      }
+      // Format 2: Fingerspot.iO Cloud Real-Time Push
+      else if (parsedData.type === "attlog" && parsedData.data) {
+        try {
+          const deviceSn = parsedData.cloud_id || "";
+          const eventData = parsedData.data;
+          const machineUserId = String(eventData.pin ?? "");
+          const rawStatus = typeof eventData.status_scan === "number" ? eventData.status_scan : 0;
+          const mappedState = FINGERSPOT_STATUS_MAP[rawStatus] ?? 1;
+          const punchType = ATTENDANCE_STATES[mappedState] || `Status (${rawStatus})`;
+          const verifyName = VERIFY_TYPES[eventData.verify] || "Biometrik";
+
+          const scanDateStr = eventData.scan_date || "";
+          const parsedTime = scanDateStr ? new Date(scanDateStr.replace(" ", "T")) : new Date();
+
+          let branchId = null;
+          let staffId = null;
+          let machineRecord = null;
+
+          if (deviceSn) {
+            machineRecord = await prisma.attendanceMachine.findUnique({
+              where: { sn: deviceSn }
+            });
+            if (machineRecord) {
+              branchId = machineRecord.branchId;
+
+              if (machineUserId) {
+                const staffMachine = await prisma.staffMachine.findUnique({
+                  where: {
+                    machineId_machineUserId: {
+                      machineId: machineRecord.id,
+                      machineUserId: machineUserId
+                    }
+                  }
+                });
+                if (staffMachine) {
+                  staffId = staffMachine.staffId;
+                }
+              }
+            }
+          }
+
+          const savedLog = await prisma.attendanceMachineLog.create({
+            data: {
+              machineUserId: machineUserId,
+              cardName: `${verifyName} (Fingerspot.iO)`,
+              attendanceState: mappedState,
+              punchType: punchType,
+              deviceSn: deviceSn,
+              branchId: branchId,
+              staffId: staffId,
+              utcTime: parsedTime,
+              rawPayload: JSON.stringify(parsedData)
+            }
+          });
+
+          if (staffId && machineRecord) {
+            await AttendanceService.processPunch(staffId, parsedTime, String(mappedState), machineRecord.id);
+          }
+        } catch (dbError) {
+          console.error("Gagal memproses Fingerspot attlog:", dbError);
+        }
+      }
+      // Format 3: Fingerspot.iO Asynchronous Command Callbacks (get_userinfo, get_userid_list, etc.)
+      else if (parsedData.type && parsedData.cloud_id) {
+        try {
+          const deviceSn = parsedData.cloud_id || "";
+          let branchId = null;
+          if (deviceSn) {
+            const machine = await prisma.attendanceMachine.findUnique({ where: { sn: deviceSn } });
+            if (machine) branchId = machine.branchId;
+          }
+
+          await prisma.attendanceMachineLog.create({
+            data: {
+              machineUserId: parsedData.trans_id ? `trans:${parsedData.trans_id}` : "callback",
+              cardName: `Callback: ${parsedData.type}`,
+              attendanceState: 0,
+              punchType: parsedData.type,
+              deviceSn: deviceSn,
+              branchId: branchId,
+              utcTime: new Date(),
+              rawPayload: JSON.stringify(parsedData)
+            }
+          });
+        } catch (dbError) {
+          console.error("Gagal menyimpan callback Fingerspot:", dbError);
         }
       }
     }
