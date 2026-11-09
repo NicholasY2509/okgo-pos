@@ -100,7 +100,14 @@ export class FingerspotService {
     if (input.importToDatabase && data.data && Array.isArray(data.data)) {
       const machine = await FingerspotRepository.findMachineBySn(input.cloudId)
 
-      for (const item of data.data) {
+      // Urutkan item secara kronologis dari pagi ke malam
+      const items = [...data.data].sort((a, b) => {
+        const timeA = new Date((a.time || a.scan_date || "").replace(" ", "T")).getTime() || 0
+        const timeB = new Date((b.time || b.scan_date || "").replace(" ", "T")).getTime() || 0
+        return timeA - timeB
+      })
+
+      for (const item of items) {
         const pin = String(item.pin ?? "")
         const dateString = item.time || item.scan_date || ""
         const scanDate = dateString ? new Date(dateString.replace(" ", "T")) : null

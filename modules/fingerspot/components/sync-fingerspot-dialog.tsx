@@ -147,3 +147,4 @@ export function SyncFingerspotDialog({
     </Dialog>
   )
 }
+
