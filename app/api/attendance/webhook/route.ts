@@ -147,12 +147,13 @@ export async function POST(req: NextRequest) {
           const deviceSn = parsedData.cloud_id || "";
           const eventData = parsedData.data;
           const machineUserId = String(eventData.pin ?? "");
-          const rawStatus = typeof eventData.status_scan === "number" ? eventData.status_scan : 0;
+          const rawStatus = Number(eventData.status ?? eventData.status_scan ?? 0);
+          const rawVerify = Number(eventData.verif ?? eventData.verify ?? 1);
           const mappedState = FINGERSPOT_STATUS_MAP[rawStatus] ?? 1;
           const punchType = ATTENDANCE_STATES[mappedState] || `Status (${rawStatus})`;
-          const verifyName = VERIFY_TYPES[eventData.verify] || "Biometrik";
+          const verifyName = VERIFY_TYPES[rawVerify] || "Biometrik";
 
-          const scanDateStr = eventData.scan_date || "";
+          const scanDateStr = eventData.time || eventData.scan_date || "";
           const parsedTime = scanDateStr ? new Date(scanDateStr.replace(" ", "T")) : new Date();
 
           let branchId = null;

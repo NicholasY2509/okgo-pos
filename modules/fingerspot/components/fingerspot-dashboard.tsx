@@ -412,31 +412,37 @@ export function FingerspotDashboard({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {attlogResults.map((item, idx) => (
-                        <TableRow key={idx}>
-                          <TableCell className="text-xs">{idx + 1}</TableCell>
-                          <TableCell className="font-mono text-xs">{item.pin}</TableCell>
-                          <TableCell className="font-mono text-xs">{item.scan_date}</TableCell>
-                          <TableCell className="text-xs">
-                            {item.verify === 1
-                              ? "Sidik Jari"
-                              : item.verify === 4
-                              ? "Wajah"
-                              : item.verify === 3
-                              ? "Kartu RFID"
-                              : `Kode ${item.verify}`}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={item.status_scan === 0 ? "default" : "secondary"}>
-                              {item.status_scan === 0
-                                ? "Masuk"
-                                : item.status_scan === 1
-                                ? "Pulang"
-                                : `Status ${item.status_scan}`}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {attlogResults.map((item, idx) => {
+                        const scanTime = item.time || item.scan_date || "-"
+                        const verifCode = Number(item.verif ?? item.verify ?? 0)
+                        const statusCode = Number(item.status ?? item.status_scan ?? 0)
+
+                        return (
+                          <TableRow key={idx}>
+                            <TableCell className="text-xs">{idx + 1}</TableCell>
+                            <TableCell className="font-mono text-xs">{item.pin}</TableCell>
+                            <TableCell className="font-mono text-xs">{scanTime}</TableCell>
+                            <TableCell className="text-xs">
+                              {verifCode === 1
+                                ? "Sidik Jari"
+                                : verifCode === 4
+                                ? "Wajah"
+                                : verifCode === 3
+                                ? "Kartu RFID"
+                                : `Kode ${verifCode}`}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={statusCode === 0 ? "default" : "secondary"}>
+                                {statusCode === 0
+                                  ? "Masuk"
+                                  : statusCode === 1
+                                  ? "Pulang"
+                                  : `Status ${statusCode}`}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
                     </TableBody>
                   </Table>
                 </div>

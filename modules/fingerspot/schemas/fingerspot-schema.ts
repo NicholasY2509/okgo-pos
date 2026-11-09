@@ -32,11 +32,32 @@ export const fingerspotUserInfoSchema = z.object({
 
 export type FingerspotUserInfoInput = z.infer<typeof fingerspotUserInfoSchema>
 
+export const fingerspotSetUserInfoSchema = z.object({
+  apiToken: z.string().optional(),
+  cloudId: z.string().min(1, "Cloud ID wajib diisi"),
+  data: z.object({
+    pin: z.string().min(1, "PIN wajib diisi"),
+    name: z.string().min(1, "Nama wajib diisi"),
+    privilege: z.union([z.string(), z.number()]).default("1"),
+    password: z.string().optional().default(""),
+    rfid: z.string().optional().default(""),
+    template: z.string().optional().default(""),
+  }),
+})
+
+export type FingerspotSetUserInfoInput = z.infer<typeof fingerspotSetUserInfoSchema>
+
 export interface FingerspotAttlogItem {
   pin: string
-  scan_date: string
-  verify: number
-  status_scan: number
+  scan_date?: string
+  time?: string
+  verify?: number | string
+  verif?: number | string
+  status_scan?: number | string
+  status?: number | string
+  work_code?: string
+  photo?: string
+  photo_url?: string
 }
 
 export interface FingerspotAttlogResponse {

@@ -6,6 +6,7 @@ import {
   type FingerspotDeviceResponse,
   type FingerspotUserIdListInput,
   type FingerspotUserInfoInput,
+  type FingerspotSetUserInfoInput,
 } from "../schemas/fingerspot-schema"
 import { AttendanceService } from "@/modules/attendance/services/attendance-service"
 
@@ -101,7 +102,8 @@ export class FingerspotService {
 
       for (const item of data.data) {
         const pin = String(item.pin ?? "")
-        const scanDate = item.scan_date ? new Date(item.scan_date.replace(" ", "T")) : null
+        const dateString = item.time || item.scan_date || ""
+        const scanDate = dateString ? new Date(dateString.replace(" ", "T")) : null
         if (!scanDate) continue
 
         // Check if log already exists
@@ -111,9 +113,10 @@ export class FingerspotService {
           continue
         }
 
-        const rawStatus = typeof item.status_scan === "number" ? item.status_scan : 0
+        const rawStatus = Number(item.status ?? item.status_scan ?? 0)
+        const rawVerify = Number(item.verif ?? item.verify ?? 1)
         const statusMeta = STATUS_MAP[rawStatus] || { state: 1, name: `Status (${rawStatus})` }
-        const verifyName = VERIFY_MAP[item.verify] || "Biometrik"
+        const verifyName = VERIFY_MAP[rawVerify] || "Biometrik"
 
         let staffId: string | null = null
         if (machine && pin) {
@@ -154,7 +157,7 @@ export class FingerspotService {
     const token = this.resolveToken(input.apiToken)
     const transId = `uid-${Date.now()}`
 
-    const response = await fetch(`${FINGERSPOT_BASE_URL}/api/get_userid_list`, {
+    const response = await fetch(`${FINGERSPOT_BASE_URL}/api/get_all_pin`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -200,6 +203,36 @@ export class FingerspotService {
     if (!response.ok) {
       const errText = await response.text()
       throw new Error(`Gagal meminta info user (HTTP ${response.status}): ${errText}`)
+    }
+
+    const json = await response.json()
+    return {
+      transId,
+      result: json,
+    }
+  }
+
+  static async setUserInfo(input: FingerspotSetUserInfoInput) {
+    const token = this.resolveToken(input.apiToken)
+    const transId = `setu-${Date.now()}`
+
+    const response = await fetch(`${FINGERSPOT_BASE_URL}/api/set_userinfo`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        trans_id: transId,
+        cloud_id: input.cloudId,
+        data: input.data,
+      }),
+    })
+
+    if (!response.ok) {
+      const errText = await response.text()
+      throw new Error(`Gagal mengirim data user (HTTP ${response.status}): ${errText}`)
     }
 
     const json = await response.json()

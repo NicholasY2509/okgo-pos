@@ -6,10 +6,12 @@ import {
   fingerspotDeviceSchema,
   fingerspotUserIdListSchema,
   fingerspotUserInfoSchema,
+  fingerspotSetUserInfoSchema,
   type FingerspotAttlogInput,
   type FingerspotDeviceInput,
   type FingerspotUserIdListInput,
   type FingerspotUserInfoInput,
+  type FingerspotSetUserInfoInput,
 } from "../schemas/fingerspot-schema"
 import { FingerspotService } from "../services/fingerspot-service"
 
@@ -71,6 +73,21 @@ export async function requestUserInfoAction(values: FingerspotUserInfoInput) {
     return { success: true, data: result }
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Terjadi kesalahan saat meminta info user"
+    return { error: msg }
+  }
+}
+
+export async function setUserInfoAction(values: FingerspotSetUserInfoInput) {
+  try {
+    const validated = fingerspotSetUserInfoSchema.safeParse(values)
+    if (!validated.success) {
+      return { error: validated.error.issues[0]?.message || "Input tidak valid" }
+    }
+
+    const result = await FingerspotService.setUserInfo(validated.data)
+    return { success: true, data: result }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Terjadi kesalahan saat mengatur user di mesin"
     return { error: msg }
   }
 }
