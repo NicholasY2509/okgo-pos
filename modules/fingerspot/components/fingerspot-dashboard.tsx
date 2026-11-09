@@ -23,9 +23,18 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   CheckCircle2,
   Copy,
   DownloadCloud,
+  Eye,
+  FileCode2,
   Key,
   Radio,
   RefreshCw,
@@ -77,6 +86,37 @@ export function FingerspotDashboard({
 
   const [inputToken, setInputToken] = useState("")
   const [showTokenInput, setShowTokenInput] = useState(false)
+  const [selectedPayloadLog, setSelectedPayloadLog] = useState<any | null>(null)
+
+  // Parse latest get_userid_list callback from recent logs
+  const latestUserIdListLog = recentLogs.find((l) => l.punchType === "get_userid_list")
+  let parsedUserIds: string[] = []
+  if (latestUserIdListLog?.rawPayload) {
+    try {
+      const parsed = JSON.parse(latestUserIdListLog.rawPayload)
+      if (Array.isArray(parsed.data)) {
+        parsedUserIds = parsed.data.map(String)
+      } else if (Array.isArray(parsed.data?.data)) {
+        parsedUserIds = parsed.data.data.map(String)
+      }
+    } catch {
+      // ignore parse error
+    }
+  }
+
+  // Parse latest get_userinfo callback from recent logs
+  const latestUserInfoLog = recentLogs.find((l) => l.punchType === "get_userinfo")
+  let parsedUserInfo: any = null
+  if (latestUserInfoLog?.rawPayload) {
+    try {
+      const parsed = JSON.parse(latestUserInfoLog.rawPayload)
+      if (parsed.data && typeof parsed.data === "object" && !Array.isArray(parsed.data)) {
+        parsedUserInfo = parsed.data
+      }
+    } catch {
+      // ignore parse error
+    }
+  }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -289,6 +329,7 @@ export function FingerspotDashboard({
                         <TableHead>Tipe Absen</TableHead>
                         <TableHead>Metode / Info</TableHead>
                         <TableHead>Mesin (SN)</TableHead>
+                        <TableHead className="w-12 text-right">Detail</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -299,6 +340,7 @@ export function FingerspotDashboard({
 
                         const isClockIn = log.attendanceState === 1 || log.punchType === "Masuk"
                         const isClockOut = log.attendanceState === 4 || log.punchType === "Pulang"
+                        const isCallback = log.punchType?.startsWith("get_") || log.cardName?.startsWith("Callback")
 
                         return (
                           <TableRow key={log.id}>
@@ -310,6 +352,10 @@ export function FingerspotDashboard({
                                 <span className="font-medium">
                                   {log.staff.firstName} {log.staff.lastName || ""}
                                 </span>
+                              ) : isCallback ? (
+                                <Badge variant="outline" className="text-xs bg-muted/60">
+                                  Respon Sistem
+                                </Badge>
                               ) : (
                                 <Badge variant="secondary" className="text-xs">
                                   Belum Dipetakan
@@ -333,6 +379,19 @@ export function FingerspotDashboard({
                             </TableCell>
                             <TableCell className="font-mono text-xs text-muted-foreground">
                               {log.deviceSn || "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {log.rawPayload && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                  onClick={() => setSelectedPayloadLog(log)}
+                                  title="Lihat Raw JSON Data"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
                         )
@@ -487,6 +546,40 @@ export function FingerspotDashboard({
                     Minta Daftar PIN
                   </Button>
                 </div>
+
+                {parsedUserIds.length > 0 && (
+                  <div className="mt-3 p-3 bg-muted/50 rounded-md border space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-foreground">
+                        Daftar PIN Terdaftar di Mesin ({parsedUserIds.length} User):
+                      </span>
+                      {latestUserIdListLog && (
+                        <span className="text-muted-foreground font-mono text-[11px]">
+                          Terakhir diperbarui: {new Date(latestUserIdListLog.createdAt).toLocaleTimeString("id-ID")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pt-1">
+                      {parsedUserIds.map((pin) => (
+                        <Button
+                          key={pin}
+                          variant={userPin === pin ? "default" : "outline"}
+                          size="sm"
+                          className="h-7 px-2.5 text-xs font-mono"
+                          onClick={() => {
+                            setUserPin(pin)
+                            toast.info(`PIN ${pin} dipilih.`)
+                          }}
+                        >
+                          PIN {pin}
+                        </Button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Klik salah satu tombol PIN di atas untuk memilih dan menarik detail profilnya di bawah.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Request 2: Get Specific User Info */}
@@ -517,6 +610,42 @@ export function FingerspotDashboard({
                     Minta Info PIN {userPin}
                   </Button>
                 </div>
+
+                {parsedUserInfo && (
+                  <div className="mt-3 p-3 bg-muted/50 rounded-md border text-xs space-y-2">
+                    <div className="font-semibold text-foreground flex items-center justify-between">
+                      <span>Data User Terbaru dari Mesin:</span>
+                      {latestUserInfoLog && (
+                        <span className="text-[11px] font-normal text-muted-foreground font-mono">
+                          {new Date(latestUserInfoLog.createdAt).toLocaleTimeString("id-ID")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                      <div className="p-2 bg-background rounded border">
+                        <span className="text-muted-foreground block text-[10px]">PIN</span>
+                        <span className="font-mono font-semibold">{parsedUserInfo.pin || "-"}</span>
+                      </div>
+                      <div className="p-2 bg-background rounded border">
+                        <span className="text-muted-foreground block text-[10px]">Nama</span>
+                        <span className="font-semibold truncate block">{parsedUserInfo.name || "-"}</span>
+                      </div>
+                      <div className="p-2 bg-background rounded border">
+                        <span className="text-muted-foreground block text-[10px]">Hak Akses</span>
+                        <span>{parsedUserInfo.privilege === "2" || parsedUserInfo.privilege === 2 ? "Admin" : "User Biasa"}</span>
+                      </div>
+                      <div className="p-2 bg-background rounded border">
+                        <span className="text-muted-foreground block text-[10px]">Kartu RFID</span>
+                        <span className="font-mono">{parsedUserInfo.rfid || "-"}</span>
+                      </div>
+                    </div>
+                    {parsedUserInfo.template && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Biometrik: Template wajah/sidik jari tersimpan di database callback.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Async Command Status Banner */}
@@ -529,6 +658,42 @@ export function FingerspotDashboard({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Raw Payload Inspection Modal */}
+      <Dialog
+        open={Boolean(selectedPayloadLog)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedPayloadLog(null)
+        }}
+      >
+        <DialogContent className="max-w-xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <FileCode2 className="h-4 w-4 text-primary" />
+              Detail Raw JSON Payload Mesin
+            </DialogTitle>
+            <DialogDescription>
+              {selectedPayloadLog?.cardName || selectedPayloadLog?.punchType || "Log Absensi"} - SN: {selectedPayloadLog?.deviceSn}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto bg-muted/60 p-3 rounded-md font-mono text-xs">
+            {selectedPayloadLog?.rawPayload ? (
+              <pre className="whitespace-pre-wrap break-all">
+                {(() => {
+                  try {
+                    return JSON.stringify(JSON.parse(selectedPayloadLog.rawPayload), null, 2)
+                  } catch {
+                    return selectedPayloadLog.rawPayload
+                  }
+                })()}
+              </pre>
+            ) : (
+              <p className="text-muted-foreground italic">Tidak ada data mentah (rawPayload).</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -214,10 +214,20 @@ export async function POST(req: NextRequest) {
             if (machine) branchId = machine.branchId;
           }
 
+          let machineUserId = parsedData.trans_id ? `trans:${parsedData.trans_id}` : "callback";
+          let cardName = `Callback: ${parsedData.type}`;
+
+          if (parsedData.type === "get_userid_list" && Array.isArray(parsedData.data)) {
+            cardName = `${parsedData.data.length} PIN: [${parsedData.data.slice(0, 8).join(", ")}${parsedData.data.length > 8 ? "..." : ""}]`;
+          } else if (parsedData.type === "get_userinfo" && parsedData.data?.pin) {
+            machineUserId = String(parsedData.data.pin);
+            cardName = `User: ${parsedData.data.name || "Tanpa Nama"} (PIN ${parsedData.data.pin})`;
+          }
+
           await prisma.attendanceMachineLog.create({
             data: {
-              machineUserId: parsedData.trans_id ? `trans:${parsedData.trans_id}` : "callback",
-              cardName: `Callback: ${parsedData.type}`,
+              machineUserId: machineUserId,
+              cardName: cardName,
               attendanceState: 0,
               punchType: parsedData.type,
               deviceSn: deviceSn,
