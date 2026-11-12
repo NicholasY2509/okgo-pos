@@ -1,5 +1,7 @@
 import { BrandSettingService } from "@/modules/brand-setting/services/brand-setting-service";
 import { BrandSettingForm } from "@/modules/brand-setting/components/brand-setting-form";
+import { MarketingSettingService } from "@/modules/marketing/services/marketing-setting-service";
+import { MarketingMaintenanceToggle } from "@/modules/marketing/components/marketing-maintenance-toggle";
 import { PageHeader } from "@/components/page-header";
 
 export const metadata = {
@@ -7,7 +9,10 @@ export const metadata = {
 };
 
 export default async function BrandSettingsPage() {
-  const brandSetting = await BrandSettingService.get();
+  const [brandSetting, marketingSetting] = await Promise.all([
+    BrandSettingService.get(),
+    MarketingSettingService.get(),
+  ]);
 
   const initialData = brandSetting
     ? {
@@ -19,12 +24,13 @@ export default async function BrandSettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Pengaturan Merek"
-        description="Kelola pengaturan global untuk jam operasional bisnis Anda."
+        title="Pengaturan Merek & Situs"
+        description="Kelola pengaturan global untuk jam operasional bisnis dan status halaman publik."
       />
 
-      <div className="mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         <BrandSettingForm initialData={initialData} />
+        <MarketingMaintenanceToggle initialIsMaintenance={marketingSetting?.isMaintenanceMode ?? false} />
       </div>
     </div>
   );

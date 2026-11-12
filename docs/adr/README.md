@@ -14,6 +14,7 @@ Decisions that were expensive to make and would be expensive to reverse. Each fi
 | 0002 | [Adopt Vitest for Automated Unit and Domain Engine Testing](0002-adopt-vitest-for-automated-testing.md) | Accepted | 2026-10-18 |
 | 0003 | [Direct Revenue Recognition for Voucher Purchases](0003-voucher-direct-revenue-accounting.md) | Accepted | 2026-10-18 |
 | 0004 | [Store Attendance Machine Network IP and Port](0004-store-attendance-machine-network-ip.md) | Accepted | 2026-10-21 |
+| 0013 | [Marketing Maintenance Mode Toggle via Dedicated MarketingSetting Model](0013-marketing-maintenance-mode-toggle.md) | Accepted | 2026-11-12 |
 
 ## When an ADR is required
 

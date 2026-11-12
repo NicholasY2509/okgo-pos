@@ -16,41 +16,37 @@ export function BrandSettingForm({ initialData }: BrandSettingFormProps) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Jam Operasional</CardTitle>
-              <CardDescription>Atur jam mulai dan selesai operasional untuk timetable dan booking.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="businessStartTime">Jam Mulai Operasional</Label>
-                <Input
-                  id="businessStartTime"
-                  type="time"
-                  {...form.register("businessStartTime")}
-                />
-                {form.formState.errors.businessStartTime && (
-                  <p className="text-sm text-destructive">{form.formState.errors.businessStartTime.message}</p>
-                )}
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Jam Operasional</CardTitle>
+          <CardDescription>Atur jam mulai dan selesai operasional untuk timetable dan booking.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="businessStartTime">Jam Mulai Operasional</Label>
+            <Input
+              id="businessStartTime"
+              type="time"
+              {...form.register("businessStartTime")}
+            />
+            {form.formState.errors.businessStartTime && (
+              <p className="text-sm text-destructive">{form.formState.errors.businessStartTime.message}</p>
+            )}
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="businessEndTime">Jam Selesai Operasional</Label>
-                <Input
-                  id="businessEndTime"
-                  type="time"
-                  {...form.register("businessEndTime")}
-                />
-                {form.formState.errors.businessEndTime && (
-                  <p className="text-sm text-destructive">{form.formState.errors.businessEndTime.message}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="businessEndTime">Jam Selesai Operasional</Label>
+            <Input
+              id="businessEndTime"
+              type="time"
+              {...form.register("businessEndTime")}
+            />
+            {form.formState.errors.businessEndTime && (
+              <p className="text-sm text-destructive">{form.formState.errors.businessEndTime.message}</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex flex-col items-end gap-2">
         {error && <p className="text-sm text-destructive">{error}</p>}

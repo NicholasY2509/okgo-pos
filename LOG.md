@@ -8,6 +8,31 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
+## 2026-11-12 — Marketing Landing Page Maintenance Mode Toggle
+
+**Did:**
+1. Documented architecture decisions in [`docs/adr/0013-marketing-maintenance-mode-toggle.md`](docs/adr/0013-marketing-maintenance-mode-toggle.md).
+2. Extended `prisma/schema/marketing.prisma` with `MarketingSetting` model:
+   - Tracks `isMaintenanceMode` boolean (default `false`).
+   - Safely migrated table via `prisma db execute` without data loss or impacting other branch columns.
+3. Implemented full 5-layer architecture in [`modules/marketing/`](modules/marketing/):
+   - `schemas/marketing-setting.ts`: Zod validation schema and TypeScript input type.
+   - `repositories/marketing-setting-repository.ts`: Direct Prisma access queries (`get`, `upsert`).
+   - `services/marketing-setting-service.ts`: Business logic orchestrator and `isMaintenanceMode` helper.
+   - `actions/marketing-setting-action.ts`: Server actions revalidating `/`, `/admin/brand-settings`, and `/admin/marketing`.
+   - `hooks/use-marketing-setting.ts`: Client hook with optimistic UI and transition states.
+   - `components/marketing-maintenance-toggle.tsx`: Interactive switch with live/maintenance status badge, descriptions, and preview link.
+   - `components/marketing-maintenance-notice.tsx`: Reusable maintenance notice view extracted from original page.
+4. Integrated toggle into admin portals:
+   - Added `MarketingMaintenanceToggle` beside `BrandSettingForm` in [`app/admin/(main)/brand-settings/page.tsx`](app/admin/(main)/brand-settings/page.tsx).
+   - Also integrated `MarketingMaintenanceToggle` at the top of [`app/admin/(main)/marketing/page.tsx`](app/admin/(main)/marketing/page.tsx) for convenience.
+5. Reopened marketing page dynamically in [`app/(marketing)/page.tsx`](app/(marketing)/page.tsx):
+   - Renders original [`MarketingLandingPage`](modules/marketing/components/marketing-landing-page.tsx) when maintenance mode is off (`false`).
+   - Renders [`MarketingMaintenanceNotice`](modules/marketing/components/marketing-maintenance-notice.tsx) when maintenance mode is toggled on (`true`).
+   - Added dynamic metadata resolving title and description according to maintenance status.
+6. Added automated unit tests in [`modules/marketing/services/marketing-setting-service.test.ts`](modules/marketing/services/marketing-setting-service.test.ts) covering all states.
+7. Verification gate passed: Vitest (10 files, 47 tests passed) and TypeScript (`tsc --noEmit`) clean with zero errors.
+
 ## 2026-11-09 — Fingerspot Cloud Developer Integration
 
 **Did:**
