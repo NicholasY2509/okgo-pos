@@ -1,12 +1,31 @@
 import bcrypt from "bcryptjs";
 import { AuthRepository } from "../repositories/auth-repository";
 
+export interface AuthenticatedBranch {
+  id: string;
+  name: string;
+  subdomain: string;
+}
+
+export interface VerifiedCredentialsResult {
+  id: string;
+  name: string | null;
+  email: string | null;
+  role: { name: string };
+  branch?: AuthenticatedBranch | null;
+}
+
 export class AuthService {
   /**
    * Verifies the email and password against the database.
-   * Returns the user object if valid, otherwise throws an error with the specific reason.
+   * Returns the user object with their role and bound branch if valid,
+   * otherwise throws an error with the specific reason.
    */
-  static async verifyCredentials(email?: string, password?: string, subdomain?: string) {
+  static async verifyCredentials(
+    email?: string,
+    password?: string,
+    subdomain?: string
+  ): Promise<VerifiedCredentialsResult> {
     if (!email || !password) {
       throw new Error("Email dan kata sandi wajib diisi.");
     }
@@ -28,6 +47,7 @@ export class AuthService {
     }
 
     let userRole = "Guest";
+    let resolvedBranch: AuthenticatedBranch | null = null;
     const globalRole = await AuthRepository.getGlobalRole(user.id);
 
     // If subdomain is provided, we must check if the user has access to it
@@ -37,6 +57,12 @@ export class AuthService {
       if (!branch) {
         throw new Error("Cabang tidak ditemukan atau tidak aktif.");
       }
+
+      resolvedBranch = {
+        id: branch.id,
+        name: branch.name,
+        subdomain: branch.subdomain,
+      };
 
       if (globalRole && (globalRole.name === "Super Admin" || globalRole.name === "Admin Pusat")) {
         userRole = globalRole.name;
@@ -62,16 +88,31 @@ export class AuthService {
         }
 
         userRole = "Admin Pusat";
+        if (adminAssignment.branch) {
+          resolvedBranch = {
+            id: adminAssignment.branch.id,
+            name: adminAssignment.branch.name,
+            subdomain: adminAssignment.branch.subdomain,
+          };
+        }
       }
     } else {
-      // Fallback if no subdomain (e.g. main marketing site), just get their primary role if they have one
+      // No subdomain provided (e.g. Nyenyak Portal login or main site):
+      // Resolve the user's primary branch assignment and role
+      const primaryAssignment = await AuthRepository.getPrimaryAssignment(user.id);
+
+      if (primaryAssignment?.branch) {
+        resolvedBranch = {
+          id: primaryAssignment.branch.id,
+          name: primaryAssignment.branch.name,
+          subdomain: primaryAssignment.branch.subdomain,
+        };
+      }
+
       if (globalRole) {
         userRole = globalRole.name;
-      } else {
-        const primaryAssignment = await AuthRepository.getPrimaryAssignment(user.id);
-        if (primaryAssignment) {
-          userRole = primaryAssignment.role.name;
-        }
+      } else if (primaryAssignment?.role) {
+        userRole = primaryAssignment.role.name;
       }
     }
 
@@ -79,7 +120,8 @@ export class AuthService {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: { name: userRole }
+      role: { name: userRole },
+      branch: resolvedBranch,
     };
   }
 }

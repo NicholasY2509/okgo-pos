@@ -60,7 +60,14 @@ export function ActiveSessionView({ session, tenantSlug }: { session: any, tenan
 
       // Notify POS and other clients
       const socket = io(process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined);
-      socket.emit("service_status_changed", { sessionId: session.id, action: "end", serviceName, staffName });
+      socket.emit("service_status_changed", {
+        sessionId: session.id,
+        branchId: session.branchId,
+        roomId: session.roomId,
+        action: "end",
+        serviceName,
+        staffName,
+      });
       setTimeout(() => socket.disconnect(), 1000);
     }
     setLoading(false)

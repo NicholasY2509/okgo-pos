@@ -14,6 +14,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { assignBookingToTimetableAction } from "@/modules/booking/actions/booking-actions";
 import { useTimetableStore } from "../../stores/timetable-store";
+import { io } from "socket.io-client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -87,6 +88,11 @@ export function AssignBookingModal() {
       const res = await assignBookingToTimetableAction(selectedBookingForAssignment.id, startTime, values.selections);
       if (res.success) {
         toast.success("Booking berhasil ditugaskan ke jadwal");
+        const socket = io(
+          process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined
+        );
+        socket.emit("service_assigned", { branchId });
+        setTimeout(() => socket.disconnect(), 1000);
         fetchPendingBookings();
         fetchSessions();
         setSelectedBookingForAssignment(null);

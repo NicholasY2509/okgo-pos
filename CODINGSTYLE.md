@@ -25,6 +25,7 @@ Facts in the stack table are detected from the code; everything else is a delibe
 | Authentication | NextAuth.js | ^5.0.0-beta.31 | Prisma adapter `@auth/prisma-adapter` |
 | Realtime | Socket.io | ^4.8.3 | Standalone node server `socket-server.js` |
 | PWA / Offline | Serwist | ^9.5.11 | `@serwist/next`, service worker compiled to `public/sw.js` |
+| Mobile / Tablet | Flutter & Dart | SDK ^3.11.5 | Native Android & iOS app in `nyenyak-portal/` |
 | Testing | Vitest | ^4.1.12 | Native ESM TypeScript unit & integration test runner |
 
 ### Key libraries
@@ -38,6 +39,8 @@ Facts in the stack table are detected from the code; everything else is a delibe
 | `radix-ui` / `@radix-ui/*` | Accessible primitives underlying Shadcn UI components |
 | `class-variance-authority` | Variant styling management for UI primitives |
 | `framer-motion` & `gsap` | Fluid transitions and animations |
+| `http` (`package:http` ^1.6.0) | REST HTTP client in `nyenyak-portal/` for communicating with `nyenyak-pos` APIs |
+| `socket_io_client` (`package:socket_io_client` ^3.1.6) | Real-time Socket.io WebSocket client in `nyenyak-portal/` for room session live updates |
 
 ## Commands
 
@@ -53,6 +56,8 @@ Facts in the stack table are detected from the code; everything else is a delibe
 | Start | `npm run start` | Production startup with Next.js and Socket.io |
 | DB Studio | `npx prisma studio` | Interactive database explorer |
 | DB Migration | `npx prisma db push` or `npx prisma migrate dev` | Database schema updates |
+| Flutter Analyze | `cd nyenyak-portal && dart analyze` | Static analysis for Nyenyak Portal mobile/tablet app |
+| Flutter Test | `cd nyenyak-portal && flutter test` | Widget and unit tests for Nyenyak Portal |
 
 ## Conventions
 

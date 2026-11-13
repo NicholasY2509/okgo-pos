@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { BookingInput } from "../schemas/booking";
 import { startOfDay, endOfDay, addMinutes, isBefore, addHours, format } from "date-fns";
 import { StaffAvailabilityService } from "../../staff/services/staff-availability-service";
+import { getTherapistWorkPositionFilter } from "../../staff/repositories/staff-repository";
 
 export const BookingRepository = {
   async getBranches() {
@@ -19,14 +20,17 @@ export const BookingRepository = {
   },
 
   async getStaffStatus(branchId: string) {
+    const therapistFilter = await getTherapistWorkPositionFilter();
     const staff = await prisma.staff.findMany({
-      where: { branchStaffs: { some: { branchId } }, isActive: true },
+      where: {
+        isActive: true,
+        workPosition: therapistFilter,
+      },
       orderBy: { firstName: 'asc' }
     });
 
     const activeSessions = await prisma.serviceSession.findMany({
       where: {
-        branchId,
         status: "IN_PROGRESS",
       }
     });
@@ -53,8 +57,12 @@ export const BookingRepository = {
     const start = startOfDay(targetDate);
     const end = endOfDay(targetDate);
 
+    const therapistFilter = await getTherapistWorkPositionFilter();
     const staff = await prisma.staff.findMany({
-      where: { branchStaffs: { some: { branchId } }, isActive: true },
+      where: {
+        isActive: true,
+        workPosition: therapistFilter,
+      },
       orderBy: { firstName: 'asc' }
     });
 
@@ -64,9 +72,12 @@ export const BookingRepository = {
 
     const sessions = await prisma.serviceSession.findMany({
       where: {
-        branchId,
         status: { in: ["SCHEDULED", "IN_PROGRESS"] },
-        startTime: { gte: start, lte: end }
+        startTime: { gte: start, lte: end },
+        OR: [
+          { branchId },
+          { staffId: { in: staff.map(s => s.id) } }
+        ]
       },
       select: {
         id: true,
@@ -74,6 +85,7 @@ export const BookingRepository = {
         roomId: true,
         startTime: true,
         endTime: true,
+        branchId: true,
       }
     });
 
@@ -113,7 +125,7 @@ export const BookingRepository = {
     });
 
     const totalCapacity = rooms.reduce((acc, r) => acc + (r.capacity || 1), 0);
-    const roomSessions = sessions.filter(s => s.roomId).map(s => ({
+    const roomSessions = sessions.filter(s => s.branchId === branchId && s.roomId).map(s => ({
       startTime: s.startTime,
       endTime: s.endTime || addMinutes(s.startTime!, 60)
     }));
@@ -148,13 +160,18 @@ export const BookingRepository = {
     }
 
     const rooms = await prisma.room.findMany({ where: { branchId, isActive: true } });
-    const staff = await prisma.staff.findMany({ where: { branchStaffs: { some: { branchId } }, isActive: true } });
+    const therapistFilter = await getTherapistWorkPositionFilter();
+    const staff = await prisma.staff.findMany({
+      where: {
+        isActive: true,
+        workPosition: therapistFilter,
+      }
+    });
 
     if (rooms.length < selections.length || staff.length < selections.length) return [];
 
     const existingSessions = await prisma.serviceSession.findMany({
       where: {
-        branchId,
         status: { in: ["SCHEDULED", "IN_PROGRESS"] },
         startTime: { gte: start, lte: end }
       }
@@ -196,7 +213,7 @@ export const BookingRepository = {
         const sessionStart = session.startTime;
         const sessionEnd = session.endTime || addMinutes(sessionStart, 60);
 
-        if (slotStart < sessionEnd && slotEnd > sessionStart) {
+        if (session.branchId === branchId && slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
         }
       }
@@ -387,12 +404,17 @@ export const BookingRepository = {
       const slotStart = new Date(data.startTime);
       const slotEnd = addMinutes(slotStart, maxDuration);
 
+      const therapistFilter = await getTherapistWorkPositionFilter();
       const rooms = await tx.room.findMany({ where: { branchId: data.branchId, isActive: true } });
-      const staffList = await tx.staff.findMany({ where: { branchStaffs: { some: { branchId: data.branchId } }, isActive: true } });
+      const staffList = await tx.staff.findMany({
+        where: {
+          isActive: true,
+          workPosition: therapistFilter,
+        }
+      });
 
       const existingSessions = await tx.serviceSession.findMany({
         where: {
-          branchId: data.branchId,
           status: { in: ["SCHEDULED", "IN_PROGRESS"] },
           startTime: {
             gte: startOfDay(slotStart),
@@ -409,7 +431,7 @@ export const BookingRepository = {
         const sessionStart = session.startTime;
         const sessionEnd = session.endTime || addMinutes(sessionStart, 60);
 
-        if (slotStart < sessionEnd && slotEnd > sessionStart) {
+        if (session.branchId === data.branchId && slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
         }
       }
@@ -657,12 +679,17 @@ export const BookingRepository = {
       const slotStart = new Date(data.startTime);
       const slotEnd = addMinutes(slotStart, maxDuration);
 
+      const therapistFilter = await getTherapistWorkPositionFilter();
       const rooms = await tx.room.findMany({ where: { branchId: data.branchId, isActive: true } });
-      const staffList = await tx.staff.findMany({ where: { branchStaffs: { some: { branchId: data.branchId } }, isActive: true } });
+      const staffList = await tx.staff.findMany({
+        where: {
+          isActive: true,
+          workPosition: therapistFilter,
+        }
+      });
 
       const existingSessions = await tx.serviceSession.findMany({
         where: {
-          branchId: data.branchId,
           status: { in: ["SCHEDULED", "IN_PROGRESS"] },
           startTime: {
             gte: startOfDay(slotStart),
@@ -679,7 +706,7 @@ export const BookingRepository = {
         const sessionStart = session.startTime;
         const sessionEnd = session.endTime || addMinutes(sessionStart, 60);
 
-        if (slotStart < sessionEnd && slotEnd > sessionStart) {
+        if (session.branchId === data.branchId && slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
         }
       }
@@ -866,20 +893,20 @@ export const BookingRepository = {
 
       const slotEnd = addMinutes(slotStart, maxDuration);
 
+      const therapistFilter = await getTherapistWorkPositionFilter();
       const rooms = await tx.room.findMany({
         where: { branchId: booking.branchId, isActive: true }
       });
 
       const staffList = await tx.staff.findMany({
         where: {
-          branchStaffs: { some: { branchId: booking.branchId } },
-          isActive: true
+          isActive: true,
+          workPosition: therapistFilter,
         }
       });
 
       const existingSessions = await tx.serviceSession.findMany({
         where: {
-          branchId: booking.branchId,
           status: { in: ["SCHEDULED", "IN_PROGRESS"] },
           startTime: {
             gte: startOfDay(slotStart),
@@ -896,7 +923,7 @@ export const BookingRepository = {
         const sessionStart = session.startTime;
         const sessionEnd = session.endTime || addMinutes(sessionStart, 60);
 
-        if (slotStart < sessionEnd && slotEnd > sessionStart) {
+        if (session.branchId === booking.branchId && slotStart < sessionEnd && slotEnd > sessionStart) {
           roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
         }
       }

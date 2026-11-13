@@ -5,7 +5,29 @@ import { StaffAvailabilityService } from "../services/staff-availability-service
 import { addMinutes } from "date-fns"
 import { BranchStaffHrisItem } from "../types/hris-types"
 
+export async function getTherapistWorkPositionFilter(): Promise<Prisma.StaffWhereInput["workPosition"]> {
+  const targetPositions = await prisma.category.findMany({
+    where: { targetWorkPositionId: { not: null } },
+    select: { targetWorkPositionId: true },
+    distinct: ["targetWorkPositionId"],
+  });
+  const targetPosIds = targetPositions
+    .map((c) => c.targetWorkPositionId)
+    .filter((id): id is string => Boolean(id));
+
+  return {
+    OR: [
+      { name: { contains: "terapis" } },
+      { name: { contains: "therapist" } },
+      { name: { contains: "beaut" } },
+      ...(targetPosIds.length > 0 ? [{ id: { in: targetPosIds } }] : []),
+    ],
+  };
+}
+
 export const StaffRepository = {
+  getTherapistWorkPositionFilter,
+
   async getAllStaff(branchId?: string, serviceId?: string, excludeSessionId?: string, startTime?: Date) {
     const todayStr = (startTime || new Date()).toISOString().split('T')[0];
     const todayStart = new Date(todayStr + "T00:00:00.000Z");
@@ -29,11 +51,10 @@ export const StaffRepository = {
     const whereClause: any = {
       isActive: true,
     };
-    if (branchId) {
-      whereClause.branchStaffs = { some: { branchId } };
-    }
     if (workPositionId) {
       whereClause.workPositionId = workPositionId;
+    } else {
+      whereClause.workPosition = await getTherapistWorkPositionFilter();
     }
 
     const staffList = await prisma.staff.findMany({
@@ -67,9 +88,6 @@ export const StaffRepository = {
       status: { in: ["SCHEDULED", "IN_PROGRESS"] },
       startTime: { lte: endTime },
     };
-    if (branchId) {
-      sessionWhereClause.branchId = branchId;
-    }
     if (excludeSessionId) {
       sessionWhereClause.id = { not: excludeSessionId };
     }
@@ -83,10 +101,106 @@ export const StaffRepository = {
     return staffList.filter((s: any) => !busyStaffIds.has(s.id));
   },
 
-  async getActiveStaff(branchId: string) {
+  async getActiveStaff(_branchId?: string) {
+    const therapistFilter = await getTherapistWorkPositionFilter();
     return await prisma.staff.findMany({
-      where: { branchStaffs: { some: { branchId } }, isActive: true },
+      where: {
+        isActive: true,
+        workPosition: therapistFilter,
+      },
+      include: {
+        workPosition: true,
+        branchStaffs: { include: { branch: true } },
+      },
       orderBy: { firstName: "asc" },
+    });
+  },
+
+  async getBranchStaffFaceProfiles(branchId: string) {
+    const branchScoped = await prisma.staff.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { branchStaffs: { some: { branchId } } },
+          { branchStaffs: { none: {} } },
+        ],
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        staffIdNumber: true,
+        imageUrl: true,
+        faceEmbedding: true,
+        faceRegisteredAt: true,
+        workPosition: {
+          select: { name: true },
+        },
+      },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+    })
+
+    if (branchScoped.length > 0) {
+      return branchScoped
+    }
+
+    // Fallback to all active staff if branch has no explicit BranchStaff mappings yet
+    return await prisma.staff.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        staffIdNumber: true,
+        imageUrl: true,
+        faceEmbedding: true,
+        faceRegisteredAt: true,
+        workPosition: {
+          select: { name: true },
+        },
+      },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+    })
+  },
+
+  async getBranchStaffMember(staffId: string, _branchId: string) {
+    return await prisma.staff.findFirst({
+      where: {
+        id: staffId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        staffIdNumber: true,
+        imageUrl: true,
+        workPosition: {
+          select: { name: true },
+        },
+      },
+    })
+  },
+
+  async saveStaffFaceEmbedding(staffId: string, embedding: number[], registeredAt: Date) {
+    return await prisma.staff.update({
+      where: { id: staffId },
+      data: {
+        faceEmbedding: embedding,
+        faceRegisteredAt: registeredAt,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        staffIdNumber: true,
+        imageUrl: true,
+        faceEmbedding: true,
+        faceRegisteredAt: true,
+        workPosition: {
+          select: { name: true },
+        },
+      },
     })
   },
 

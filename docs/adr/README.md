@@ -14,6 +14,11 @@ Decisions that were expensive to make and would be expensive to reverse. Each fi
 | 0002 | [Adopt Vitest for Automated Unit and Domain Engine Testing](0002-adopt-vitest-for-automated-testing.md) | Accepted | 2026-10-18 |
 | 0003 | [Direct Revenue Recognition for Voucher Purchases](0003-voucher-direct-revenue-accounting.md) | Accepted | 2026-10-18 |
 | 0004 | [Store Attendance Machine Network IP and Port](0004-store-attendance-machine-network-ip.md) | Accepted | 2026-10-21 |
+| 0005 | [Introduce Nyenyak Portal Flutter Application in Monorepo](0005-nyenyak-portal-flutter-app.md) | Accepted | 2026-10-28 |
+| 0006 | [Nyenyak Portal REST Authentication Endpoint & HTTP Client](0006-nyenyak-portal-rest-auth.md) | Accepted | 2026-10-28 |
+| 0007 | [Room-Bound Session Feed & Socket.io Live Updates in Nyenyak Portal](0007-nyenyak-portal-room-sessions-socket.md) | Accepted | 2026-10-28 |
+| 0008 | [On-Device Passive Face Anti-Spoofing via TFLite & ML Kit](0008-nyenyak-portal-on-device-passive-face-liveness.md) | Accepted | 2026-10-29 |
+| 0009 | [On-Device Face Embedding Registration & Verification with Server-Synced Profiles](0009-nyenyak-portal-face-recognition-registration-verification.md) | Accepted | 2026-11-01 |
 | 0013 | [Marketing Maintenance Mode Toggle via Dedicated MarketingSetting Model](0013-marketing-maintenance-mode-toggle.md) | Accepted | 2026-11-12 |
 
 ## When an ADR is required

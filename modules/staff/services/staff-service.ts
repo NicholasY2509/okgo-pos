@@ -1,10 +1,24 @@
 import {
   CreateStaffInput,
+  RegisterStaffFaceInput,
   UpdateStaffInput,
 } from "../schemas/staff-schema"
 import { StaffRepository } from "../repositories/staff-repository"
 import { Prisma } from "@/lib/generated/prisma"
 import bcrypt from "bcryptjs"
+
+export interface PortalStaffFaceProfile {
+  id: string
+  name: string
+  firstName: string
+  lastName: string
+  staffIdNumber: string | null
+  position: string
+  imageUrl: string | null
+  hasFaceRegistered: boolean
+  faceEmbedding: number[] | null
+  faceRegisteredAt: string | null
+}
 
 export interface GetStaffParams {
   page?: number;
@@ -49,7 +63,7 @@ export class StaffService {
     return await StaffRepository.getAllStaff(branchId, serviceId, excludeSessionId, startTime)
   }
 
-  static async getActiveStaff(branchId: string) {
+  static async getActiveStaff(branchId?: string) {
     return await StaffRepository.getActiveStaff(branchId)
   }
 
@@ -140,5 +154,83 @@ export class StaffService {
 
   static async getBranchHrisRoster(branchId: string) {
     return await StaffRepository.getBranchHrisRoster(branchId)
+  }
+
+  static normalizeFaceEmbedding(embedding: number[]): number[] {
+    let sumSquares = 0
+    for (let i = 0; i < embedding.length; i++) {
+      sumSquares += embedding[i] * embedding[i]
+    }
+    const norm = Math.sqrt(sumSquares)
+    if (!Number.isFinite(norm) || norm <= 1e-8) {
+      throw new Error("Vektor wajah tidak valid (norma nol).")
+    }
+    return embedding.map((v) => Number((v / norm).toFixed(6)))
+  }
+
+  private static parseFaceEmbedding(raw: unknown): number[] | null {
+    if (!Array.isArray(raw) || raw.length === 0) return null
+    const values: number[] = []
+    for (const item of raw) {
+      if (typeof item !== "number" || !Number.isFinite(item)) {
+        return null
+      }
+      values.push(item)
+    }
+    return values
+  }
+
+  private static mapPortalStaffFaceProfile(record: {
+    id: string
+    firstName: string
+    lastName: string
+    staffIdNumber: string | null
+    imageUrl: string | null
+    faceEmbedding: unknown
+    faceRegisteredAt: Date | null
+    workPosition?: { name: string } | null
+  }): PortalStaffFaceProfile {
+    const embedding = StaffService.parseFaceEmbedding(record.faceEmbedding)
+    return {
+      id: record.id,
+      name: `${record.firstName} ${record.lastName}`.trim(),
+      firstName: record.firstName,
+      lastName: record.lastName,
+      staffIdNumber: record.staffIdNumber ?? null,
+      position: record.workPosition?.name ?? "Staf",
+      imageUrl: record.imageUrl ?? null,
+      hasFaceRegistered: embedding !== null && embedding.length >= 64,
+      faceEmbedding: embedding,
+      faceRegisteredAt: record.faceRegisteredAt
+        ? record.faceRegisteredAt.toISOString()
+        : null,
+    }
+  }
+
+  static async getBranchStaffFaceProfiles(
+    branchId: string
+  ): Promise<PortalStaffFaceProfile[]> {
+    const records = await StaffRepository.getBranchStaffFaceProfiles(branchId)
+    return records.map(StaffService.mapPortalStaffFaceProfile)
+  }
+
+  static async registerStaffFace(
+    input: RegisterStaffFaceInput
+  ): Promise<PortalStaffFaceProfile> {
+    const staffMember = await StaffRepository.getBranchStaffMember(
+      input.staffId,
+      input.branchId
+    )
+    if (!staffMember) {
+      throw new Error("Staf tidak ditemukan atau tidak terdaftar pada cabang ini.")
+    }
+
+    const normalizedEmbedding = StaffService.normalizeFaceEmbedding(input.embedding)
+    const updated = await StaffRepository.saveStaffFaceEmbedding(
+      input.staffId,
+      normalizedEmbedding,
+      new Date()
+    )
+    return StaffService.mapPortalStaffFaceProfile(updated)
   }
 }

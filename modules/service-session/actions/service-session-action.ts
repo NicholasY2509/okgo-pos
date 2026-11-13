@@ -3,6 +3,60 @@
 import { revalidatePath } from "next/cache"
 import { ServiceSessionService } from "../services/service-session-service"
 import { BranchService } from "@/modules/branch/services/branch-service"
+import {
+  serviceSessionQuerySchema,
+  type ServiceSessionQueryInput,
+} from "../schemas/service-session-query-schema"
+
+export async function getServiceSessionsAction(
+  tenantSlug: string,
+  query: ServiceSessionQueryInput
+) {
+  try {
+    const validated = serviceSessionQuerySchema.safeParse(query)
+    if (!validated.success) {
+      return { error: "Filter parameter tidak valid." }
+    }
+
+    const branch = await BranchService.getBranchBySubdomain(tenantSlug)
+    if (!branch) {
+      return { error: "Cabang tidak ditemukan." }
+    }
+
+    const result = await ServiceSessionService.getServiceSessions({
+      branchId: branch.id,
+      ...validated.data,
+    })
+
+    return { success: true, data: result }
+  } catch (error: unknown) {
+    console.error("Failed to fetch service sessions:", error)
+    const message =
+      error instanceof Error ? error.message : "Gagal mengambil daftar sesi layanan."
+    return { error: message }
+  }
+}
+
+export async function getServiceSessionFilterOptionsAction(tenantSlug: string) {
+  try {
+    const branch = await BranchService.getBranchBySubdomain(tenantSlug)
+    if (!branch) {
+      return { error: "Cabang tidak ditemukan." }
+    }
+
+    const options = await ServiceSessionService.getServiceSessionFilterOptions(
+      branch.id
+    )
+    return { success: true, data: options }
+  } catch (error: unknown) {
+    console.error("Failed to fetch filter options:", error)
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Gagal mengambil opsi filter sesi layanan."
+    return { error: message }
+  }
+}
 
 export async function getStaffDailySessionsAction(staffId: string) {
   try {

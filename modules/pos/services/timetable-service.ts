@@ -6,11 +6,20 @@ export class TimetableService {
     return sessions.map(TimetableService.mapSessionOutput);
   }
 
+  static async getRoomSessions(branchId: string, roomId: string, date?: string) {
+    const sessions = await TimetableRepository.getRoomSessions(branchId, roomId, date);
+    return sessions.map(TimetableService.mapSessionOutput);
+  }
+
   private static mapSessionOutput(session: any) {
     const isBooking = !!session.booking;
     const itemName = isBooking
-      ? (session.booking.items?.[0]?.itemNameSnapshot || "Sesi")
-      : (session.transactionItem?.itemNameSnapshot || "Sesi");
+      ? (session.booking.items?.[0]?.itemNameSnapshot || session.serviceProduct?.name || "Sesi")
+      : (session.transactionItem?.itemNameSnapshot || session.serviceProduct?.name || "Sesi");
+
+    const staffName = session.staff
+      ? `${session.staff.firstName || ""} ${session.staff.lastName || ""}`.trim() || null
+      : null;
 
     const paymentStatus = session.transactionItem?.transaction?.status
       || (isBooking ? session.booking.status : undefined);
@@ -31,6 +40,7 @@ export class TimetableService {
       bookingNumber: session.booking?.bookingNumber,
       isVip: !!session.transactionItem?.transaction?.isVip,
       itemName,
+      staffName,
       paymentStatus,
       customerName,
       customerPhone,

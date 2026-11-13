@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getTherapistWorkPositionFilter } from "@/modules/staff/repositories/staff-repository";
 
 export const PosDataRepository = {
   async getBranchBySubdomain(subdomain: string) {
@@ -23,8 +24,16 @@ export const PosDataRepository = {
   },
 
   async getActiveStaff() {
+    const therapistFilter = await getTherapistWorkPositionFilter();
     return await prisma.staff.findMany({
-      where: { isActive: true },
+      where: {
+        isActive: true,
+        workPosition: therapistFilter,
+      },
+      include: {
+        workPosition: true,
+        branchStaffs: { include: { branch: true } },
+      },
       orderBy: { firstName: 'asc' }
     });
   },

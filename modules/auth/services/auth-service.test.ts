@@ -172,6 +172,51 @@ describe("AuthService.verifyCredentials", () => {
       name: "Staff Member",
       email: "staff@okgo.com",
       role: { name: "Cashier" },
+      branch: {
+        id: "branch-1",
+        name: "Branch 1",
+        subdomain: "branch-1",
+      },
+    });
+  });
+
+  it("should resolve primary branch assignment when no subdomain is provided", async () => {
+    vi.mocked(AuthRepository.getUserByEmail).mockResolvedValue({
+      id: "u2",
+      email: "portal@okgo.com",
+      password: "hashedpassword",
+      name: "Portal Staff",
+      roleId: null,
+      image: null,
+      emailVerified: null,
+    });
+    vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+    vi.mocked(AuthRepository.getGlobalRole).mockResolvedValue(null as never);
+    vi.mocked(AuthRepository.getPrimaryAssignment).mockResolvedValue({
+      id: "bs-2",
+      branchId: "branch-juanda",
+      staffId: "s2",
+      roleId: "r2",
+      role: { name: "Manager" },
+      branch: {
+        id: "branch-juanda",
+        name: "Nyenyak Juanda",
+        subdomain: "juanda",
+      },
+    } as never);
+
+    const result = await AuthService.verifyCredentials("portal@okgo.com", "password");
+
+    expect(result).toEqual({
+      id: "u2",
+      name: "Portal Staff",
+      email: "portal@okgo.com",
+      role: { name: "Manager" },
+      branch: {
+        id: "branch-juanda",
+        name: "Nyenyak Juanda",
+        subdomain: "juanda",
+      },
     });
   });
 });
