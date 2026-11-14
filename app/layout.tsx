@@ -40,11 +40,6 @@ export const metadata: Metadata = {
     default: "Nyenyak Healing Point | Tempat Pijat & Spa Medan",
   },
   applicationName: "Nyenyak",
-  appleWebApp: {
-    title: "Nyenyak",
-    statusBarStyle: "default",
-    capable: true,
-  },
   description: "Tempat pijat dan spa terbaik di Medan. Lepas lelah, tidur lebih nyenyak. Terapis profesional kami menghadirkan relaksasi mendalam untuk memulihkan tubuh dan kualitas tidur Anda ke tingkat yang paling optimal.",
   keywords: ["Nyenyak Healing Point", "spa", "massage", "relaksasi", "terapi tidur", "medan", "tempat pijat", "pijat medan", "spa medan", "tempat pijat medan", "pijat panggilan medan"],
   openGraph: {

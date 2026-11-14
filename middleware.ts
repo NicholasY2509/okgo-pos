@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import NextAuth from "next-auth"
 import { authConfig } from "@/modules/auth/auth.config"
+import { extractSubdomain } from "@/lib/subdomain"
 
 export const config = {
   matcher: [
@@ -14,8 +15,10 @@ export const config = {
      * - favicon.ico
      * - sitemap.xml
      * - robots.txt
+     * - sw.js (PWA service worker)
+     * - ~offline (PWA offline fallback)
      */
-    "/((?!api|socket\\.io|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!api|socket\\.io|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|favicon.ico|sitemap.xml|robots.txt|sw\\.js|~offline).*)",
   ],
 }
 
@@ -43,30 +46,7 @@ export default NextAuth(authConfig).auth((req) => {
   const protocol = req.headers.get("x-forwarded-proto") || "https"
   const baseUrl = `${protocol}://${hostname}`
 
-  let subdomain = ""
-
-  /*
-   * Detect subdomain
-   */
-  if (hostname.includes("localhost")) {
-    const parts = hostname.split(".")
-
-    // Example:
-    // admin.localhost:3000 -> ["admin", "localhost:3000"]
-    if (parts.length > 1 && parts[0] !== "localhost") {
-      subdomain = parts[0]
-    }
-  } else {
-    // Production:
-    // juanda.nyenyak.com -> ["juanda", "nyenyak", "com"]
-    // admin.nyenyak.com -> ["admin", "nyenyak", "com"]
-    // nyenyak.com       -> ["nyenyak", "com"]
-    const parts = hostname.split(".")
-
-    if (parts.length > 2 && parts[0] !== "www") {
-      subdomain = parts[0]
-    }
-  }
+  const subdomain = extractSubdomain(hostname)
 
   // Authentication session
   const session = req.auth
