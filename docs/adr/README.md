@@ -19,6 +19,9 @@ Decisions that were expensive to make and would be expensive to reverse. Each fi
 | 0007 | [Room-Bound Session Feed & Socket.io Live Updates in Nyenyak Portal](0007-nyenyak-portal-room-sessions-socket.md) | Accepted | 2026-10-28 |
 | 0008 | [On-Device Passive Face Anti-Spoofing via TFLite & ML Kit](0008-nyenyak-portal-on-device-passive-face-liveness.md) | Accepted | 2026-10-29 |
 | 0009 | [On-Device Face Embedding Registration & Verification with Server-Synced Profiles](0009-nyenyak-portal-face-recognition-registration-verification.md) | Accepted | 2026-11-01 |
+| 0010 | [Introduce Nyenyak Print ESC/POS Thermal Printer Bridge Flutter App](0010-nyenyak-print-escpos-bridge-flutter-app.md) | Accepted | 2026-11-04 |
+| 0011 | [Generate Invoice PDF via pdf-lib and Send via Evolution API WhatsApp](0011-whatsapp-invoice-pdf-via-evolution-api.md) | Accepted | 2026-11-08 |
+| 0012 | [Multi-Instance Branch WhatsApp Configuration](0012-multi-instance-branch-whatsapp-configuration.md) | Accepted | 2026-11-08 |
 | 0013 | [Marketing Maintenance Mode Toggle via Dedicated MarketingSetting Model](0013-marketing-maintenance-mode-toggle.md) | Accepted | 2026-11-12 |
 
 ## When an ADR is required

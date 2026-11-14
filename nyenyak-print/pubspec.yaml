@@ -1,0 +1,29 @@
+name: nyenyak_print
+description: "Nyenyak Print ESC/POS thermal printer bridge application."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.3
+  google_fonts: ^8.2.1
+  print_bluetooth_thermal: ^1.1.6
+  permission_handler: ^12.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/logo-long.webp
+    - assets/images/logo-only.png

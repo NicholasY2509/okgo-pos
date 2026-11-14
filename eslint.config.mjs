@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     "public/sw.js",
     "lib/generated/**",
     "nyenyak-portal/**",
+    "nyenyak-print/**",
   ]),
 ]);
 

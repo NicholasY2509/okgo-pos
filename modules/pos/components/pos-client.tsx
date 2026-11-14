@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePosClient } from "../hooks/use-pos-client";
 import { PosCart } from "./pos-cart";
 import { PaymentModal } from "./payment-modal";
@@ -10,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { PosBookingDialog } from "./pos-booking-dialog";
+import { sendInvoiceWhatsappAction } from "../actions/invoice-whatsapp-action";
+import { toast } from "sonner";
 
 interface PosClientProps {
   branchId: string;
@@ -96,9 +99,30 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
           onClose={() => setIsPaymentModalOpen(false)}
           branchId={branchId}
           paymentMethods={paymentMethods}
-          onSuccess={() => {
+          onSuccess={(data) => {
             setIsPaymentModalOpen(false);
             clearCart();
+            if (data?.id && data?.customerId) {
+              const cust = customers?.find((c) => c.id === data.customerId);
+              const phone = cust?.phone;
+              if (phone) {
+                const recipientName = cust?.name || "Pelanggan";
+                toast.promise(
+                  sendInvoiceWhatsappAction({
+                    transactionId: data.id,
+                    phoneNumber: phone,
+                  }),
+                  {
+                    loading: `Mengirim struk WhatsApp ke ${recipientName} (${phone})...`,
+                    success: (res) => {
+                      if (res.error) throw new Error(res.error);
+                      return `Struk WhatsApp berhasil terkirim ke ${recipientName}!`;
+                    },
+                    error: (err) => `Gagal kirim struk WA: ${err.message || "Periksa koneksi WhatsApp API"}`,
+                  }
+                );
+              }
+            }
           }}
         />
       )}

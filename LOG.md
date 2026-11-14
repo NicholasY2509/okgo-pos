@@ -68,6 +68,153 @@ session — it records what the code cannot say for itself.
    - Clean, lightweight server component layout adhering to DESIGN.md tokens without decorative emojis or heavy client animations.
 2. Verified production compilation via `tsc --noEmit` and `next build`.
 
+## 2026-11-08 — Brand Lockup & Receipt Layout Polish for Digital Invoices
+
+**Did:**
+1. Upgraded [`InvoicePdfService`](modules/pos/services/invoice-pdf-service.ts) to embed the official horizontal brand lockup ([`public/logo-long.png`](public/logo-long.png)) with both the blossom emblem and brand typography (`NYENYAK HEALING POINT`).
+2. Sizing, Spacing & Delicate Thermal Receipt Polish:
+   - Resized logo to a compact, delicate width 80 pt (~21 pt height).
+   - Scaled down typography across all sections (item names to 6.2 pt bold, metadata & rows to 5.5 pt, TOTAL AKHIR to 6.8 pt bold, footers to 5-5.5 pt) for an authentic, refined receipt feel.
+   - Added proper breathing room around dashed line separators (gap below divider to 8 pt, above to 3 pt).
+   - Reduced overall slip width to 210 pt (~74mm) with snug dynamic height calculation (`slipHeight`).
+   - Removed colored highlight boxes, borders, and decorative accents on `TOTAL AKHIR` in favor of clean, solid, dark typography.
+3. Verification Gate:
+   - `npm run typecheck` (`tsc --noEmit`): 0 errors.
+   - `npm test`: 86/86 passing across 20 test files.
+   - Visually verified rendered thumbnail (`real-receipt-v5-preview.png`).
+
+---
+
+## 2026-11-08 — Implemented Multi-Instance Branch WhatsApp Configuration & Admin UI
+
+**Did:**
+1. Documented architecture decision in [`docs/adr/0012-multi-instance-branch-whatsapp-configuration.md`](docs/adr/0012-multi-instance-branch-whatsapp-configuration.md) and updated [`docs/adr/README.md`](docs/adr/README.md).
+2. Schema & Database:
+   - Added `whatsappInstanceName String?` to model `Branch` in [`prisma/schema/branch.prisma`](prisma/schema/branch.prisma).
+   - Bumped `PRISMA_SCHEMA_REVISION` in [`lib/prisma.ts`](lib/prisma.ts) and synchronized database via `npx prisma db push` and `npx prisma generate`.
+3. Evolution API Multi-Instance Support:
+   - Added `createInstance`, `deleteInstance`, and `fetchInstances` to [`EvolutionApiService`](modules/pos/services/evolution-api-service.ts).
+   - Added dynamic `instanceName` routing to `sendMedia` and `sendText`.
+   - Updated [`InvoiceWhatsappService`](modules/pos/services/invoice-whatsapp-service.ts) to route receipt dispatches dynamically through `branch.whatsappInstanceName` (with global `EVOLUTION_INSTANCE_NAME` fallback).
+4. Strict 5-Layer Module Architecture (`modules/whatsapp/` & `modules/branch/`):
+   - **Schemas**: Added `createWhatsappInstanceSchema`, `deleteWhatsappInstanceSchema`, and `linkBranchWhatsappSchema` in [`whatsapp-pairing-schema.ts`](modules/whatsapp/schemas/whatsapp-pairing-schema.ts).
+   - **Repository**: Added `updateBranchWhatsappInstance` in [`branch-repository.ts`](modules/branch/repositories/branch-repository.ts).
+   - **Services**:
+     - Upgraded [`WhatsappPairingService`](modules/whatsapp/services/whatsapp-pairing-service.ts) with `listAllInstancesWithBranches`, `createInstance`, `deleteInstance`, and `getBranchWhatsappInfo`. Added Nyenyak-specific instance isolation filtering so external instances (e.g. `okgo-carwash-instance`) are excluded.
+     - Added `updateBranchWhatsappInstance` to [`BranchService`](modules/branch/services/branch-service.ts).
+   - **Actions**: Added `createWhatsappInstanceAction`, `deleteWhatsappInstanceAction`, `linkBranchWhatsappAction`, `listAllWhatsappInstancesAction`, and `getBranchWhatsappConfigAction` in [`whatsapp-pairing-action.ts`](modules/whatsapp/actions/whatsapp-pairing-action.ts).
+   - **Hook**: Parameterized [`useWhatsappPairing`](modules/whatsapp/hooks/use-whatsapp-pairing.ts) to support arbitrary target instances.
+   - **Components**:
+     - Built [`BranchWhatsappTab`](modules/branch/components/branch-whatsapp-tab.tsx) embedded as a 3rd tab in the Branch Detail page ([`app/admin/(main)/branches/[slug]/page.tsx`](app/admin/(main)/branches/[slug]/page.tsx)), featuring 1-click instance creation, pairing (QR/8-digit code), status badges, test message sandbox, and unpairing. Automatically hides creation buttons once an instance is already created/linked to avoid duplication confusion.
+     - Upgraded [`WhatsappPairingManager`](modules/whatsapp/components/whatsapp-pairing-manager.tsx) on the dedicated WhatsApp page ([`app/admin/(main)/whatsapp/page.tsx`](app/admin/(main)/whatsapp/page.tsx)) into a multi-instance dashboard with instance cards, "+ Tambah Instance Baru" modal, deletion, and pairing controls.
+5. Verification Gate:
+   - `npm run typecheck` (`tsc --noEmit`): 0 errors.
+   - `npm test`: 86/86 passing across 20 test files.
+
+---
+
+## 2026-11-08 — Automated WhatsApp Receipt Dispatch on Transaction Completion
+
+**Did:**
+1. Removed post-transaction confirmation dialog requirement:
+   - In [`pos-client.tsx`](modules/pos/components/pos-client.tsx), eliminated the automatic modal popup (`SendWhatsappInvoiceDialog`) after completing checkout.
+   - When a transaction completes with a customer phone number, `sendInvoiceWhatsappAction` is dispatched immediately in the background with `toast.promise` feedback showing delivery status and customer name.
+   - Preserved [`SendWhatsappInvoiceDialog`](modules/pos/components/send-whatsapp-invoice-dialog.tsx) strictly for manual receipt re-sends via [`transaction-detail-dialog.tsx`](modules/pos/components/transaction-detail-dialog.tsx).
+2. Made phone number optional in [`sendInvoiceWhatsappSchema`](modules/pos/schemas/invoice-whatsapp-schema.ts) and upgraded [`InvoiceWhatsappService`](modules/pos/services/invoice-whatsapp-service.ts) to automatically fall back to the transaction customer's registered phone number in the database if not explicitly provided.
+3. Added unit tests for automated phone number lookup and verified full suite (`npm test` 80/80 passing, `npm run typecheck` 0 errors).
+
+---
+
+## 2026-11-08 — Redesigned PDF to Thermal-Style Digital Receipt & Fixed Logo Overlap
+
+**Did:**
+1. Transformed PDF generation in [`InvoicePdfService`](modules/pos/services/invoice-pdf-service.ts) from wide corporate A4 invoice to a modern mobile-optimized thermal digital receipt slip (80mm / 280pt width):
+   - Centered the gold Nyenyak blossom icon scaled neatly to 36pt height without text overlap or bleed.
+   - Replaced heavy multi-column table borders with clean receipt typography: itemized quantity $\times$ price lines, dashed dividers (`dashArray: [3, 2.5]`), highlighted gold `TOTAL AKHIR` banner, payment methods, and warm receipt closing footer.
+   - Dynamic single-page height calculation fitting exact transaction item and voucher counts.
+2. Updated receipt terminology across tenant POS:
+   - Changed buttons and labels in [`transaction-detail-dialog.tsx`](modules/pos/components/transaction-detail-dialog.tsx) and [`send-whatsapp-invoice-dialog.tsx`](modules/pos/components/send-whatsapp-invoice-dialog.tsx) from "Invoice / Faktur" to "Struk".
+   - Default WhatsApp caption updated to "Berikut kami lampirkan struk pembayaran digital resmi...".
+3. Fixed Evolution API instance name trailing newline issue in `.env` and ensured `.trim()` is called across all service methods.
+4. Verified layout with visual preview generation and full test suite (`npm test` 79/79 passing, `npm run typecheck` 0 errors).
+
+---
+
+## 2026-11-08 — Implemented Admin WhatsApp API Pairing, Unpairing & Test Sandbox
+
+**Did:**
+1. Fixed PDF invoice header layout and logo geometry in [`InvoicePdfService`](modules/pos/services/invoice-pdf-service.ts):
+   - Scaled the gold lotus logo to a clean, proportional 42pt height and positioned it in the top-left margin.
+   - Offset the header text ("NYENYAK", branch name, and address) cleanly to the right of the logo with 14pt padding, eliminating text collision and bleed across the separator line.
+2. Created new domain module `modules/whatsapp/` following strict 5-layer architecture:
+   - **Schema**: [`connectWhatsappSchema`](modules/whatsapp/schemas/whatsapp-pairing-schema.ts) and [`sendTestWhatsappSchema`](modules/whatsapp/schemas/whatsapp-pairing-schema.ts).
+   - **Service**: [`WhatsappPairingService`](modules/whatsapp/services/whatsapp-pairing-service.ts) interacting with Evolution API:
+     - `getConnectionStatus()`: queries `GET /instance/connectionState/:instance` and `GET /instance/fetchInstances` to retrieve real-time state, owner phone number, and profile details.
+     - `connect(phoneNumber?)`: queries `GET /instance/connect/:instance` supporting dual pairing modes (QR Code base64 image or 8-digit numeric pairing code).
+     - `logout()`: invokes `DELETE /instance/logout/:instance` to unpair sessions.
+     - `restart()`: invokes `POST /instance/restart/:instance`.
+     - `sendTestMessage()`: dispatches test text messages via `POST /message/sendText/:instance`.
+   - **Action**: [`whatsapp-pairing-action.ts`](modules/whatsapp/actions/whatsapp-pairing-action.ts) (`"use server"`).
+   - **Hook**: [`useWhatsappPairing`](modules/whatsapp/hooks/use-whatsapp-pairing.ts) handling active polling every 4 seconds while awaiting connection, copy-to-clipboard for pairing codes, and Sonner feedback.
+   - **Component**: [`WhatsappPairingManager`](modules/whatsapp/components/whatsapp-pairing-manager.tsx) with live connection status banner, dual pairing tabs (QR Code scan & Phone number pairing code), device overview, unpair confirmation dialog, and message test sandbox.
+2. Built admin route at [`app/admin/(main)/whatsapp/page.tsx`](app/admin/(main)/whatsapp/page.tsx) with dynamic server-side initial status fetching.
+3. Added "Integrasi WhatsApp" navigation link to [`app-sidebar-data.tsx`](components/app-sidebar-data.tsx) and breadcrumb resolution to [`admin-breadcrumb.tsx`](components/admin-breadcrumb.tsx).
+4. Added unit test suites in [`whatsapp-pairing-schema.test.ts`](modules/whatsapp/schemas/whatsapp-pairing-schema.test.ts), [`whatsapp-pairing-service.test.ts`](modules/whatsapp/services/whatsapp-pairing-service.test.ts), and [`whatsapp-pairing-action.test.ts`](modules/whatsapp/actions/whatsapp-pairing-action.test.ts).
+5. Verified with `npm test` (79/79 passing) and `npm run typecheck` (`tsc --noEmit` 0 errors).
+
+**Why:**
+Allows administrators to pair, monitor, and unpair the official WhatsApp gateway number directly from the web admin portal without needing terminal access or manual Postman API requests.
+
+---
+
+## 2026-11-08 — Implemented Tenant WhatsApp Invoice PDF Delivery via Evolution API
+
+**Did:**
+1. Branched to `feat/tenant-whatsapp-invoice-pdf` and recorded [`ADR-0011`](docs/adr/0011-whatsapp-invoice-pdf-via-evolution-api.md) in [`docs/adr/README.md`](docs/adr/README.md).
+2. Installed `pdf-lib` for fast, zero-native-dependency server-side vector PDF generation in Node.js.
+3. Added Evolution API environment variables to [`.env`](.env) (`EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCE_NAME="tester"`).
+4. Implemented strict 5-layer module architecture under `modules/pos/`:
+   - **Schema**: [`sendInvoiceWhatsappSchema`](modules/pos/schemas/invoice-whatsapp-schema.ts) with input sanitization and automatic normalization from Indonesian phone numbers (`08xx` / `8xx`) to international E.164 (`628xx`).
+   - **Repository**: [`InvoiceRepository.getInvoiceData`](modules/pos/repositories/invoice-repository.ts) fetching transaction, branch details, cashier names, payments, and generated customer vouchers.
+   - **Services**:
+     - [`InvoicePdfService`](modules/pos/services/invoice-pdf-service.ts): Generates branded A4 PDF invoices with embedded logo, branch header, customer & cashier card, itemized table, discount and voucher highlights, payment method breakdowns, and validity footer.
+     - [`EvolutionApiService`](modules/pos/services/evolution-api-service.ts): REST client for Evolution API (`POST /message/sendMedia/:instance` and `GET /instance/connectionState/:instance`).
+     - [`InvoiceWhatsappService`](modules/pos/services/invoice-whatsapp-service.ts): Orchestrates PDF synthesis and Evolution API document dispatch.
+   - **Action**: [`sendInvoiceWhatsappAction`](modules/pos/actions/invoice-whatsapp-action.ts), `getInvoicePdfBase64Action`, and `checkEvolutionApiStatusAction` (`"use server"`).
+   - **Hook**: [`useSendInvoiceWhatsapp`](modules/pos/hooks/use-send-invoice-whatsapp.ts) managing send progress, PDF downloads, and toast feedback.
+   - **Component**: [`SendWhatsappInvoiceDialog`](modules/pos/components/send-whatsapp-invoice-dialog.tsx) with phone input, custom message, direct PDF download button, and WhatsApp send button.
+5. Integrated into tenant POS UI:
+   - Added "Kirim Invoice WA" button to [`TransactionDetailDialog`](modules/pos/components/transaction-detail-dialog.tsx).
+   - Integrated post-checkout invoice dialog trigger into [`PosClient`](modules/pos/components/pos-client.tsx) immediately after successful checkout.
+6. Added automated unit tests in [`invoice-whatsapp-schema.test.ts`](modules/pos/schemas/invoice-whatsapp-schema.test.ts), [`invoice-pdf-service.test.ts`](modules/pos/services/invoice-pdf-service.test.ts), and [`invoice-whatsapp-action.test.ts`](modules/pos/actions/invoice-whatsapp-action.test.ts).
+7. Verified with `npm test` (68/68 passing) and `npm run typecheck` (`tsc --noEmit` 0 errors).
+
+**Why:**
+Enables tenant cashiers and operators to send formal, branded PDF invoices directly to customer WhatsApp inboxes without third-party cloud file hosting or browser-dependent print dialogs.
+
+---
+
+## 2026-11-04 — Created Nyenyak Print ESC/POS Thermal Printer Bridge Flutter App (`nyenyak-print`)
+
+**Did:**
+1. Recorded and accepted [`ADR-0010`](docs/adr/0010-nyenyak-print-escpos-bridge-flutter-app.md) and updated [`docs/adr/README.md`](docs/adr/README.md).
+2. Scaffolded standalone Flutter application at [`./nyenyak-print`](nyenyak-print/pubspec.yaml) and excluded `nyenyak-print` from root [`tsconfig.json`](tsconfig.json) and [`eslint.config.mjs`](eslint.config.mjs).
+3. Configured Android (`BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`, legacy Bluetooth, `INTERNET`) and iOS (`NSBluetoothAlwaysUsageDescription`, `NSLocalNetworkUsageDescription`) permissions.
+4. Built the 5-layer bridge module under `nyenyak-print/lib/features/bridge/`:
+   - **Models**: [`PaperWidth`](nyenyak-print/lib/features/bridge/models/paper_width.dart) (`58mm` / 32 cols and `80mm` / 48 cols), [`ReceiptPayload`](nyenyak-print/lib/features/bridge/models/receipt_payload.dart), [`BluetoothPrinterDevice`](nyenyak-print/lib/features/bridge/models/bluetooth_printer_device.dart), [`BridgeConfig`](nyenyak-print/lib/features/bridge/models/bridge_config.dart), and [`PrintJobLog`](nyenyak-print/lib/features/bridge/models/print_job_log.dart).
+   - **Repositories**: [`BridgeSettingsRepository`](nyenyak-print/lib/features/bridge/repositories/bridge_settings_repository.dart) (`SharedPreferences` persistence) and [`BluetoothPrinterRepository`](nyenyak-print/lib/features/bridge/repositories/bluetooth_printer_repository.dart) (`print_bluetooth_thermal` + `permission_handler`).
+   - **Services**:
+     - [`EscPosEncoderService`](nyenyak-print/lib/features/bridge/services/esc_pos_encoder_service.dart): Compiles structured receipt payloads (or raw Base64 bytes) into ESC/POS commands (`ESC @`, alignment, bold/double-height, two-column key-value justification, itemized rows, native `GS ( k` QR code, partial cut `GS V 66 3`, and cash drawer kick `ESC p`) plus plain-text thermal receipt preview lines.
+     - [`LocalBridgeServerService`](nyenyak-print/lib/features/bridge/services/local_bridge_server_service.dart): Loopback `HttpServer` (`127.0.0.1:9123` default, optional `0.0.0.0` LAN mode) with CORS and Chrome Private Network Access (`Access-Control-Allow-Private-Network: true`) headers, serving `GET /status`, `POST /print`, `POST /test-print`, and `WS /ws`.
+   - **Controller & UI**: [`BridgeController`](nyenyak-print/lib/features/bridge/controllers/bridge_controller.dart), [`BridgeDashboardPage`](nyenyak-print/lib/features/bridge/presentation/pages/bridge_dashboard_page.dart), [`ThermalReceiptPreviewCard`](nyenyak-print/lib/features/bridge/presentation/widgets/thermal_receipt_preview_card.dart), and [`WebIntegrationDialog`](nyenyak-print/lib/features/bridge/presentation/widgets/web_integration_dialog.dart) styled with `NyenyakTheme` (`Plus Jakarta Sans` + `JetBrains Mono` receipt preview).
+   - **Native Undismissable Foreground Service Notification**: Added [`BridgeForegroundService.kt`](nyenyak-print/android/app/src/main/kotlin/com/okgo/nyenyak/nyenyak_print/BridgeForegroundService.kt), [`MainActivity.kt`](nyenyak-print/android/app/src/main/kotlin/com/okgo/nyenyak/nyenyak_print/MainActivity.kt), [`AppDelegate.swift`](nyenyak-print/ios/Runner/AppDelegate.swift), and [`BridgeNotificationService`](nyenyak-print/lib/features/bridge/services/bridge_notification_service.dart) to pin an ongoing (`FLAG_ONGOING_EVENT | FLAG_NO_CLEAR`, auto-restored on swipe) notification showing the active bridge server port and connected Bluetooth printer whenever the server runs, and keeping the HTTP server alive in the background.
+5. Verified with `cd nyenyak-print && dart analyze` (0 issues) and `npm run typecheck` (0 errors).
+
+**Why:**
+Allows any POS web page running in Chrome/Safari to silently print 58mm or 80mm thermal receipts over Bluetooth via `http://127.0.0.1:9123/print` or `ws://127.0.0.1:9123/ws` without browser print dialogs or Web Bluetooth limitations.
+
+---
+
 ## 2026-11-01 — Installed On-Device MobileFaceNet & Anti-Spoofing TFLite Neural Network Models
 
 **Did:**

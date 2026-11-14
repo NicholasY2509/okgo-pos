@@ -19,7 +19,8 @@ import {
   Banknote,
   MonitorSmartphoneIcon,
   StarIcon,
-  CircleDollarSign
+  CircleDollarSign,
+  MessageSquare
 } from "lucide-react"
 
 export const branchNav = [
@@ -184,6 +185,12 @@ export const adminNav = [
         title: "Pengaturan Brand",
         url: "/brand-settings",
         icon: (<Settings2Icon />),
+        roles: ["Admin"],
+      },
+      {
+        title: "Integrasi WhatsApp",
+        url: "/whatsapp",
+        icon: (<MessageSquare />),
         roles: ["Admin"],
       }
     ]

@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../../../../nyenyak-portal"
+		},
+		{
+			"path": "../../../../nyenyak-print"
 		}
 	],
 	"settings": {}
