@@ -3,8 +3,34 @@ import { UpdatePayrollItemInput } from "../schemas/payroll";
 import { Prisma } from "@/lib/generated/prisma";
 
 export class PayrollUIService {
+  private static serializePayroll<
+    T extends {
+      baseSalary: unknown;
+      totalAllowance: unknown;
+      totalDeduction: unknown;
+      netSalary: unknown;
+      items?: Array<{ amount: unknown } & Record<string, unknown>>;
+    },
+  >(payroll: T) {
+    return {
+      ...payroll,
+      baseSalary: Number(payroll.baseSalary ?? 0),
+      totalAllowance: Number(payroll.totalAllowance ?? 0),
+      totalDeduction: Number(payroll.totalDeduction ?? 0),
+      netSalary: Number(payroll.netSalary ?? 0),
+      ...(payroll.items
+        ? {
+            items: payroll.items.map((item) => ({
+              ...item,
+              amount: Number(item.amount ?? 0),
+            })),
+          }
+        : {}),
+    };
+  }
+
   static async getPayrolls() {
-    return await prisma.payroll.findMany({
+    const payrolls = await prisma.payroll.findMany({
       include: {
         staff: true,
       },
@@ -12,9 +38,10 @@ export class PayrollUIService {
         createdAt: "desc",
       },
     });
+    return payrolls.map((p) => PayrollUIService.serializePayroll(p));
   }
   static async getPayrollsByMonth(monthPeriod: string) {
-    return await prisma.payroll.findMany({
+    const payrolls = await prisma.payroll.findMany({
       where: { monthPeriod },
       include: {
         staff: true,
@@ -23,6 +50,7 @@ export class PayrollUIService {
         createdAt: "desc",
       },
     });
+    return payrolls.map((p) => PayrollUIService.serializePayroll(p));
   }
 
   static async getPayrollSummaryByMonth() {
@@ -68,7 +96,7 @@ export class PayrollUIService {
     return Array.from(summaryMap.values()).sort((a, b) => b.monthPeriod.localeCompare(a.monthPeriod));
   }
   static async getPayrollById(id: string) {
-    return await prisma.payroll.findUnique({
+    const payroll = await prisma.payroll.findUnique({
       where: { id },
       include: {
         staff: true,
@@ -77,6 +105,7 @@ export class PayrollUIService {
         },
       },
     });
+    return payroll ? PayrollUIService.serializePayroll(payroll) : null;
   }
 
   static async updatePayrollItem(input: UpdatePayrollItemInput) {

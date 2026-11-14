@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePayrollDetails } from "../hooks/use-payroll";
@@ -34,7 +34,17 @@ type PayrollData = {
   items: PayrollItem[];
 };
 
-export function PayrollDetailsDialog({ payroll, open, onOpenChange }: { payroll: PayrollData | null, open: boolean, onOpenChange: (open: boolean) => void }) {
+export function PayrollDetailsDialog({
+  payroll,
+  open,
+  onOpenChange,
+  isLoading = false,
+}: {
+  payroll: PayrollData | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  isLoading?: boolean;
+}) {
   const { handleAddManualItem, handleDeleteItem, handleSettle, isUpdating } = usePayrollDetails();
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -49,10 +59,9 @@ export function PayrollDetailsDialog({ payroll, open, onOpenChange }: { payroll:
     },
   });
 
-  // Update default values when payroll changes
-  if (payroll?.id !== form.getValues("payrollId")) {
+  useEffect(() => {
     form.setValue("payrollId", payroll?.id || "");
-  }
+  }, [payroll?.id, form]);
 
   const formatCurrency = (val: any) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(Number(val || 0));
@@ -65,7 +74,21 @@ export function PayrollDetailsDialog({ payroll, open, onOpenChange }: { payroll:
     });
   };
 
-  if (!payroll) return null;
+  if (!payroll) {
+    if (!isLoading) return null;
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-175">
+          <DialogHeader>
+            <DialogTitle>Memuat Detail Slip Gaji...</DialogTitle>
+          </DialogHeader>
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            Sedang mengambil rincian slip gaji staf...
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const isDraft = payroll.status === "DRAFT";
 

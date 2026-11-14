@@ -5,6 +5,8 @@ import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { getPayrollDetailsAction } from "../actions/payroll-action";
 import { PayrollDetailsDialog } from "./payroll-details-dialog";
 
 type PayrollListItem = {
@@ -25,19 +27,25 @@ export function PayrollTable({ data }: { data: PayrollListItem[] }) {
   const fetchDetails = async (id: string) => {
     setLoadingDetails(true);
     setSelectedPayrollId(id);
+    setDetailsData(null);
     setDialogOpen(true);
-    
+
     try {
-      // In a real app, you might use React Query or pass a server action down as a prop
-      // Since this is a client component, we should ideally fetch via server action or API route.
-      // We will create a simple server action for getting details.
-      const { getPayrollDetailsAction } = await import("../actions/payroll-action");
       const res = await getPayrollDetailsAction(id);
-      if (res.data) {
-        setDetailsData(res.data);
+      if (res.error) {
+        toast.error(res.error);
+        setDialogOpen(false);
+        return;
       }
-    } catch (e) {
-      console.error(e);
+      if (!res.data) {
+        toast.error("Data slip gaji tidak ditemukan.");
+        setDialogOpen(false);
+        return;
+      }
+      setDetailsData(res.data);
+    } catch {
+      toast.error("Gagal memuat detail slip gaji.");
+      setDialogOpen(false);
     } finally {
       setLoadingDetails(false);
     }
@@ -104,7 +112,8 @@ export function PayrollTable({ data }: { data: PayrollListItem[] }) {
               setSelectedPayrollId(null);
             }
           }} 
-          payroll={detailsData} 
+          payroll={detailsData}
+          isLoading={loadingDetails}
         />
       )}
     </>

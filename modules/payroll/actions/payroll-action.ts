@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache";
 
 export async function generateBatchPayrollAction(values: GenerateBatchPayrollInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"]);
+    const authCheck = await AuthGuardService.requireAuth();
     if (!authCheck.success) {
       return { error: authCheck.error };
     }
@@ -42,7 +42,7 @@ export async function generateBatchPayrollAction(values: GenerateBatchPayrollInp
 
 export async function addPayrollItemAction(values: UpdatePayrollItemInput) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"]);
+    const authCheck = await AuthGuardService.requireAuth();
     if (!authCheck.success) {
       return { error: authCheck.error };
     }
@@ -63,7 +63,7 @@ export async function addPayrollItemAction(values: UpdatePayrollItemInput) {
 
 export async function getPayrollDetailsAction(id: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"]);
+    const authCheck = await AuthGuardService.requireAuth();
     if (!authCheck.success) {
       return { error: authCheck.error };
     }
@@ -78,7 +78,7 @@ export async function getPayrollDetailsAction(id: string) {
 
 export async function deletePayrollItemAction(itemId: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"]);
+    const authCheck = await AuthGuardService.requireAuth();
     if (!authCheck.success) {
       return { error: authCheck.error };
     }
@@ -94,7 +94,7 @@ export async function deletePayrollItemAction(itemId: string) {
 
 export async function settlePayrollAction(payrollId: string) {
   try {
-    const authCheck = await AuthGuardService.requireAuth(["ADMIN"]);
+    const authCheck = await AuthGuardService.requireAuth();
     if (!authCheck.success) {
       return { error: authCheck.error };
     }
