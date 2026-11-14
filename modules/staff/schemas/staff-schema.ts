@@ -30,6 +30,8 @@ export type PortalBranchStaffFacesQuery = z.infer<typeof portalBranchStaffFacesQ
 export const registerStaffFaceSchema = z.object({
   staffId: z.string().min(1, "ID staf wajib diisi."),
   branchId: z.string().min(1, "ID cabang wajib diisi."),
+  email: z.string().email("Email pengguna tidak valid."),
+  password: z.string().min(1, "Kata sandi pengguna wajib diisi."),
   embedding: z
     .array(z.number().finite("Nilai vektor harus berupa angka valid."))
     .min(64, "Dimensi vektor wajah minimal 64.")

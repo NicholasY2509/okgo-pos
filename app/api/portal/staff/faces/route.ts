@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { AuthService } from "@/modules/auth/services/auth-service"
 import {
   portalBranchStaffFacesQuerySchema,
   registerStaffFaceSchema,
@@ -58,6 +59,19 @@ export async function POST(req: NextRequest) {
       { error: firstError || "Data registrasi wajah tidak valid." },
       { status: 400 }
     )
+  }
+
+  try {
+    await AuthService.verifyCredentials(
+      validated.data.email,
+      validated.data.password
+    )
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Kata sandi pengguna yang Anda masukkan salah."
+    return NextResponse.json({ error: message }, { status: 401 })
   }
 
   try {
