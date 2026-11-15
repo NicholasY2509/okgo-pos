@@ -17,6 +17,7 @@ import { TimePicker } from "@/components/ui/time-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { assignBookingToTimetableAction, previewBookingAssignmentAction } from "@/modules/booking/actions/booking-actions";
+import { updateBookingStatusAction } from "@/modules/booking/actions/booking-list-actions";
 import { getEligiblePromotionsAction } from "@/modules/discount/actions/promotion-action";
 import { getCustomerVouchersAction, getVoucherByCodeAction } from "@/modules/vouchers/actions/get-customer-vouchers-action";
 import { useTimetableStore } from "../../stores/timetable-store";
@@ -62,7 +63,8 @@ export function AssignBookingModal() {
     fetchSessions 
   } = useTimetableStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitAction, setSubmitAction] = useState<"pay_later" | "pay_now" | null>(null);
+  const [submitAction, setSubmitAction] = useState<"pay_later" | "pay_now" | "cancel" | null>(null);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [appliedPromos, setAppliedPromos] = useState<AppliedPromoItem[]>([]);
   const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
   const [isLoadingPromos, setIsLoadingPromos] = useState(false);
@@ -380,6 +382,34 @@ export function AssignBookingModal() {
       }
     } catch (err: any) {
       toast.error(err.message || "Terjadi kesalahan");
+    } finally {
+      setIsSubmitting(false);
+      setSubmitAction(null);
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    if (!selectedBookingForAssignment) return;
+    setIsSubmitting(true);
+    setSubmitAction("cancel");
+    try {
+      const res = await updateBookingStatusAction(selectedBookingForAssignment.id, "CANCELLED");
+      if (res.success) {
+        toast.success("Booking berhasil dibatalkan");
+        const socket = io(
+          process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined
+        );
+        socket.emit("service_assigned", { branchId });
+        setTimeout(() => socket.disconnect(), 1000);
+        fetchPendingBookings();
+        fetchSessions();
+        setIsCancelDialogOpen(false);
+        setSelectedBookingForAssignment(null);
+      } else {
+        toast.error(res.error || "Gagal membatalkan booking");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan saat membatalkan booking");
     } finally {
       setIsSubmitting(false);
       setSubmitAction(null);
@@ -739,15 +769,26 @@ export function AssignBookingModal() {
                     "Bayar nanti dan jadwalkan sesi"
                   )}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  disabled={isSubmitting}
-                  onClick={() => setSelectedBookingForAssignment(null)}
-                >
-                  Batal
-                </Button>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+                    disabled={isSubmitting}
+                    onClick={() => setIsCancelDialogOpen(true)}
+                  >
+                    Batalkan Booking
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    disabled={isSubmitting}
+                    onClick={() => setSelectedBookingForAssignment(null)}
+                  >
+                    Tutup
+                  </Button>
+                </div>
               </div>
             </div>
           </form>
@@ -899,6 +940,46 @@ export function AssignBookingModal() {
                 </div>
               )}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Batalkan Booking?</DialogTitle>
+            <DialogDescription>
+              Booking untuk{" "}
+              <span className="font-semibold text-foreground">
+                {selectedBookingForAssignment?.customerName || "Pelanggan"}
+              </span>{" "}
+              akan diubah statusnya menjadi dibatalkan dan dihapus dari daftar tunggu jadwal.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={() => setIsCancelDialogOpen(false)}
+            >
+              Kembali
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isSubmitting}
+              onClick={handleCancelBooking}
+            >
+              {isSubmitting && submitAction === "cancel" ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Membatalkan...
+                </>
+              ) : (
+                "Ya, Batalkan Booking"
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
