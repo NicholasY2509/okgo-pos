@@ -3,9 +3,19 @@
 import { useAdminBookingForm } from "../hooks/use-admin-booking-form";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Calendar as CalendarIcon, Loader2, Plus, Trash2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CustomerSelector } from "../../pos/components/customer-selector";
@@ -30,6 +40,11 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
     loadingSlots,
     availableSlots,
     selectedDate,
+    selectedStartTime,
+    isBusyStaffSelected,
+    confirmBusyStaffOpen,
+    setConfirmBusyStaffOpen,
+    confirmBusyStaffSubmit,
   } = useAdminBookingForm({ branchId, onSuccess });
 
   if (loadingInitial) {
@@ -123,6 +138,8 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
                               <StaffCombobox
                                 branchId={branchId}
                                 serviceId={currentServiceId}
+                                startTime={selectedStartTime ? new Date(selectedStartTime) : undefined}
+                                includeUnavailable={true}
                                 value={field.value || ""}
                                 onChange={(val) => field.onChange(val || undefined)}
                               />
@@ -194,29 +211,56 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
                     <p className="text-muted-foreground font-light text-sm">Tidak ada jadwal tersedia di tanggal ini.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 h-full overflow-y-auto pr-2 pb-2 content-start">
-                    {availableSlots.map(slot => {
-                      const dateObj = new Date(slot);
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 h-full overflow-y-auto pr-2 pb-2 content-start">
+                    {availableSlots.map((slot) => {
+                      const dateObj = new Date(slot.time);
                       const timeString = dateObj.toLocaleTimeString('id-ID', {
                         hour: '2-digit',
                         minute: '2-digit',
                         timeZone: 'Asia/Jakarta'
                       });
-                      const isSelected = form.watch("startTime") === slot;
+                      const isSelected = form.watch("startTime") === slot.time;
                       return (
-                        <div
-                          key={slot}
+                        <button
+                          key={slot.time}
+                          type="button"
+                          disabled={!slot.canFulfill}
                           className={cn(
-                            "py-4 text-center cursor-pointer transition-all rounded-2xl border font-medium text-sm",
-                            isSelected
-                              ? "border-primary bg-primary text-primary-foreground shadow-md"
-                              : "border-border/50 bg-muted/10 hover:bg-muted/30 text-foreground"
+                            "py-2.5 px-2 text-center transition-all rounded-xl border flex flex-col items-center justify-center gap-0.5",
+                            !slot.canFulfill
+                              ? "border-border/40 bg-muted/30 text-muted-foreground opacity-65 cursor-not-allowed"
+                              : isSelected
+                                ? "border-primary bg-primary text-primary-foreground shadow-md cursor-pointer"
+                                : "border-border/60 bg-muted/10 hover:bg-muted/30 text-foreground cursor-pointer"
                           )}
-                          onClick={() => form.setValue("startTime", slot, { shouldValidate: true })}
+                          onClick={() => {
+                            if (!slot.canFulfill) return;
+                            form.setValue("startTime", slot.time, { shouldValidate: true });
+                          }}
                         >
-                          {timeString}
-                        </div>
-                      )
+                          <span className="font-semibold text-sm leading-tight">{timeString}</span>
+                          <span
+                            className={cn(
+                              "text-[11px] leading-tight",
+                              isSelected
+                                ? "text-primary-foreground/90"
+                                : !slot.canFulfill
+                                  ? "text-destructive font-medium"
+                                  : slot.hasBusyStaff
+                                    ? "text-amber-600 dark:text-amber-400 font-medium"
+                                    : "text-emerald-600 dark:text-emerald-400 font-medium"
+                            )}
+                          >
+                            {slot.availableCount > 0
+                              ? slot.hasBusyStaff
+                                ? `${slot.availableCount} slot (${slot.reason})`
+                                : slot.canFulfill
+                                  ? `${slot.availableCount} slot`
+                                  : `${slot.availableCount} slot (${slot.reason})`
+                              : "Penuh"}
+                          </span>
+                        </button>
+                      );
                     })}
                   </div>
                 )}
@@ -225,6 +269,15 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
             </div>
           </div>
         </div>
+
+        {isBusyStaffSelected && (
+          <div className="flex items-start gap-2.5 p-3 rounded-lg border border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-sm">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+            <p>
+              Peringatan: Terapis yang dipilih sedang sibuk pada jam yang dipilih. Yakin ingin melanjutkan?
+            </p>
+          </div>
+        )}
 
         <div className="pt-4 flex justify-end gap-2">
           {onCancel && (
@@ -238,6 +291,23 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
           </Button>
         </div>
       </form>
+
+      <AlertDialog open={confirmBusyStaffOpen} onOpenChange={setConfirmBusyStaffOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terapis Sibuk pada Jam Terpilih</AlertDialogTitle>
+            <AlertDialogDescription>
+              Terapis yang Anda pilih sedang melayani atau terjadwal pada jam yang dipilih. Yakin ingin melanjutkan?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBusyStaffSubmit}>
+              Ya, Lanjutkan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Form>
   );
 }

@@ -12,14 +12,26 @@ import {
 
 // --- Staff Actions ---
 
-export async function getStaffListAction(branchId?: string, serviceId?: string, excludeSessionId?: string, startTime?: Date) {
+export async function getStaffListAction(
+  branchId?: string,
+  serviceId?: string,
+  excludeSessionId?: string,
+  startTime?: Date,
+  includeUnavailable?: boolean
+) {
   try {
     const authCheck = await AuthGuardService.requireAuth()
     if (!authCheck.success) {
       return { error: authCheck.error }
     }
 
-    const staff = await StaffService.getAllStaff(branchId, serviceId, excludeSessionId, startTime)
+    const staff = await StaffService.getAllStaff(
+      branchId,
+      serviceId,
+      excludeSessionId,
+      startTime,
+      includeUnavailable
+    )
     return { success: true, data: staff }
   } catch (error: unknown) {
     console.error("Failed to fetch staff list:", error)

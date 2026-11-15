@@ -16,7 +16,7 @@ interface CustomerSelectionDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedCustomerId?: string;
   onSelectCustomer: (id: string | undefined) => void;
-  onNewCustomer: () => void;
+  onNewCustomer: (searchQuery?: string) => void;
   initialCustomers?: any[];
 }
 
@@ -60,7 +60,7 @@ export function CustomerSelectionDialog({
             </div>
             <Button variant="secondary" onClick={() => {
               onOpenChange(false);
-              onNewCustomer();
+              onNewCustomer(searchQuery);
             }}>
               <UserPlus className="w-4 h-4 mr-2" />
               Baru
@@ -100,9 +100,22 @@ export function CustomerSelectionDialog({
               ))}
             </div>
           ) : customers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-              <User className="w-12 h-12 mb-2 opacity-20" />
-              <p>Tidak ada pelanggan ditemukan.</p>
+            <div className="flex flex-col items-center justify-center h-48 text-muted-foreground gap-3">
+              <div className="flex flex-col items-center">
+                <User className="w-12 h-12 mb-2 opacity-20" />
+                <p>Tidak ada pelanggan ditemukan.</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onNewCustomer(searchQuery);
+                }}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Tambahkan Customer
+              </Button>
             </div>
           ) : (
             <div className="space-y-1 p-1">

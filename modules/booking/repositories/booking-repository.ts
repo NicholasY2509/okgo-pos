@@ -194,8 +194,6 @@ export const BookingRepository = {
       }
     });
 
-    if (rooms.length < selections.length || staff.length < selections.length) return [];
-
     const existingSessions = await prisma.serviceSession.findMany({
       where: {
         status: { in: ["SCHEDULED", "IN_PROGRESS"] },
@@ -216,140 +214,162 @@ export const BookingRepository = {
     const businessStart = 8;
     const businessEnd = 22;
     const closingTime = parseJakartaDateTime(dateOnly, businessEnd, 0, 0, 0);
-    const slots = [];
+    const slots: { time: string; availableCount: number; canFulfill: boolean; reason?: string }[] = [];
     const now = new Date();
 
     const minTime = addHours(now, 2);
 
     for (let hour = businessStart; hour < businessEnd; hour++) {
-      const slotStart = parseJakartaDateTime(dateOnly, hour, 0, 0, 0);
-      const slotEnd = addMinutes(slotStart, maxDuration);
+      for (const minute of [0, 30]) {
+        const slotStart = parseJakartaDateTime(dateOnly, hour, minute, 0, 0);
+        const slotEnd = addMinutes(slotStart, maxDuration);
 
-      if (isBefore(slotStart, minTime)) continue;
+        if (isBefore(slotStart, minTime)) continue;
 
-      if (slotEnd > closingTime) {
-        continue;
-      }
-
-      const roomSessionCounts = new Map<string, number>();
-      const busyStaffIds = StaffAvailabilityService.getBusyStaffIds(existingSessions, slotStart, slotEnd);
-
-      for (const session of existingSessions) {
-        if (!session.startTime) continue;
-        const sessionStart = session.startTime;
-        const sessionEnd = session.endTime || addMinutes(sessionStart, 60);
-
-        if (session.branchId === branchId && slotStart < sessionEnd && slotEnd > sessionStart) {
-          roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
+        if (slotEnd > closingTime) {
+          continue;
         }
-      }
 
-      let unassignedCountInSlot = 0;
-      for (const bkg of unassignedBookings) {
-        if (!bkg.scheduledStartTime) continue;
-        const bkgStart = bkg.scheduledStartTime;
-        const bkgEnd = addMinutes(bkgStart, bkg.estimatedDuration);
-        if (slotStart < bkgEnd && slotEnd > bkgStart) {
-          const assignedCount = existingSessions.filter(s => s.bookingId === bkg.id && s.startTime && slotStart < (s.endTime || addMinutes(s.startTime, 60)) && slotEnd > s.startTime).length;
-          unassignedCountInSlot += Math.max(0, (bkg.guestCount || 1) - assignedCount);
+        const roomSessionCounts = new Map<string, number>();
+        const busyStaffIds = StaffAvailabilityService.getBusyStaffIds(existingSessions, slotStart, slotEnd);
 
-          for (const item of bkg.items || []) {
-            if (item.requestedStaffId) {
-              busyStaffIds.add(item.requestedStaffId);
+        for (const session of existingSessions) {
+          if (!session.startTime) continue;
+          const sessionStart = session.startTime;
+          const sessionEnd = session.endTime || addMinutes(sessionStart, 60);
+
+          if (session.branchId === branchId && slotStart < sessionEnd && slotEnd > sessionStart) {
+            roomSessionCounts.set(session.roomId, (roomSessionCounts.get(session.roomId) || 0) + 1);
+          }
+        }
+
+        let unassignedCountInSlot = 0;
+        for (const bkg of unassignedBookings) {
+          if (!bkg.scheduledStartTime) continue;
+          const bkgStart = bkg.scheduledStartTime;
+          const bkgEnd = addMinutes(bkgStart, bkg.estimatedDuration);
+          if (slotStart < bkgEnd && slotEnd > bkgStart) {
+            const assignedCount = existingSessions.filter(s => s.bookingId === bkg.id && s.startTime && slotStart < (s.endTime || addMinutes(s.startTime, 60)) && slotEnd > s.startTime).length;
+            unassignedCountInSlot += Math.max(0, (bkg.guestCount || 1) - assignedCount);
+
+            for (const item of bkg.items || []) {
+              if (item.requestedStaffId) {
+                busyStaffIds.add(item.requestedStaffId);
+              }
             }
           }
         }
-      }
 
-      const availableRooms = [];
-      for (const r of rooms) {
-        const count = roomSessionCounts.get(r.id) || 0;
-        const capacity = r.capacity || 1;
-        const remaining = Math.max(0, capacity - count);
-        for (let i = 0; i < remaining; i++) {
-          availableRooms.push(r);
-        }
-      }
-
-      // Deduct unassigned bookings from available standard rooms (or any room)
-      for (let i = 0; i < unassignedCountInSlot; i++) {
-        const stdIndex = availableRooms.findIndex(r => !r.isVip);
-        if (stdIndex !== -1) {
-          availableRooms.splice(stdIndex, 1);
-        } else if (availableRooms.length > 0) {
-          availableRooms.splice(0, 1);
-        }
-      }
-
-      const availableStaff = staff.filter(s => !busyStaffIds.has(s.id));
-
-      const vipServicesCount = services.filter(s => s.isVip).length;
-      const standardServicesCount = services.length - vipServicesCount;
-
-      const availableVipRooms = availableRooms.filter(r => r.isVip).length;
-      const availableStandardRooms = availableRooms.filter(r => !r.isVip).length;
-
-      // If selections is empty, we just need at least 1 room available
-      if (selections.length === 0) {
-        if (availableRooms.length < 1) continue;
-        slots.push(slotStart.toISOString());
-        continue;
-      }
-
-      if (availableRooms.length < selections.length) continue;
-      if (availableVipRooms < vipServicesCount || availableStandardRooms < standardServicesCount) continue;
-
-      let canFulfillAll = true;
-
-      const requiredPositions: string[] = [];
-      for (const sel of selections) {
-        if (sel.serviceId) {
-          const svc = services.find(s => s.id === sel.serviceId);
-          if (svc?.category?.targetWorkPositionId) {
-            requiredPositions.push(svc.category.targetWorkPositionId);
-          } else {
-            requiredPositions.push("ANY");
+        const availableRooms = [];
+        for (const r of rooms) {
+          const count = roomSessionCounts.get(r.id) || 0;
+          const capacity = r.capacity || 1;
+          const remaining = Math.max(0, capacity - count);
+          for (let i = 0; i < remaining; i++) {
+            availableRooms.push(r);
           }
         }
-      }
 
-      if (requiredPositions.length > 0) {
-        const requiredCounts: Record<string, number> = {};
-        requiredPositions.forEach(pos => {
-          requiredCounts[pos] = (requiredCounts[pos] || 0) + 1;
+        // Deduct unassigned bookings from available standard rooms (or any room)
+        for (let i = 0; i < unassignedCountInSlot; i++) {
+          const stdIndex = availableRooms.findIndex(r => !r.isVip);
+          if (stdIndex !== -1) {
+            availableRooms.splice(stdIndex, 1);
+          } else if (availableRooms.length > 0) {
+            availableRooms.splice(0, 1);
+          }
+        }
+
+        const availableStaff = staff.filter(s => !busyStaffIds.has(s.id));
+        const availableCount = Math.min(availableRooms.length, availableStaff.length);
+
+        const vipServicesCount = services.filter(s => s.isVip).length;
+        const standardServicesCount = services.length - vipServicesCount;
+
+        const availableVipRooms = availableRooms.filter(r => r.isVip).length;
+        const availableStandardRooms = availableRooms.filter(r => !r.isVip).length;
+
+        let canFulfill = true;
+        let reason: string | undefined;
+
+        if (selections.length === 0) {
+          if (availableCount < 1) {
+            canFulfill = false;
+            reason = "Penuh";
+          }
+        } else {
+          if (availableRooms.length < selections.length || availableStaff.length < selections.length) {
+            canFulfill = false;
+            reason = availableCount === 0 ? "Penuh" : "Slot kurang";
+          } else if (availableVipRooms < vipServicesCount) {
+            canFulfill = false;
+            reason = "VIP penuh";
+          } else if (availableStandardRooms < standardServicesCount) {
+            canFulfill = false;
+            reason = "Kamar penuh";
+          }
+
+          if (canFulfill) {
+            const requiredPositions: string[] = [];
+            for (const sel of selections) {
+              if (sel.serviceId) {
+                const svc = services.find(s => s.id === sel.serviceId);
+                if (svc?.category?.targetWorkPositionId) {
+                  requiredPositions.push(svc.category.targetWorkPositionId);
+                } else {
+                  requiredPositions.push("ANY");
+                }
+              }
+            }
+
+            if (requiredPositions.length > 0) {
+              const requiredCounts: Record<string, number> = {};
+              requiredPositions.forEach(pos => {
+                requiredCounts[pos] = (requiredCounts[pos] || 0) + 1;
+              });
+
+              for (const pos in requiredCounts) {
+                if (pos !== "ANY") {
+                  const availableForPos = availableStaff.filter(s => s.workPositionId === pos).length;
+                  if (availableForPos < requiredCounts[pos]) {
+                    canFulfill = false;
+                    reason = "Terapis penuh";
+                    break;
+                  }
+                }
+              }
+            }
+          }
+
+          if (canFulfill) {
+            for (const sel of selections) {
+              if (sel.staffId) {
+                const staffIsAvailable = availableStaff.some(s => s.id === sel.staffId);
+                if (!staffIsAvailable) {
+                  canFulfill = false;
+                  reason = "Terapis sibuk";
+                  break;
+                }
+              }
+            }
+          }
+
+          if (canFulfill) {
+            const requestedSpecificStaffIds = selections.filter(s => s.staffId).map(s => s.staffId);
+            const uniqueStaffIds = new Set(requestedSpecificStaffIds);
+            if (uniqueStaffIds.size < requestedSpecificStaffIds.length) {
+              canFulfill = false;
+              reason = "Terapis ganda";
+            }
+          }
+        }
+
+        slots.push({
+          time: slotStart.toISOString(),
+          availableCount,
+          canFulfill,
+          reason,
         });
-
-        for (const pos in requiredCounts) {
-          if (pos !== "ANY") {
-            const availableForPos = availableStaff.filter(s => s.workPositionId === pos).length;
-            if (availableForPos < requiredCounts[pos]) {
-              canFulfillAll = false;
-              break;
-            }
-          }
-        }
-      }
-
-      for (const sel of selections) {
-        if (sel.staffId) {
-          const staffIsAvailable = availableStaff.some(s => s.id === sel.staffId);
-          if (!staffIsAvailable) {
-            canFulfillAll = false;
-            break;
-          }
-        }
-      }
-
-      if (canFulfillAll && availableStaff.length >= selections.length) {
-        const requestedSpecificStaffIds = selections.filter(s => s.staffId).map(s => s.staffId);
-        const uniqueStaffIds = new Set(requestedSpecificStaffIds);
-        if (uniqueStaffIds.size < requestedSpecificStaffIds.length) {
-          canFulfillAll = false;
-        }
-      }
-
-      if (canFulfillAll && availableStaff.length >= selections.length) {
-        slots.push(slotStart.toISOString());
       }
     }
 

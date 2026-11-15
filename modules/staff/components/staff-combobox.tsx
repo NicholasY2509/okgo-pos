@@ -27,11 +27,12 @@ interface StaffComboboxProps {
   serviceId?: string;
   excludeSessionId?: string;
   startTime?: Date;
+  includeUnavailable?: boolean;
   className?: string;
 }
 
-export function StaffCombobox({ value, onChange, branchId, serviceId, excludeSessionId, startTime, className }: StaffComboboxProps) {
-  const { open, setOpen, staffList, loading } = useStaffCombobox(branchId, serviceId, excludeSessionId, startTime);
+export function StaffCombobox({ value, onChange, branchId, serviceId, excludeSessionId, startTime, includeUnavailable, className }: StaffComboboxProps) {
+  const { open, setOpen, staffList, loading } = useStaffCombobox(branchId, serviceId, excludeSessionId, startTime, includeUnavailable);
 
 
   const selectedStaff = staffList.find((s) => s.id === value)

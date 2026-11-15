@@ -17,13 +17,22 @@ interface UseAdminBookingFormProps {
   onSuccess?: () => void;
 }
 
+export interface AvailableTimeSlot {
+  time: string;
+  availableCount: number;
+  canFulfill: boolean;
+  hasBusyStaff?: boolean;
+  reason?: string;
+}
+
 export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingFormProps) {
   const [services, setServices] = useState<any[]>([]);
   const [staffList, setStaffList] = useState<any[]>([]);
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<AvailableTimeSlot[]>([]);
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmBusyStaffOpen, setConfirmBusyStaffOpen] = useState(false);
 
   const form = useForm<BookingInput>({
     resolver: zodResolver(bookingSchema),
@@ -42,8 +51,15 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
   });
 
   const selectedDate = form.watch("date");
+  const selectedStartTime = form.watch("startTime");
   const selections = useWatch({ control: form.control, name: "selections" });
   const selectedServiceId = selections?.[0]?.serviceId;
+
+  const isBusyStaffSelected = useMemo(() => {
+    if (!selectedStartTime) return false;
+    const slot = availableSlots.find((s) => s.time === selectedStartTime);
+    return Boolean(slot?.hasBusyStaff);
+  }, [availableSlots, selectedStartTime]);
 
   // Fetch initial data
   useEffect(() => {
@@ -69,8 +85,15 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
     if (selectedDate) {
       setLoadingSlots(true);
       getAvailableSlotsAction(branchId, selectedDate, selections || []).then((res) => {
-        if (res.success) {
+        if (res.success && Array.isArray(res.data)) {
           setAvailableSlots(res.data);
+          const currentStart = form.getValues("startTime");
+          if (currentStart) {
+            const match = res.data.find((s: AvailableTimeSlot) => s.time === currentStart);
+            if (!match || !match.canFulfill) {
+              form.setValue("startTime", "");
+            }
+          }
         } else {
           setAvailableSlots([]);
         }
@@ -81,7 +104,7 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
     }
   }, [branchId, selectedDate, slotDependencies]);
 
-  const onSubmit = async (values: BookingInput) => {
+  const submitBooking = async (values: BookingInput) => {
     setIsSubmitting(true);
     try {
       const payload = {
@@ -115,6 +138,19 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
     }
   };
 
+  const onSubmit = async (values: BookingInput) => {
+    if (isBusyStaffSelected) {
+      setConfirmBusyStaffOpen(true);
+      return;
+    }
+    await submitBooking(values);
+  };
+
+  const confirmBusyStaffSubmit = async () => {
+    setConfirmBusyStaffOpen(false);
+    await submitBooking(form.getValues());
+  };
+
   return {
     form,
     fields,
@@ -128,6 +164,11 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
     staffList,
     availableSlots,
     selectedDate,
-    selectedServiceId
+    selectedStartTime,
+    selectedServiceId,
+    isBusyStaffSelected,
+    confirmBusyStaffOpen,
+    setConfirmBusyStaffOpen,
+    confirmBusyStaffSubmit,
   };
 }

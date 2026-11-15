@@ -9,6 +9,38 @@ import { CustomerSelectionDialog } from "./customer-selection-dialog";
 import { getCustomerByIdAction } from "../../customer/actions/customer-action";
 import { Button } from "@/components/ui/button";
 
+import { CustomerInput } from "../../customer/schemas/customer-schema";
+
+const PHONE_ONLY_REGEX = /^[\d\s+\-()]+$/;
+const PHONE_TOKEN_REGEX = /(\+?\d[\d\s\-()]{4,}\d)/;
+const MIN_PHONE_DIGITS = 6;
+
+function parseCustomerSearchQuery(query?: string): CustomerInput {
+  const trimmed = query?.trim() ?? "";
+  if (!trimmed) {
+    return { name: "", phone: "", email: "" };
+  }
+
+  if (PHONE_ONLY_REGEX.test(trimmed) && /\d/.test(trimmed)) {
+    return { name: "", phone: trimmed, email: "" };
+  }
+
+  const phoneMatch = trimmed.match(PHONE_TOKEN_REGEX);
+  if (phoneMatch) {
+    const rawPhone = phoneMatch[1].trim();
+    const digitCount = rawPhone.replace(/\D/g, "").length;
+    if (digitCount >= MIN_PHONE_DIGITS) {
+      const remainingName = trimmed
+        .replace(phoneMatch[1], "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return { name: remainingName, phone: rawPhone, email: "" };
+    }
+  }
+
+  return { name: trimmed, phone: "", email: "" };
+}
+
 interface CustomerSelectorProps {
   value: string | undefined;
   onChange: (customerId: string | undefined) => void;
@@ -19,6 +51,11 @@ export function CustomerSelector({ value, onChange, error }: CustomerSelectorPro
   const router = useRouter();
   const [isNewCustomerOpen, setIsNewCustomerOpen] = useState(false);
   const [isCustomerSelectionOpen, setIsCustomerSelectionOpen] = useState(false);
+  const [newCustomerInitialData, setNewCustomerInitialData] = useState<CustomerInput>({
+    name: "",
+    phone: "",
+    email: "",
+  });
   const [customerName, setCustomerName] = useState<string | null>(null);
   const [customerPhoneNumber, setCustomerPhoneNumber] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,6 +102,8 @@ export function CustomerSelector({ value, onChange, error }: CustomerSelectorPro
           </DialogHeader>
           <div className="">
             <CustomerForm
+              key={`${newCustomerInitialData.name}-${newCustomerInitialData.phone}`}
+              initialData={newCustomerInitialData}
               onSuccess={(customer) => {
                 setIsNewCustomerOpen(false);
                 router.refresh();
@@ -84,7 +123,10 @@ export function CustomerSelector({ value, onChange, error }: CustomerSelectorPro
           onChange(id);
           // Pre-emptively set name if we can, but it will fetch anyway
         }}
-        onNewCustomer={() => setIsNewCustomerOpen(true)}
+        onNewCustomer={(query) => {
+          setNewCustomerInitialData(parseCustomerSearchQuery(query));
+          setIsNewCustomerOpen(true);
+        }}
         initialCustomers={[]}
       />
     </>

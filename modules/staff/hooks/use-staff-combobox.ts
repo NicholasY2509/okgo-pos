@@ -2,7 +2,13 @@ import * as React from "react"
 import { getStaffListAction } from "../actions/staff-action"
 import { toast } from "sonner"
 
-export function useStaffCombobox(branchId?: string, serviceId?: string, excludeSessionId?: string, startTime?: Date) {
+export function useStaffCombobox(
+  branchId?: string,
+  serviceId?: string,
+  excludeSessionId?: string,
+  startTime?: Date,
+  includeUnavailable?: boolean
+) {
   const [open, setOpen] = React.useState(false)
   const [staffList, setStaffList] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -10,7 +16,13 @@ export function useStaffCombobox(branchId?: string, serviceId?: string, excludeS
   React.useEffect(() => {
     async function fetchStaff() {
       setLoading(true)
-      const res = await getStaffListAction(branchId, serviceId, excludeSessionId, startTime)
+      const res = await getStaffListAction(
+        branchId,
+        serviceId,
+        excludeSessionId,
+        startTime,
+        includeUnavailable
+      )
       if (res.error) {
         toast.error(res.error)
       } else if (res.data) {
@@ -19,7 +31,7 @@ export function useStaffCombobox(branchId?: string, serviceId?: string, excludeS
       setLoading(false)
     }
     fetchStaff()
-  }, [branchId, serviceId, excludeSessionId, startTime])
+  }, [branchId, serviceId, excludeSessionId, startTime, includeUnavailable])
 
   return {
     open,

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { Prisma } from "@/lib/generated/prisma"
 import { CreateStaffInput, UpdateStaffInput } from "../schemas/staff-schema"
 import { StaffAvailabilityService } from "../services/staff-availability-service"
-import { addMinutes } from "date-fns"
+import { addMinutes, format } from "date-fns"
 import { BranchStaffHrisItem } from "../types/hris-types"
 
 export async function getTherapistWorkPositionFilter(): Promise<Prisma.StaffWhereInput["workPosition"]> {
@@ -28,7 +28,13 @@ export async function getTherapistWorkPositionFilter(): Promise<Prisma.StaffWher
 export const StaffRepository = {
   getTherapistWorkPositionFilter,
 
-  async getAllStaff(branchId?: string, serviceId?: string, excludeSessionId?: string, startTime?: Date) {
+  async getAllStaff(
+    branchId?: string,
+    serviceId?: string,
+    excludeSessionId?: string,
+    startTime?: Date,
+    includeUnavailable: boolean = false
+  ) {
     const todayStr = (startTime || new Date()).toISOString().split('T')[0];
     const todayStart = new Date(todayStr + "T00:00:00.000Z");
     const todayEnd = new Date(todayStr + "T23:59:59.999Z");
@@ -69,7 +75,10 @@ export const StaffRepository = {
               gte: todayStart,
               lte: todayEnd,
             }
-          }
+          },
+          include: {
+            status: true,
+          },
         }
       },
     });
@@ -94,11 +103,60 @@ export const StaffRepository = {
 
     const existingSessions = await prisma.serviceSession.findMany({
       where: sessionWhereClause,
+      include: {
+        transactionItem: {
+          select: { itemNameSnapshot: true },
+        },
+      },
     });
 
     const busyStaffIds = StaffAvailabilityService.getBusyStaffIds(existingSessions, now, endTime);
 
-    return staffList.filter((s: any) => !busyStaffIds.has(s.id));
+    if (!includeUnavailable) {
+      return staffList.filter((s: any) => !busyStaffIds.has(s.id));
+    }
+
+    const ABSENT_STATUS_CODES = new Set(["I", "C", "S", "A", "LEAVE", "SICK", "PERMIT", "ABSENT"]);
+
+    return staffList.map((s: any) => {
+      let unavailableReason: string | null = null;
+
+      if (busyStaffIds.has(s.id)) {
+        const overlappingSession = existingSessions.find((sess: any) => {
+          if (sess.staffId !== s.id || !sess.startTime) return false;
+          const sessEnd = sess.endTime || addMinutes(sess.startTime, 60);
+          return now < sessEnd && endTime > sess.startTime;
+        });
+
+        if (overlappingSession) {
+          const serviceName = overlappingSession.transactionItem?.itemNameSnapshot;
+          const sessEnd = overlappingSession.endTime || (overlappingSession.startTime ? addMinutes(overlappingSession.startTime, 60) : null);
+          const startStr = overlappingSession.startTime ? format(overlappingSession.startTime, "HH:mm") : "";
+          const endStr = sessEnd ? format(sessEnd, "HH:mm") : "";
+
+          if (overlappingSession.status === "IN_PROGRESS") {
+            unavailableReason = `Sedang melayani${serviceName ? ` (${serviceName})` : ""}${endStr ? ` s/d ${endStr}` : ""}`;
+          } else {
+            unavailableReason = `Terjadwal sesi${serviceName ? ` (${serviceName})` : ""}${startStr && endStr ? ` ${startStr}-${endStr}` : ""}`;
+          }
+        } else {
+          unavailableReason = "Sedang tidak tersedia";
+        }
+      } else {
+        const todayAtt = s.attendances?.[0];
+        if (todayAtt?.clockOut) {
+          unavailableReason = `Sudah pulang (${format(new Date(todayAtt.clockOut), "HH:mm")})`;
+        } else if (todayAtt?.status?.code && ABSENT_STATUS_CODES.has(todayAtt.status.code)) {
+          unavailableReason = todayAtt.status.name || "Tidak masuk";
+        }
+      }
+
+      return {
+        ...s,
+        isAvailable: unavailableReason === null,
+        unavailableReason,
+      };
+    });
   },
 
   async getActiveStaff(_branchId?: string) {
@@ -319,10 +377,9 @@ export const StaffRepository = {
     endOfToday.setHours(23, 59, 59, 999)
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
-    // 1. Fetch staff for this branch
+    // 1. Fetch all active staff (branch restriction removed)
     const staff = await prisma.staff.findMany({
       where: {
-        branchStaffs: { some: { branchId } },
         isActive: true,
       },
       include: {
