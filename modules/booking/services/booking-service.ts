@@ -34,18 +34,32 @@ export class BookingService {
     return await BookingRepository.validateVoucher(code);
   }
 
-  static async assignBookingToTimetable(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
-    return await BookingRepository.assignBookingToTimetable(bookingId, startTime, selections);
+  static async assignBookingToTimetable(
+    bookingId: string,
+    startTime: Date,
+    selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[],
+    promotionIds?: string[],
+    nominalVoucherId?: string
+  ) {
+    return await BookingRepository.assignBookingToTimetable(bookingId, startTime, selections, promotionIds, nominalVoucherId);
   }
 
-  static async previewBookingAssignment(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
-    return await BookingRepository.previewBookingAssignment(bookingId, startTime, selections);
+  static async previewBookingAssignment(
+    bookingId: string,
+    startTime: Date,
+    selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[],
+    promotionIds?: string[],
+    nominalVoucherId?: string
+  ) {
+    return await BookingRepository.previewBookingAssignment(bookingId, startTime, selections, promotionIds, nominalVoucherId);
   }
 
   static async assignAndPayBooking(input: {
     bookingId: string;
     startTime: Date;
-    selections: { serviceId: string; staffId?: string }[];
+    selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[];
+    promotionIds?: string[];
+    nominalVoucherId?: string;
     cashierId?: string | null;
     payments: {
       paymentMethodId: string;

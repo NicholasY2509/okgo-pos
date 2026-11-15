@@ -49,7 +49,10 @@ export function useExistingPayment(transaction: any, paymentMethods: any[], onSu
   };
 
   const handleSubmit = async (isPartial = false) => {
-    if (!payment.paymentMethodId) {
+    const remainingDue = Math.max(0, totalAmount - existingPaid);
+    const isZeroPendingAssignment = Boolean(transaction?.isPendingBookingAssignment && remainingDue === 0);
+
+    if (!isZeroPendingAssignment && !payment.paymentMethodId) {
       toast.error("Pilih metode pembayaran.");
       return;
     }
@@ -57,12 +60,12 @@ export function useExistingPayment(transaction: any, paymentMethods: any[], onSu
     const pm = paymentMethods.find(x => x.id === payment.paymentMethodId);
     const isVoucherMode = pm?.type === "VOUCHER" || payment.paymentMethodId === "VOUCHER";
 
-    if (!isVoucherMode && !isPartial && totalPaid < totalAmount) {
+    if (!isZeroPendingAssignment && !isVoucherMode && !isPartial && totalPaid < totalAmount) {
       toast.error("Jumlah bayar masih kurang.");
       return;
     }
 
-    if (!isVoucherMode && payment.amount <= 0) {
+    if (!isZeroPendingAssignment && !isVoucherMode && payment.amount <= 0) {
       toast.error("Jumlah pembayaran harus lebih dari 0.");
       return;
     }
@@ -72,9 +75,9 @@ export function useExistingPayment(transaction: any, paymentMethods: any[], onSu
       return;
     }
 
-    const remainingDue = Math.max(0, totalAmount - existingPaid);
-
-    const paymentsPayload = isVoucherMode
+    const paymentsPayload = isZeroPendingAssignment
+      ? []
+      : isVoucherMode
       ? (selectedVouchers.length > 0
           ? selectedVouchers.map(v => ({
               paymentMethodId: payment.paymentMethodId,
@@ -104,6 +107,8 @@ export function useExistingPayment(transaction: any, paymentMethods: any[], onSu
         bookingId: transaction.pendingAssignment.bookingId,
         startTime: new Date(transaction.pendingAssignment.startTime),
         selections: transaction.pendingAssignment.selections,
+        promotionIds: transaction.pendingAssignment.promotionIds,
+        nominalVoucherId: transaction.pendingAssignment.nominalVoucherId,
         payments: paymentsPayload,
       });
     } else {

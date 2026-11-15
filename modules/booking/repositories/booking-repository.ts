@@ -900,7 +900,9 @@ export const BookingRepository = {
     tx: Prisma.TransactionClient,
     bookingId: string,
     startTime: Date,
-    selections: { serviceId: string; staffId?: string }[]
+    selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[],
+    promotionIds?: string[],
+    nominalVoucherId?: string
   ) {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
@@ -1016,16 +1018,24 @@ export const BookingRepository = {
 
       const availableStaff = staffList.filter(s => !busyStaffIds.has(s.id));
 
-      const vipServicesCount = services.filter((s: any) => s.isVip).length;
-      const standardServicesCount = services.length - vipServicesCount;
-
-      const availableVipRooms = availableRooms.filter(r => r.isVip).length;
-      const availableStandardRooms = availableRooms.filter(r => !r.isVip).length;
-
       const activeSelections = selections.filter(s => s.serviceId);
       if (activeSelections.length === 0) {
         throw new Error("Pilih setidaknya satu layanan.");
       }
+
+      let vipServicesCount = 0;
+      let standardServicesCount = 0;
+      for (const sel of activeSelections) {
+        const svc = services.find((s: any) => s.id === sel.serviceId);
+        if (sel.isVip || svc?.isVip) {
+          vipServicesCount += 1;
+        } else {
+          standardServicesCount += 1;
+        }
+      }
+
+      const availableVipRooms = availableRooms.filter(r => r.isVip).length;
+      const availableStandardRooms = availableRooms.filter(r => !r.isVip).length;
 
       if (availableRooms.length < selections.length) {
         throw new Error("Kapasitas ruangan tidak mencukupi untuk waktu ini.");
@@ -1036,6 +1046,8 @@ export const BookingRepository = {
       }
 
       let subtotal = 0;
+      let discountTotal = 0;
+      let vipUpgradeCount = 0;
       const transactionItems = [];
 
       for (const sel of selections) {
@@ -1043,9 +1055,26 @@ export const BookingRepository = {
         const service = services.find((s: any) => s.id === sel.serviceId);
         if (!service) throw new Error("Service not found");
 
-        let assignedRoomIndex = availableRooms.findIndex(r => r.isVip === service.isVip);
-        if (assignedRoomIndex === -1) {
-          throw new Error(`Tidak ada ruangan ${service.isVip ? 'VIP' : 'Standar'} yang tersedia.`);
+        const isItemVip = Boolean(sel.isVip || service.isVip);
+
+        let assignedRoomIndex = -1;
+        if (sel.roomId) {
+          assignedRoomIndex = availableRooms.findIndex(r => r.id === sel.roomId);
+          if (assignedRoomIndex === -1) {
+            throw new Error("Ruangan yang dipilih tidak tersedia atau kapasitas penuh di waktu ini.");
+          }
+          const chosenRoom = availableRooms[assignedRoomIndex];
+          if (isItemVip && !chosenRoom.isVip) {
+            throw new Error(`Ruangan "${chosenRoom.name}" bukan ruangan VIP.`);
+          }
+          if (!isItemVip && chosenRoom.isVip) {
+            throw new Error(`Ruangan "${chosenRoom.name}" adalah ruangan VIP. Centang "Upgrade ke VIP" terlebih dahulu.`);
+          }
+        } else {
+          assignedRoomIndex = availableRooms.findIndex(r => Boolean(r.isVip) === isItemVip);
+          if (assignedRoomIndex === -1) {
+            throw new Error(`Tidak ada ruangan ${isItemVip ? 'VIP' : 'Standar'} yang tersedia.`);
+          }
         }
         let assignedRoom = availableRooms.splice(assignedRoomIndex, 1)[0];
         let assignedStaff;
@@ -1065,54 +1094,176 @@ export const BookingRepository = {
           throw new Error("Gagal mengalokasikan ruangan.");
         }
 
-        subtotal += Number(service.price);
+        const unitPrice = Number(service.price);
+        const itemDiscount = sel.customerVoucherId
+          ? unitPrice
+          : Math.min(unitPrice, Math.max(0, Number(sel.discountAmount || 0)));
+        const itemSubtotal = Math.max(0, unitPrice - itemDiscount);
+
+        subtotal += unitPrice;
+        discountTotal += itemDiscount;
+        if (sel.isVip) {
+          vipUpgradeCount += 1;
+        }
 
         transactionItems.push({
           type: "SERVICE",
           serviceId: service.id,
           itemNameSnapshot: service.name,
-          unitPrice: service.price,
-          subtotal: service.price,
+          unitPrice,
+          discountAmount: itemDiscount,
+          subtotal: itemSubtotal,
           quantity: 1,
           _assignedRoomId: assignedRoom.id,
           _assignedStaffId: assignedStaff?.id || null,
-          _duration: service.duration || 60
+          _duration: service.duration || 60,
+          _isVip: isItemVip,
+          _customerVoucherId: sel.customerVoucherId || null,
         });
       }
+
+      if (vipUpgradeCount > 0) {
+        const vipTotal = vipUpgradeCount * 80000;
+        subtotal += vipTotal;
+      }
+
+      const hasVoucherApplied =
+        transactionItems.some((item) => Boolean(item._customerVoucherId)) || Boolean(nominalVoucherId);
+      if (hasVoucherApplied && promotionIds && promotionIds.length > 0) {
+        throw new Error("Voucher dan Diskon Promosi tidak dapat digunakan bersamaan.");
+      }
+
+      const appliedPromotionIds: string[] = [];
+      if (promotionIds && promotionIds.length > 0) {
+        const promos = await tx.promotion.findMany({
+          where: { id: { in: promotionIds }, isActive: true },
+          include: { applicableProducts: true },
+        });
+
+        for (const promo of promos) {
+          appliedPromotionIds.push(promo.id);
+          const reward = promo.reward as any;
+          if (reward?.type === "PERCENTAGE_TOTAL" && reward.value) {
+            for (const itemData of transactionItems) {
+              const discount = itemData.unitPrice * (reward.value / 100);
+              itemData.discountAmount += discount;
+              discountTotal += discount;
+              itemData.subtotal = Math.max(0, itemData.unitPrice - itemData.discountAmount);
+            }
+          } else if (reward?.type === "PERCENTAGE_ITEM" && reward.value) {
+            const applicableIds = promo.applicableProducts?.map((p: any) => p.id) || [];
+            if (applicableIds.length > 0) {
+              for (const itemData of transactionItems) {
+                if (applicableIds.includes(itemData.serviceId)) {
+                  const discount = itemData.unitPrice * (reward.value / 100);
+                  itemData.discountAmount += discount;
+                  discountTotal += discount;
+                  itemData.subtotal = Math.max(0, itemData.unitPrice - itemData.discountAmount);
+                }
+              }
+            }
+          } else if (reward?.type === "FREE_ADDON" && reward.addonServiceId) {
+            const product = await tx.product.findUnique({ where: { id: reward.addonServiceId } });
+            if (product) discountTotal += Number(product.price);
+          }
+        }
+      }
+
+      let nominalVoucher: any = null;
+      let nominalVoucherDiscount = 0;
+      if (nominalVoucherId) {
+        const voucher = await tx.customerVoucher.findUnique({
+          where: { id: nominalVoucherId },
+          include: { voucherPacket: true },
+        });
+        if (!voucher) throw new Error("Voucher nominal tidak ditemukan.");
+        if (voucher.customerId && booking.customerId && voucher.customerId !== booking.customerId) {
+          throw new Error("Voucher bukan milik pelanggan ini.");
+        }
+        if (voucher.status !== "ACTIVE") {
+          throw new Error(`Status voucher adalah ${voucher.status}.`);
+        }
+        if (voucher.expiresAt && voucher.expiresAt < new Date()) {
+          throw new Error("Voucher telah kedaluwarsa.");
+        }
+        if (voucher.remainingCreditAmount == null || Number(voucher.remainingCreditAmount) <= 0) {
+          throw new Error("Saldo voucher nominal sudah habis.");
+        }
+
+        const remainingBeforeVoucher = Math.max(0, subtotal - discountTotal);
+        nominalVoucherDiscount = Math.min(Number(voucher.remainingCreditAmount), remainingBeforeVoucher);
+        discountTotal += nominalVoucherDiscount;
+        nominalVoucher = voucher;
+      }
+
+      const totalAmount = Math.max(0, subtotal - discountTotal);
 
       return {
         booking,
         slotStart,
         maxDuration,
         subtotal,
+        discountTotal,
+        totalAmount,
+        vipUpgradeCount,
+        appliedPromotionIds,
+        nominalVoucher,
+        nominalVoucherDiscount,
         transactionItems,
       };
   },
 
-  async previewBookingAssignment(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
-    const prepared = await this.prepareBookingAssignment(prisma, bookingId, startTime, selections);
+  async previewBookingAssignment(
+    bookingId: string,
+    startTime: Date,
+    selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[],
+    promotionIds?: string[],
+    nominalVoucherId?: string
+  ) {
+    const prepared = await this.prepareBookingAssignment(prisma, bookingId, startTime, selections, promotionIds, nominalVoucherId);
+    const items = prepared.transactionItems.map((item, idx) => ({
+      id: `preview-${idx}`,
+      type: item.type,
+      serviceId: item.serviceId,
+      itemNameSnapshot: item.itemNameSnapshot,
+      unitPrice: Number(item.unitPrice),
+      discountAmount: Number(item.discountAmount),
+      quantity: item.quantity,
+      subtotal: Number(item.subtotal),
+    }));
+
+    if (prepared.vipUpgradeCount > 0) {
+      items.push({
+        id: "preview-vip-upgrade",
+        type: "VIP_UPGRADE",
+        serviceId: "VIP_UPGRADE",
+        itemNameSnapshot:
+          prepared.vipUpgradeCount > 1
+            ? `Upgrade VIP (${prepared.vipUpgradeCount} Sesi)`
+            : "Upgrade VIP",
+        unitPrice: 80000,
+        discountAmount: 0,
+        quantity: prepared.vipUpgradeCount,
+        subtotal: prepared.vipUpgradeCount * 80000,
+      });
+    }
+
     return {
       isPendingBookingAssignment: true,
       pendingAssignment: {
         bookingId,
         startTime: startTime.toISOString(),
         selections,
+        promotionIds: prepared.appliedPromotionIds,
+        nominalVoucherId: prepared.nominalVoucher?.id,
       },
       customerId: prepared.booking.customerId,
       customer: prepared.booking.customer,
       subtotal: prepared.subtotal,
-      discountTotal: 0,
-      totalAmount: prepared.subtotal,
+      discountTotal: prepared.discountTotal,
+      totalAmount: prepared.totalAmount,
       paidAmount: 0,
-      items: prepared.transactionItems.map((item, idx) => ({
-        id: `preview-${idx}`,
-        type: item.type,
-        serviceId: item.serviceId,
-        itemNameSnapshot: item.itemNameSnapshot,
-        unitPrice: Number(item.unitPrice),
-        quantity: item.quantity,
-        subtotal: Number(item.subtotal),
-      })),
+      items,
     };
   },
 
@@ -1120,17 +1271,30 @@ export const BookingRepository = {
     tx: Prisma.TransactionClient,
     bookingId: string,
     startTime: Date,
-    selections: { serviceId: string; staffId?: string }[]
+    selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[],
+    promotionIds?: string[],
+    nominalVoucherId?: string
   ) {
-      const { booking, slotStart, maxDuration, subtotal, transactionItems } =
-        await this.prepareBookingAssignment(tx, bookingId, startTime, selections);
+      const {
+        booking,
+        slotStart,
+        maxDuration,
+        subtotal,
+        discountTotal,
+        totalAmount,
+        vipUpgradeCount,
+        appliedPromotionIds,
+        nominalVoucher,
+        nominalVoucherDiscount,
+        transactionItems,
+      } = await this.prepareBookingAssignment(tx, bookingId, startTime, selections, promotionIds, nominalVoucherId);
 
       await tx.booking.update({
         where: { id: bookingId },
         data: {
           isAssignedToTimetable: true,
           status: "PROCESSED",
-          totalAmount: subtotal,
+          totalAmount: totalAmount,
           estimatedDuration: maxDuration,
           scheduledStartTime: startTime,
           guestCount: selections.length,
@@ -1157,8 +1321,17 @@ export const BookingRepository = {
           customerId: booking.customerId,
           transactionNumber,
           subtotal: subtotal,
-          totalAmount: subtotal,
+          discountTotal: discountTotal,
+          totalAmount: totalAmount,
           status: 'PENDING',
+          isVip: vipUpgradeCount > 0 || transactionItems.some((i) => i._isVip),
+          ...(appliedPromotionIds.length > 0
+            ? {
+                promotions: {
+                  connect: appliedPromotionIds.map((id) => ({ id })),
+                },
+              }
+            : {}),
         }
       });
 
@@ -1174,6 +1347,7 @@ export const BookingRepository = {
             serviceId: itemSpec.serviceId,
             itemNameSnapshot: itemSpec.itemNameSnapshot,
             unitPrice: itemSpec.unitPrice,
+            discountAmount: itemSpec.discountAmount,
             quantity: itemSpec.quantity,
             subtotal: itemSpec.subtotal,
           }
@@ -1188,12 +1362,85 @@ export const BookingRepository = {
             roomId: itemSpec._assignedRoomId,
             branchId: booking.branchId,
             status: "SCHEDULED",
+            isVip: itemSpec._isVip,
             startTime: slotStart,
             endTime: sessionSlotEnd,
             transactionItemId: txItem.id,
           }
         });
         createdSessions.push(session);
+
+        if (itemSpec._customerVoucherId) {
+          const customerVoucher = await tx.customerVoucher.findUnique({
+            where: { id: itemSpec._customerVoucherId },
+          });
+          if (!customerVoucher) {
+            throw new Error("Voucher layanan tidak ditemukan.");
+          }
+          if (customerVoucher.customerId && booking.customerId && customerVoucher.customerId !== booking.customerId) {
+            throw new Error("Voucher bukan milik pelanggan ini.");
+          }
+          if (customerVoucher.status !== "ACTIVE") {
+            throw new Error(`Status voucher adalah ${customerVoucher.status}.`);
+          }
+          if (customerVoucher.expiresAt && customerVoucher.expiresAt < new Date()) {
+            throw new Error("Voucher telah kedaluwarsa.");
+          }
+          if (customerVoucher.remainingVisitCount == null || customerVoucher.remainingVisitCount <= 0) {
+            throw new Error("Kuota kunjungan voucher telah habis.");
+          }
+
+          await tx.customerVoucher.update({
+            where: { id: customerVoucher.id },
+            data: {
+              remainingVisitCount: customerVoucher.remainingVisitCount - 1,
+              status: customerVoucher.remainingVisitCount - 1 === 0 ? "USED_UP" : "ACTIVE",
+            },
+          });
+
+          await tx.voucherRedemption.create({
+            data: {
+              customerVoucherId: customerVoucher.id,
+              transactionId: transaction.id,
+              transactionItemId: txItem.id,
+              serviceSessionId: session.id,
+              redeemedVisitCount: 1,
+            },
+          });
+        }
+      }
+
+      if (nominalVoucher && nominalVoucherDiscount > 0) {
+        await tx.customerVoucher.update({
+          where: { id: nominalVoucher.id },
+          data: {
+            remainingCreditAmount: 0,
+            status: "USED_UP",
+          },
+        });
+
+        await tx.voucherRedemption.create({
+          data: {
+            customerVoucherId: nominalVoucher.id,
+            transactionId: transaction.id,
+            redeemedAmount: nominalVoucherDiscount,
+          },
+        });
+      }
+
+      if (vipUpgradeCount > 0) {
+        await tx.transactionItem.create({
+          data: {
+            transactionId: transaction.id,
+            type: "VIP_UPGRADE",
+            serviceId: "VIP_UPGRADE",
+            itemNameSnapshot:
+              vipUpgradeCount > 1 ? `Upgrade VIP (${vipUpgradeCount} Sesi)` : "Upgrade VIP",
+            unitPrice: 80000,
+            quantity: vipUpgradeCount,
+            subtotal: vipUpgradeCount * 80000,
+          },
+        });
       }
 
       const fullTransaction = await tx.transaction.findUnique({
@@ -1222,16 +1469,24 @@ export const BookingRepository = {
         : null;
   },
 
-  async assignBookingToTimetable(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
+  async assignBookingToTimetable(
+    bookingId: string,
+    startTime: Date,
+    selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[],
+    promotionIds?: string[],
+    nominalVoucherId?: string
+  ) {
     return await prisma.$transaction(async (tx) => {
-      return await this.assignBookingInTx(tx, bookingId, startTime, selections);
+      return await this.assignBookingInTx(tx, bookingId, startTime, selections, promotionIds, nominalVoucherId);
     });
   },
 
   async assignAndPayBooking(input: {
     bookingId: string;
     startTime: Date;
-    selections: { serviceId: string; staffId?: string }[];
+    selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[];
+    promotionIds?: string[];
+    nominalVoucherId?: string;
     cashierId?: string | null;
     payments: {
       paymentMethodId: string;
@@ -1242,9 +1497,16 @@ export const BookingRepository = {
     }[];
   }) {
     return await prisma.$transaction(async (tx) => {
-      const createdTx = await this.assignBookingInTx(tx, input.bookingId, input.startTime, input.selections);
+      const createdTx = await this.assignBookingInTx(tx, input.bookingId, input.startTime, input.selections, input.promotionIds, input.nominalVoucherId);
       if (!createdTx) {
         throw new Error("Gagal membuat transaksi untuk booking.");
+      }
+
+      if (createdTx.totalAmount <= 0 && (!input.payments || input.payments.length === 0)) {
+        return await tx.transaction.update({
+          where: { id: createdTx.id },
+          data: { status: "COMPLETED" },
+        });
       }
 
       const updatedTx = await PosPaymentRepository.processTransactionPayments(tx, {

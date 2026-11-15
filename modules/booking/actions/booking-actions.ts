@@ -87,10 +87,16 @@ export async function updateBookingAction(bookingId: string, values: BookingInpu
   }
 }
 
-export async function assignBookingToTimetableAction(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
+export async function assignBookingToTimetableAction(
+  bookingId: string,
+  startTime: Date,
+  selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[],
+  promotionIds?: string[],
+  nominalVoucherId?: string
+) {
   try {
     await AuthGuardService.requireAuth();
-    const result = await BookingService.assignBookingToTimetable(bookingId, startTime, selections);
+    const result = await BookingService.assignBookingToTimetable(bookingId, startTime, selections, promotionIds, nominalVoucherId);
     return { success: true, data: JSON.parse(JSON.stringify(result)) };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Gagal menugaskan booking ke jadwal";
@@ -98,10 +104,16 @@ export async function assignBookingToTimetableAction(bookingId: string, startTim
   }
 }
 
-export async function previewBookingAssignmentAction(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
+export async function previewBookingAssignmentAction(
+  bookingId: string,
+  startTime: Date,
+  selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[],
+  promotionIds?: string[],
+  nominalVoucherId?: string
+) {
   try {
     await AuthGuardService.requireAuth();
-    const result = await BookingService.previewBookingAssignment(bookingId, startTime, selections);
+    const result = await BookingService.previewBookingAssignment(bookingId, startTime, selections, promotionIds, nominalVoucherId);
     return { success: true, data: JSON.parse(JSON.stringify(result)) };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Gagal memeriksa ketersediaan jadwal";
@@ -112,7 +124,9 @@ export async function previewBookingAssignmentAction(bookingId: string, startTim
 export async function assignAndPayBookingAction(values: {
   bookingId: string;
   startTime: Date;
-  selections: { serviceId: string; staffId?: string }[];
+  selections: { serviceId: string; staffId?: string; roomId?: string; isVip?: boolean; discountAmount?: number; customerVoucherId?: string }[];
+  promotionIds?: string[];
+  nominalVoucherId?: string;
   cashierId?: string | null;
   payments: {
     paymentMethodId: string;
