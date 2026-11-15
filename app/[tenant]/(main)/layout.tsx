@@ -2,6 +2,7 @@ import { ChevronDown } from "lucide-react"
 import { PosStoreProvider } from "@/modules/pos/stores/pos-store"
 import Link from "next/link"
 import { TenantLogoutButton } from "@/components/tenant-logout-button"
+import { TenantHeaderControls } from "@/components/tenant-header-controls"
 import { BranchService } from "@/modules/branch/services/branch-service"
 import { GlobalNotificationListener } from "@/components/global-notification-listener"
 import {
@@ -143,8 +144,9 @@ export default async function TenantLayout({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Logout Button */}
-            <div className="ml-2 border-l border-border pl-2">
+            {/* Theme, Fullscreen & Logout Controls */}
+            <div className="ml-2 flex items-center gap-1 border-l border-border pl-2">
+              <TenantHeaderControls />
               <TenantLogoutButton />
             </div>
           </nav>
