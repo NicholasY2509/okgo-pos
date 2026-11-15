@@ -49,34 +49,47 @@ export function useExistingPayment(transaction: any, paymentMethods: any[], onSu
   };
 
   const handleSubmit = async (isPartial = false) => {
-    if (!isPartial && totalPaid < totalAmount) {
-      toast.error("Jumlah bayar masih kurang.");
-      return;
-    }
-
     if (!payment.paymentMethodId) {
       toast.error("Pilih metode pembayaran.");
       return;
     }
 
     const pm = paymentMethods.find(x => x.id === payment.paymentMethodId);
-    if (pm?.type !== "VOUCHER" && payment.amount <= 0) {
+    const isVoucherMode = pm?.type === "VOUCHER" || payment.paymentMethodId === "VOUCHER";
+
+    if (!isVoucherMode && !isPartial && totalPaid < totalAmount) {
+      toast.error("Jumlah bayar masih kurang.");
+      return;
+    }
+
+    if (!isVoucherMode && payment.amount <= 0) {
       toast.error("Jumlah pembayaran harus lebih dari 0.");
       return;
     }
 
-    if (pm?.type === "VOUCHER" && selectedVouchers.length === 0 && !payment.voucherCode) {
+    if (isVoucherMode && selectedVouchers.length === 0 && !payment.voucherCode) {
       toast.error("Pilih atau masukkan kode voucher.");
       return;
     }
 
-    const paymentsPayload = pm?.type === "VOUCHER"
-      ? (selectedVouchers.length > 0 ? selectedVouchers.map(v => v.code) : [payment.voucherCode]).map(code => ({
-          paymentMethodId: payment.paymentMethodId,
-          amount: 0,
-          voucherCode: code,
-          notes: payment.notes || undefined
-        }))
+    const remainingDue = Math.max(0, totalAmount - existingPaid);
+
+    const paymentsPayload = isVoucherMode
+      ? (selectedVouchers.length > 0
+          ? selectedVouchers.map(v => ({
+              paymentMethodId: payment.paymentMethodId,
+              amount: v.voucherPacket?.totalCreditAmount
+                ? Math.min(Number(v.remainingCreditAmount || 0), remainingDue)
+                : 0,
+              voucherCode: v.code,
+              notes: payment.notes || undefined
+            }))
+          : [{
+              paymentMethodId: payment.paymentMethodId,
+              amount: remainingDue,
+              voucherCode: payment.voucherCode,
+              notes: payment.notes || undefined
+            }])
       : [{
           paymentMethodId: payment.paymentMethodId,
           amount: Number(payment.amount),

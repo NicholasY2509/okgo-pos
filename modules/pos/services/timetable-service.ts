@@ -65,7 +65,7 @@ export class TimetableService {
       segments,
       isBooking: isBooking || !!session.bookingId,
       bookingNumber: session.booking?.bookingNumber,
-      isVip: !!session.transactionItem?.transaction?.isVip,
+      isVip: Boolean(session.isVip || session.transactionItem?.transaction?.isVip),
       itemName,
       staffName,
       paymentStatus,
@@ -82,6 +82,15 @@ export class TimetableService {
           paidAmount: session.transactionItem.transaction.paidAmount ? Number(session.transactionItem.transaction.paidAmount) : 0,
           subtotal: session.transactionItem.transaction.subtotal ? Number(session.transactionItem.transaction.subtotal) : 0,
           discountTotal: session.transactionItem.transaction.discountTotal ? Number(session.transactionItem.transaction.discountTotal) : 0,
+          items: Array.isArray(session.transactionItem.transaction.items)
+            ? session.transactionItem.transaction.items.map((item: any) => ({
+                ...item,
+                unitPrice: item.unitPrice ? Number(item.unitPrice) : 0,
+                discountAmount: item.discountAmount ? Number(item.discountAmount) : 0,
+                subtotal: item.subtotal ? Number(item.subtotal) : 0,
+                cashierIncentiveAmount: item.cashierIncentiveAmount ? Number(item.cashierIncentiveAmount) : 0,
+              }))
+            : [],
         } : null,
       } : null,
       booking: session.booking ? {

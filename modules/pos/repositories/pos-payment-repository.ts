@@ -36,7 +36,16 @@ export const PosPaymentRepository = {
 
       for (const payment of input.payments) {
         let paymentAmount = payment.amount;
-        const pm = await tx.paymentMethod.findUnique({ where: { id: payment.paymentMethodId } });
+        let pm = payment.paymentMethodId === "VOUCHER"
+          ? await tx.paymentMethod.findFirst({ where: { type: "VOUCHER", isActive: true } })
+          : await tx.paymentMethod.findUnique({ where: { id: payment.paymentMethodId } });
+
+        if (!pm && payment.paymentMethodId === "VOUCHER") {
+          pm = await tx.paymentMethod.create({
+            data: { name: "Voucher", type: "VOUCHER", isActive: true }
+          });
+        }
+
         if (!pm) throw new Error(`Metode pembayaran tidak valid: ${payment.paymentMethodId}`);
 
         if (pm.type === "VOUCHER") {
@@ -91,6 +100,7 @@ export const PosPaymentRepository = {
                 customerVoucherId: customerVoucher.id,
                 transactionId: transaction.id,
                 transactionItemId: matchedItem.id,
+                redeemedVisitCount: 1,
                 redeemedAmount: paymentAmount
               }
             });
@@ -127,7 +137,7 @@ export const PosPaymentRepository = {
         await tx.transactionPayment.create({
           data: {
             transactionId: transaction.id,
-            paymentMethodId: payment.paymentMethodId,
+            paymentMethodId: pm.id,
             amount: paymentAmount,
             referenceNumber: payment.referenceNumber,
             notes: payment.notes

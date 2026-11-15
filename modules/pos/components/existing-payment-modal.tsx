@@ -93,11 +93,12 @@ function ExistingTransactionPaymentModalContent({
 
   const normalMethods = paymentMethods.filter((pm: any) => pm.type !== "VOUCHER");
   const voucherMethod = paymentMethods.find((pm: any) => pm.type === "VOUCHER");
-  const isVoucher = payment.paymentMethodId === voucherMethod?.id;
+  const voucherMethodId = voucherMethod?.id || "VOUCHER";
+  const isVoucher = payment.paymentMethodId === voucherMethodId;
 
   const handleModeChange = (mode: string) => {
-    if (mode === "VOUCHER" && voucherMethod) {
-      handleUpdatePayment("paymentMethodId", voucherMethod.id);
+    if (mode === "VOUCHER") {
+      handleUpdatePayment("paymentMethodId", voucherMethodId);
     } else {
       handleUpdatePayment("paymentMethodId", "");
     }
@@ -114,14 +115,12 @@ function ExistingTransactionPaymentModalContent({
             <CreditCard className="w-5 h-5 text-primary" />
             Selesaikan Pembayaran
           </DialogTitle>
-          {voucherMethod && (
-            <Tabs value={isVoucher ? "VOUCHER" : "NORMAL"} onValueChange={handleModeChange}>
-              <TabsList className="">
-                <TabsTrigger value="NORMAL">Cash / EDC</TabsTrigger>
-                <TabsTrigger value="VOUCHER">Redeem Voucher</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
+          <Tabs value={isVoucher ? "VOUCHER" : "NORMAL"} onValueChange={handleModeChange}>
+            <TabsList className="">
+              <TabsTrigger value="NORMAL">Cash / EDC</TabsTrigger>
+              <TabsTrigger value="VOUCHER">Redeem Voucher</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </DialogHeader>
         <div className={cn(
           "grid transition-[grid-template-columns] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] flex-1 min-h-[650px]",
@@ -211,7 +210,9 @@ function ExistingTransactionPaymentModalContent({
               <Button
                 className="w-full h-14 text-lg rounded-2xl font-semibold shadow-md hover:shadow-lg transition-all"
                 onClick={() => {
-                  if (payment.amount > 0 || payment.voucherCode) {
+                  if (isVoucher) {
+                    handleSubmit();
+                  } else if (payment.amount > 0 || payment.voucherCode) {
                     handleSubmit();
                   } else if ((transaction.paidAmount || 0) >= totalAmount) {
                     onSuccess();
@@ -219,7 +220,12 @@ function ExistingTransactionPaymentModalContent({
                     handleSubmit(); // Will trigger the "masih kurang" error
                   }
                 }}
-                disabled={isSubmitting || (payment.amount > 0 && !payment.paymentMethodId)}
+                disabled={
+                  isSubmitting ||
+                  (isVoucher
+                    ? selectedVouchers.length === 0 && !payment.voucherCode
+                    : payment.amount > 0 && !payment.paymentMethodId)
+                }
               >
                 {(transaction.paidAmount || 0) >= totalAmount && payment.amount === 0 ? (
                   <>

@@ -13,6 +13,22 @@ const segmentsInclude = {
   },
 };
 
+const transactionSelect = {
+  id: true,
+  transactionNumber: true,
+  customerId: true,
+  status: true,
+  totalAmount: true,
+  paidAmount: true,
+  subtotal: true,
+  discountTotal: true,
+  isVip: true,
+  customer: {
+    select: { name: true, phone: true }
+  },
+  items: true
+};
+
 async function enrichSessionsWithProducts<T extends { serviceId: string; segments?: any[] }>(
   sessions: T[]
 ) {
@@ -56,18 +72,7 @@ export const TimetableRepository = {
         transactionItem: {
           include: {
             transaction: {
-              select: {
-                id: true,
-                status: true,
-                totalAmount: true,
-                paidAmount: true,
-                subtotal: true,
-                discountTotal: true,
-                isVip: true,
-                customer: {
-                  select: { name: true, phone: true }
-                }
-              }
+              select: transactionSelect
             }
           }
         },
@@ -140,18 +145,7 @@ export const TimetableRepository = {
         transactionItem: {
           include: {
             transaction: {
-              select: {
-                id: true,
-                status: true,
-                totalAmount: true,
-                paidAmount: true,
-                subtotal: true,
-                discountTotal: true,
-                isVip: true,
-                customer: {
-                  select: { name: true, phone: true }
-                }
-              }
+              select: transactionSelect
             }
           }
         },
@@ -191,19 +185,7 @@ export const TimetableRepository = {
         transactionItem: {
           include: {
             transaction: {
-              select: {
-                id: true,
-                status: true,
-                totalAmount: true,
-                paidAmount: true,
-                subtotal: true,
-                discountTotal: true,
-                isVip: true,
-                customer: {
-                  select: { name: true, phone: true }
-                },
-                items: true
-              }
+              select: transactionSelect
             }
           }
         },
