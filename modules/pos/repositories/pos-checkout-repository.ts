@@ -70,7 +70,7 @@ export const PosCheckoutRepository = {
           paidAmount,
           changeAmount,
           status: input.isPayLater ? "PENDING" : "COMPLETED",
-          isVip: input.isVipUpgrade === true,
+          isVip: input.isVipUpgrade === true || input.items.some((i: any) => i.type === "SERVICE" && i.isVip),
           payments: {
             create: transactionPaymentsData
           },
@@ -164,6 +164,13 @@ export const PosCheckoutRepository = {
         const room = await tx.room.findUnique({ where: { id: item.roomId } });
         if (!room || !room.isActive) throw new Error(`Ruang tidak valid: ${item.roomId}`);
         if (room.branchId !== input.branchId) throw new Error(`Ruang ${room.name} tidak berada di cabang yang dipilih.`);
+        const isItemVip = Boolean(item.isVip || input.isVipUpgrade);
+        if (isItemVip && !room.isVip) {
+          throw new Error(`Layanan VIP wajib menggunakan ruangan VIP (bukan ${room.name}).`);
+        }
+        if (!isItemVip && room.isVip) {
+          throw new Error(`Ruangan VIP (${room.name}) hanya dapat digunakan jika opsi VIP aktif.`);
+        }
 
         const now = new Date();
         const activeSessions = await tx.serviceSession.count({
@@ -209,6 +216,7 @@ export const PosCheckoutRepository = {
           durationMinutes,
           sessionGroupKey: groupKey,
           sequenceOrder,
+          isVip: isItemVip,
           status: "SCHEDULED"
         });
 
@@ -306,17 +314,35 @@ export const PosCheckoutRepository = {
       });
     }
 
-    if (input.isVipUpgrade) {
-      subtotal += 80000;
+    const countedVipGroups = new Set<string>();
+    let vipSessionCount = 0;
+    for (const s of serviceSessionsData) {
+      if (!s.isVip) continue;
+      if (s.sessionGroupKey) {
+        if (!countedVipGroups.has(s.sessionGroupKey)) {
+          countedVipGroups.add(s.sessionGroupKey);
+          vipSessionCount += 1;
+        }
+      } else {
+        vipSessionCount += 1;
+      }
+    }
+    if (vipSessionCount === 0 && input.isVipUpgrade) {
+      vipSessionCount = 1;
+    }
+
+    if (vipSessionCount > 0) {
+      const vipTotal = vipSessionCount * 80000;
+      subtotal += vipTotal;
       transactionItemsData.push({
         type: "VIP_UPGRADE",
         serviceId: "VIP_UPGRADE",
         voucherPacketId: null,
-        itemNameSnapshot: "Upgrade VIP",
+        itemNameSnapshot: vipSessionCount > 1 ? `Upgrade VIP (${vipSessionCount} Sesi)` : "Upgrade VIP",
         unitPrice: 80000,
-        quantity: 1,
+        quantity: vipSessionCount,
         discountAmount: 0,
-        subtotal: 80000,
+        subtotal: vipTotal,
         cashierIncentiveAmount: 0,
         therapistIncentivePerUnit: 0,
         staffId: null,

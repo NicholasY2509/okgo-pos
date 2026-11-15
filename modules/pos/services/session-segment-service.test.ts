@@ -9,6 +9,7 @@ vi.mock("../repositories/session-segment-repository", () => ({
     addContinuationSegment: vi.fn(),
     switchActiveSegment: vi.fn(),
     startSegment: vi.fn(),
+    updateScheduledSegment: vi.fn(),
   },
 }));
 
@@ -184,5 +185,62 @@ describe("SessionSegmentService", () => {
     });
 
     expect(res).toEqual({ id: "seg-2", status: "IN_PROGRESS" });
+  });
+
+  it("updates a scheduled segment and cascades subsequent scheduled segments", async () => {
+    const start1 = new Date("2026-11-15T10:00:00.000Z");
+    const end1 = new Date("2026-11-15T11:00:00.000Z");
+    const end2 = new Date("2026-11-15T12:00:00.000Z");
+
+    vi.mocked(SessionSegmentRepository.getSessionWithSegments).mockResolvedValueOnce({
+      id: "sess-1",
+      branchId: "br-1",
+      isVip: false,
+      status: "SCHEDULED",
+      startTime: start1,
+      endTime: end2,
+      segments: [
+        { id: "seg-1", status: "SCHEDULED", startTime: start1, endTime: end1, durationMinutes: 60 },
+        { id: "seg-2", status: "SCHEDULED", startTime: end1, endTime: end2, durationMinutes: 60 },
+      ],
+    } as any);
+
+    vi.mocked(SessionSegmentRepository.getServiceAndStaff).mockResolvedValueOnce({
+      product: { id: "srv-new", duration: 90, isActive: true },
+      staff: { id: "staff-new", isActive: true },
+      room: { id: "room-new", branchId: "br-1", isVip: false },
+    } as any);
+
+    vi.mocked(SessionSegmentRepository.updateScheduledSegment).mockResolvedValueOnce({
+      id: "seg-1",
+      serviceId: "srv-new",
+    } as any);
+
+    await SessionSegmentService.updateScheduledSegment({
+      sessionId: "sess-1",
+      segmentId: "seg-1",
+      serviceId: "srv-new",
+      staffId: "staff-new",
+      roomId: "room-new",
+    });
+
+    const expectedEnd1 = new Date("2026-11-15T11:30:00.000Z");
+    const expectedEnd2 = new Date("2026-11-15T12:30:00.000Z");
+
+    expect(SessionSegmentRepository.updateScheduledSegment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: "sess-1",
+        segmentId: "seg-1",
+        serviceId: "srv-new",
+        staffId: "staff-new",
+        roomId: "room-new",
+        durationMinutes: 90,
+        startTime: start1,
+        endTime: expectedEnd1,
+        subsequentSegments: [{ id: "seg-2", startTime: expectedEnd1, endTime: expectedEnd2 }],
+        sessionEndTime: expectedEnd2,
+        updateSessionSummary: true,
+      })
+    );
   });
 });

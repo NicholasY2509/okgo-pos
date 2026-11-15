@@ -67,6 +67,7 @@ interface TimetableState {
   handleAddContinuationSegment: (sessionId: string, serviceId: string, staffId: string, roomId?: string) => Promise<boolean>;
   handleSwitchActiveSegment: (sessionId: string, serviceId: string, staffId: string, roomId?: string) => Promise<boolean>;
   handleStartSegment: (sessionId: string, segmentId: string) => Promise<boolean>;
+  handleUpdateScheduledSegment: (sessionId: string, segmentId: string, serviceId: string, staffId: string, roomId: string) => Promise<boolean>;
 }
 
 export const useTimetableStore = create<TimetableState>((set, get) => ({
@@ -354,6 +355,34 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
       return true;
     }
     toast.error(res.error || "Gagal memulai segmen");
+    return false;
+  },
+
+  handleUpdateScheduledSegment: async (sessionId, segmentId, serviceId, staffId, roomId) => {
+    const { branchId, sessions, fetchSessions } = get();
+    const target = sessions.find((s) => s.id === sessionId);
+    const { updateScheduledSegmentAction } = await import("../actions/session-segment-action");
+    const res = await updateScheduledSegmentAction({
+      sessionId,
+      segmentId,
+      serviceId,
+      staffId,
+      roomId,
+    });
+    if (res.success) {
+      toast.success("Segmen berhasil diperbarui");
+      broadcastRoomSessionUpdate({
+        branchId,
+        roomId: roomId || target?.roomId,
+        sessionId,
+        action: "segment_updated",
+      });
+      await fetchSessions();
+      const updated = get().sessions.find((s) => s.id === sessionId) || null;
+      set({ selectedSessionForInfo: updated });
+      return true;
+    }
+    toast.error(res.error || "Gagal memperbarui segmen");
     return false;
   }
 }));

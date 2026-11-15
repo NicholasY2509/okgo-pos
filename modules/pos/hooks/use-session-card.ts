@@ -136,22 +136,35 @@ export function useSessionCard({ session, onUpdateTime }: UseSessionCardProps) {
       setIsResizingRight(false);
 
       const deltaX = Math.abs(upEvent.clientX - startX);
-      const isClick = deltaX < 5;
+      const isClick = deltaX < 8;
 
       if (isClick && mode === "drag") {
         setSelectedSessionForInfo(session);
       } else if (!isClick && onUpdateTime) {
         const rawDeltaMs = calculateTimeDelta(upEvent.clientX, startX);
+        let nextStart = initialStart;
+        let nextEnd = initialEnd;
+
         if (mode === "drag") {
           const durationMs = initialEnd.getTime() - initialStart.getTime();
-          const snappedStart = snapTo15Mins(new Date(initialStart.getTime() + rawDeltaMs));
-          onUpdateTime(snappedStart, new Date(snappedStart.getTime() + durationMs));
+          nextStart = snapTo15Mins(new Date(initialStart.getTime() + rawDeltaMs));
+          nextEnd = new Date(nextStart.getTime() + durationMs);
         } else if (mode === "resizeLeft") {
           const snappedStart = snapTo15Mins(new Date(initialStart.getTime() + rawDeltaMs));
-          if (snappedStart < initialEnd) onUpdateTime(snappedStart, initialEnd);
+          if (snappedStart < initialEnd) nextStart = snappedStart;
         } else if (mode === "resizeRight") {
           const snappedEnd = snapTo15Mins(new Date(initialEnd.getTime() + rawDeltaMs));
-          if (snappedEnd > initialStart) onUpdateTime(initialStart, snappedEnd);
+          if (snappedEnd > initialStart) nextEnd = snappedEnd;
+        }
+
+        const timeChanged =
+          nextStart.getTime() !== initialStart.getTime() ||
+          nextEnd.getTime() !== initialEnd.getTime();
+
+        if (timeChanged) {
+          onUpdateTime(nextStart, nextEnd);
+        } else if (mode === "drag") {
+          setSelectedSessionForInfo(session);
         }
       }
     };

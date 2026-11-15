@@ -3,6 +3,7 @@ import type {
   AddContinuationSegmentInput,
   StartSegmentInput,
   SwitchActiveSegmentInput,
+  UpdateScheduledSegmentInput,
 } from "../schemas/session-segment-schema";
 
 function calculateCommissionFromRules(staff: any, unitPrice: number): number {
@@ -155,6 +156,71 @@ export class SessionSegmentService {
       staffId: target.staffId,
       roomId: target.roomId,
       now: new Date(),
+    });
+  }
+
+  static async updateScheduledSegment(input: UpdateScheduledSegmentInput) {
+    const session = await SessionSegmentRepository.getSessionWithSegments(input.sessionId);
+    if (!session) throw new Error("Sesi tidak ditemukan.");
+
+    const targetIndex = session.segments.findIndex((s) => s.id === input.segmentId);
+    if (targetIndex === -1) throw new Error("Segmen tidak ditemukan.");
+
+    const target = session.segments[targetIndex];
+    if (target.status !== "SCHEDULED") {
+      throw new Error("Hanya segmen yang belum dimulai yang dapat diedit.");
+    }
+
+    const { product, staff, room } = await SessionSegmentRepository.getServiceAndStaff(
+      input.serviceId,
+      input.staffId,
+      input.roomId
+    );
+    if (!product) throw new Error("Layanan tidak ditemukan.");
+    if (!staff) throw new Error("Terapis tidak ditemukan.");
+    if (!room) throw new Error("Ruangan tidak ditemukan.");
+    if (room.branchId !== session.branchId) {
+      throw new Error("Ruangan tidak sesuai dengan cabang sesi.");
+    }
+    if (session.isVip && !room.isVip) {
+      throw new Error("Sesi VIP hanya dapat menggunakan ruangan VIP.");
+    }
+
+    const durationMinutes = product.duration || 60;
+    const prevSeg = targetIndex > 0 ? session.segments[targetIndex - 1] : null;
+    const startTime = target.startTime || prevSeg?.endTime || session.startTime || new Date();
+    const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+
+    const subsequentSegments: Array<{ id: string; startTime: Date; endTime: Date }> = [];
+    let cursorEnd = endTime;
+    for (let i = targetIndex + 1; i < session.segments.length; i++) {
+      const nextSeg = session.segments[i];
+      if (nextSeg.status !== "SCHEDULED") break;
+      const nextStart = new Date(cursorEnd);
+      const nextEnd = new Date(nextStart.getTime() + (nextSeg.durationMinutes || 60) * 60000);
+      subsequentSegments.push({ id: nextSeg.id, startTime: nextStart, endTime: nextEnd });
+      cursorEnd = nextEnd;
+    }
+
+    const sessionEndTime =
+      subsequentSegments.length > 0
+        ? subsequentSegments[subsequentSegments.length - 1].endTime
+        : targetIndex === session.segments.length - 1
+          ? endTime
+          : session.endTime || endTime;
+
+    return await SessionSegmentRepository.updateScheduledSegment({
+      sessionId: session.id,
+      segmentId: target.id,
+      serviceId: product.id,
+      staffId: staff.id,
+      roomId: room.id,
+      durationMinutes,
+      startTime,
+      endTime,
+      subsequentSegments,
+      sessionEndTime,
+      updateSessionSummary: targetIndex === 0,
     });
   }
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Trash2, Plus, Minus, ShoppingCart, PlusCircle, Link2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePosStoreSelector, usePosStoreActions, type CartItem } from "../../stores/pos-store";
 import { AddonServiceDialog } from "./addon-service-dialog";
 
@@ -15,8 +16,10 @@ interface CartItemsProps {
 export function CartItems({ products = [], staff = [], rooms = [], branchId = "" }: CartItemsProps) {
   const items = usePosStoreSelector((state) => state.items);
   const appliedPromos = usePosStoreSelector((state) => state.appliedPromos);
-  const { removeItem, updateQuantity, addAddonServiceToItem } = usePosStoreActions();
+  const isVipUpgrade = usePosStoreSelector((state) => state.isVipUpgrade);
+  const { removeItem, updateQuantity, updateItem, addAddonServiceToItem } = usePosStoreActions();
   const [addonParentItem, setAddonParentItem] = useState<CartItem | null>(null);
+  const availableRooms = rooms.filter((r) => (isVipUpgrade ? Boolean(r.isVip) : !r.isVip));
 
   if (items.length === 0) {
     return (
@@ -79,6 +82,11 @@ export function CartItems({ products = [], staff = [], rooms = [], branchId = ""
                   <span className="inline-block text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider">
                     1 Sesi · {groupItems.length} Layanan
                   </span>
+                  {groupItems.some((g) => g.isVip) && (
+                    <span className="inline-block text-[9px] font-semibold bg-amber-500/15 text-amber-600 px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider">
+                      VIP
+                    </span>
+                  )}
                   <span className="text-[11px] text-muted-foreground truncate max-w-[140px]">
                     {firstItem.roomName}
                   </span>
@@ -140,9 +148,16 @@ export function CartItems({ products = [], staff = [], rooms = [], branchId = ""
                 ) : (
                   <span className="text-[11px] font-medium text-muted-foreground">Total Sesi</span>
                 )}
-                <span className="font-semibold text-base tracking-tight text-foreground">
-                  Rp {groupTotal.toLocaleString("id-ID")}
-                </span>
+                <div className="flex flex-col items-end leading-none">
+                  <span className="font-semibold text-base tracking-tight text-foreground">
+                    Rp {groupTotal.toLocaleString("id-ID")}
+                  </span>
+                  {groupItems.some((g) => g.isVip) && (
+                    <span className="text-[10px] font-medium text-amber-600 mt-0.5">
+                      + Rp 80.000 VIP
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -161,15 +176,43 @@ export function CartItems({ products = [], staff = [], rooms = [], branchId = ""
           >
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0 px-2">
-                <h4 className="font-semibold text-base tracking-tight text-foreground leading-tight mb-1 line-clamp-2">
-                  {item.name}
-                </h4>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <h4 className="font-semibold text-base tracking-tight text-foreground leading-tight line-clamp-2">
+                    {item.name}
+                  </h4>
+                  {item.isVip && (
+                    <span className="inline-block text-[9px] font-semibold bg-amber-500/15 text-amber-600 px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider shrink-0">
+                      VIP
+                    </span>
+                  )}
+                </div>
 
                 {item.type === "SERVICE" && (
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
                     <span className="truncate max-w-[110px]">{item.staffName}</span>
                     <span className="w-1 h-1 rounded-full bg-border shrink-0"></span>
-                    <span className="truncate max-w-[80px]">{item.roomName}</span>
+                    {item.roomId ? (
+                      <span className="truncate max-w-[80px]">{item.roomName}</span>
+                    ) : (
+                      <Select
+                        value=""
+                        onValueChange={(val) => {
+                          const r = rooms.find((rm) => rm.id === val);
+                          updateItem(item.cartId, { roomId: val, roomName: r?.name });
+                        }}
+                      >
+                        <SelectTrigger className="h-6 text-[11px] w-[125px] border-amber-500/60 text-amber-600">
+                          <SelectValue placeholder={isVipUpgrade ? "Pilih Room VIP" : "Pilih Ruangan"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableRooms.map((r) => (
+                            <SelectItem key={r.id} value={r.id}>
+                              {r.name} {r.isVip ? "(VIP)" : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                 )}
 
@@ -255,6 +298,11 @@ export function CartItems({ products = [], staff = [], rooms = [], branchId = ""
                 ) : (
                   <span className="font-light text-base tracking-tight text-foreground">
                     Rp {(item.unitPrice * item.quantity).toLocaleString("id-ID")}
+                  </span>
+                )}
+                {item.isVip && (
+                  <span className="text-[10px] font-medium text-amber-600 mt-0.5">
+                    + Rp 80.000 VIP
                   </span>
                 )}
               </div>

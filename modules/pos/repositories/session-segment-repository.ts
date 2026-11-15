@@ -236,4 +236,58 @@ export const SessionSegmentRepository = {
       return updatedSegment;
     });
   },
+
+  async updateScheduledSegment(params: {
+    sessionId: string;
+    segmentId: string;
+    serviceId: string;
+    staffId: string;
+    roomId: string;
+    durationMinutes: number;
+    startTime: Date;
+    endTime: Date;
+    subsequentSegments: Array<{ id: string; startTime: Date; endTime: Date }>;
+    sessionEndTime: Date;
+    updateSessionSummary: boolean;
+  }) {
+    return await prisma.$transaction(async (tx) => {
+      const updatedSegment = await tx.serviceSessionSegment.update({
+        where: { id: params.segmentId },
+        data: {
+          serviceId: params.serviceId,
+          staffId: params.staffId,
+          roomId: params.roomId,
+          durationMinutes: params.durationMinutes,
+          startTime: params.startTime,
+          endTime: params.endTime,
+        },
+      });
+
+      for (const nextSeg of params.subsequentSegments) {
+        await tx.serviceSessionSegment.update({
+          where: { id: nextSeg.id },
+          data: {
+            startTime: nextSeg.startTime,
+            endTime: nextSeg.endTime,
+          },
+        });
+      }
+
+      await tx.serviceSession.update({
+        where: { id: params.sessionId },
+        data: {
+          endTime: params.sessionEndTime,
+          ...(params.updateSessionSummary
+            ? {
+                serviceId: params.serviceId,
+                staffId: params.staffId,
+                roomId: params.roomId,
+              }
+            : {}),
+        },
+      });
+
+      return updatedSegment;
+    });
+  },
 };

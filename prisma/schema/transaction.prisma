@@ -211,7 +211,8 @@ model ServiceSession {
   roomId            String
   branchId          String
 
-  status String @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  status String  @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  isVip  Boolean @default(false)
 
   startTime DateTime?
   endTime   DateTime?

@@ -25,10 +25,18 @@ export function GlobalNotificationListener({ branchId }: GlobalNotificationListe
     socket.on("connect", joinBranchRoom);
 
     const handleStatusChanged = (data: any) => {
+      const action = data?.action;
+      const isStart = action === "start";
+      const isEnd = action === "end" || action === "complete";
+
+      if (!isStart && !isEnd) {
+        router.refresh();
+        return;
+      }
+
       const audio = new Audio("/notification.ogg");
       audio.play().catch(e => console.error("Error playing sound:", e));
       
-      const isStart = data?.action === "start";
       const therapistName = data?.staffName || "seorang terapis";
       const serviceName = data?.serviceName || "Layanan";
 

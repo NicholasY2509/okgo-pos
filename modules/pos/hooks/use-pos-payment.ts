@@ -101,6 +101,7 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
         voucherCode: i.voucherCode,
         sessionGroupKey: i.sessionGroupKey ?? null,
         sequenceOrder: i.sequenceOrder ?? null,
+        isVip: Boolean(i.isVip),
       })),
       payments: isPayLater ? [] : paymentsArray,
       isPayLater

@@ -8,7 +8,6 @@ import { CartCheckout } from "./cart/cart-checkout";
 
 import { PosPromoDialog } from "./cart/pos-promo-dialog";
 import { PosVoucherDialog } from "./cart/pos-voucher-dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { usePosCart, usePosStoreSelector } from "../stores/pos-store";
 import { useEffect } from "react";
 
@@ -47,21 +46,6 @@ export function PosCart({ onCheckout, branchId, onRedeemVoucher, products = [], 
         <div className="flex flex-col gap-1">
           <PosPromoDialog branchId={branchId} disabled={hasVoucherPacket || hasAppliedVoucher} />
           <PosVoucherDialog onRedeemVoucher={onRedeemVoucher} disabled={hasVoucherPacket || hasAppliedPromo} />
-
-          <div className="flex items-center space-x-2 mt-2 px-2">
-            <Checkbox
-              id="vip-upgrade"
-              checked={isVipUpgrade}
-              onCheckedChange={(checked) => setIsVipUpgrade(checked === true)}
-              disabled={hasVoucherPacket}
-            />
-            <label
-              htmlFor="vip-upgrade"
-              className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${hasVoucherPacket ? "text-muted-foreground" : "cursor-pointer text-amber-600"}`}
-            >
-              Upgrade ke VIP (+ Rp 80.000)
-            </label>
-          </div>
         </div>
         <CartSummary />
         <CartCheckout onCheckout={onCheckout} />

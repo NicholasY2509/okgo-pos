@@ -54,7 +54,7 @@ export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosC
     }
   };
 
-  const handleAddServiceToCart = async (staffId: string, roomId: string) => {
+  const handleAddServiceToCart = async (staffId: string, roomId: string, isVip = false) => {
     if (!selectedProduct || !staffId || !roomId) return;
 
     const hasVoucherPacket = cartItems.some(i => i.type === "VOUCHER_PACKET");
@@ -79,6 +79,7 @@ export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosC
         unitPrice: unitPrice,
         staffName: staffMember?.firstName + " " + (staffMember?.lastName || ""),
         roomName: room?.name,
+        isVip: Boolean(isVip),
         isVoucherRedemption: true,
         customerVoucherId: selectedVoucherRedemption.id,
         voucherCode: selectedVoucherRedemption.code,
@@ -98,6 +99,7 @@ export function usePosClient({ staff, rooms, activeDiscount, branchId }: UsePosC
         unitPrice: unitPrice,
         staffName: staffMember?.firstName + " " + (staffMember?.lastName || ""),
         roomName: room?.name,
+        isVip: Boolean(isVip),
       });
     }
 

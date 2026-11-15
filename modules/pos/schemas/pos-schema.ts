@@ -20,6 +20,7 @@ export const posItemServiceSchema = z.object({
   voucherCode: z.string().optional().nullable(),
   sessionGroupKey: z.string().optional().nullable(),
   sequenceOrder: z.number().int().min(1).optional().nullable(),
+  isVip: z.boolean().optional().default(false),
 });
 
 export const posItemVoucherPacketSchema = z.object({

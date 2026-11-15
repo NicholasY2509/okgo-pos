@@ -22,6 +22,7 @@ export type CartItem = {
   voucherCode?: string;
   sessionGroupKey?: string | null;
   sequenceOrder?: number | null;
+  isVip?: boolean;
 };
 
 export type AppliedPromo = {
@@ -131,6 +132,7 @@ export const createPosStore = () => {
                   quantity: 1,
                   sessionGroupKey: groupKey,
                   sequenceOrder: maxSeq + 1,
+                  isVip: Boolean(parent.isVip),
                 },
               ],
               appliedPromos: [],
@@ -349,8 +351,24 @@ export function usePosCart() {
   const isVipUpgrade = useStore(store, (s) => s.isVipUpgrade);
   const setIsVipUpgrade = useStore(store, (s) => s.setIsVipUpgrade);
 
+  const countedVipGroups = new Set<string>();
+  let vipSessionCount = 0;
+  for (const item of items) {
+    if (item.type !== "SERVICE" || !item.isVip) continue;
+    if (item.sessionGroupKey) {
+      if (!countedVipGroups.has(item.sessionGroupKey)) {
+        countedVipGroups.add(item.sessionGroupKey);
+        vipSessionCount += 1;
+      }
+    } else {
+      vipSessionCount += item.quantity;
+    }
+  }
+  const vipFeeTotal =
+    vipSessionCount > 0 ? vipSessionCount * 80000 : isVipUpgrade ? 80000 : 0;
+
   let subtotal = items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
-  if (isVipUpgrade) subtotal += 80000;
+  subtotal += vipFeeTotal;
   const itemDiscountTotal = items.reduce((acc, item) => acc + item.discountAmount, 0);
   const promoDiscountTotal = appliedPromos.reduce((acc, promo) => acc + promo.discountAmount, 0);
   const discountTotal = itemDiscountTotal + promoDiscountTotal;
@@ -390,7 +408,9 @@ export function usePosCart() {
     isPaymentModalOpen,
     selectedProduct,
     selectedVoucherRedemption,
-    isVipUpgrade,
+    isVipUpgrade: vipSessionCount > 0 || isVipUpgrade,
+    vipSessionCount,
+    vipFeeTotal,
     setIsVipUpgrade,
   };
 }

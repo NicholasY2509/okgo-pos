@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, CheckCircle2, Play, User, Activity, Receipt, CreditCard, PlusCircle, ArrowLeftRight } from "lucide-react";
+import { Clock, CheckCircle2, User, Activity, Receipt, CreditCard, PlusCircle, ArrowLeftRight, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { StaffCombobox } from "@/modules/staff/components/staff-combobox";
@@ -29,7 +29,6 @@ export function SessionInfoDialog({
   staff,
 }: SessionInfoDialogProps) {
   const {
-    handleStart,
     handleComplete,
     handleProcessBooking,
     handleUpdateSessionStaff,
@@ -37,12 +36,14 @@ export function SessionInfoDialog({
     handleAddContinuationSegment,
     handleSwitchActiveSegment,
     handleStartSegment,
+    handleUpdateScheduledSegment,
     branchId,
     rooms,
     products,
   } = useTimetableStore();
 
-  const [segmentActionMode, setSegmentActionMode] = useState<"CONTINUE" | "SWITCH" | null>(null);
+  const [segmentActionMode, setSegmentActionMode] = useState<"CONTINUE" | "SWITCH" | "EDIT" | null>(null);
+  const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [sameStaff, setSameStaff] = useState<boolean>(true);
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
@@ -52,6 +53,7 @@ export function SessionInfoDialog({
 
   useEffect(() => {
     setSegmentActionMode(null);
+    setEditingSegmentId(null);
     setSelectedServiceId("");
     setSameStaff(true);
     setSelectedStaffId("");
@@ -70,21 +72,42 @@ export function SessionInfoDialog({
   const activeStaffName = activeSegment?.staffName || (activeStaffObj ? `${activeStaffObj.firstName} ${activeStaffObj.lastName || ""}`.trim() : "Terapis saat ini");
   const serviceProducts = (products || []).filter((p: any) => p.isActive !== false);
 
+  const openEditSegment = (seg: any) => {
+    setSegmentActionMode("EDIT");
+    setEditingSegmentId(seg.id);
+    setSelectedServiceId(seg.serviceId || "");
+    setSameStaff(false);
+    setSelectedStaffId(seg.staffId || "");
+    setSameRoom(false);
+    setSelectedRoomId(seg.roomId || session.roomId || "");
+  };
+
   const handleSegmentSubmit = async () => {
-    const targetStaffId = sameStaff ? activeStaffId : selectedStaffId;
-    const targetRoomId = sameRoom ? activeRoomId : selectedRoomId;
+    const targetStaffId = segmentActionMode === "EDIT" ? selectedStaffId : sameStaff ? activeStaffId : selectedStaffId;
+    const targetRoomId = segmentActionMode === "EDIT" ? selectedRoomId : sameRoom ? activeRoomId : selectedRoomId;
     if (!selectedServiceId || !targetStaffId || !targetRoomId) {
       toast.error("Layanan, terapis, dan ruangan wajib dipilih.");
       return;
     }
     setIsSubmittingSegment(true);
-    const ok =
-      segmentActionMode === "CONTINUE"
-        ? await handleAddContinuationSegment(session.id, selectedServiceId, targetStaffId, targetRoomId)
-        : await handleSwitchActiveSegment(session.id, selectedServiceId, targetStaffId, targetRoomId);
+    let ok = false;
+    if (segmentActionMode === "CONTINUE") {
+      ok = await handleAddContinuationSegment(session.id, selectedServiceId, targetStaffId, targetRoomId);
+    } else if (segmentActionMode === "SWITCH") {
+      ok = await handleSwitchActiveSegment(session.id, selectedServiceId, targetStaffId, targetRoomId);
+    } else if (segmentActionMode === "EDIT" && editingSegmentId) {
+      ok = await handleUpdateScheduledSegment(
+        session.id,
+        editingSegmentId,
+        selectedServiceId,
+        targetStaffId,
+        targetRoomId
+      );
+    }
     setIsSubmittingSegment(false);
     if (ok) {
       setSegmentActionMode(null);
+      setEditingSegmentId(null);
       setSelectedServiceId("");
       setSameStaff(true);
       setSelectedStaffId("");
@@ -97,14 +120,21 @@ export function SessionInfoDialog({
   const isInProgress = session.status === "IN_PROGRESS";
   const isScheduled = session.status === "SCHEDULED";
 
+  const hasSegments = segments.length > 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-zinc-200/60 shadow-2xl rounded-2xl gap-0">
+      <DialogContent
+        className={cn(
+          "p-0 overflow-hidden border-zinc-200/60 shadow-2xl rounded-2xl gap-0 max-h-[90vh] flex flex-col",
+          hasSegments ? "sm:max-w-[820px]" : "sm:max-w-[450px]"
+        )}
+      >
 
         {/* Header Section */}
-        <div className="px-6 pt-6 pb-5 bg-zinc-50/50 dark:bg-zinc-900/20 border-b border-zinc-100 dark:border-zinc-800/50">
+        <div className="px-6 pt-6 pb-5 bg-zinc-50/50 dark:bg-zinc-900/20 border-b border-zinc-100 dark:border-zinc-800/50 shrink-0">
           <DialogHeader>
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4 pr-8">
               <div className="space-y-1.5 text-left">
                 <DialogTitle className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                   {session.itemName}
@@ -116,6 +146,7 @@ export function SessionInfoDialog({
               </div>
               <Badge
                 variant={isCompleted ? "secondary" : isInProgress ? "default" : "outline"}
+                className="shrink-0"
               >
                 {isCompleted ? "Selesai" : isInProgress ? "Berlangsung" : "Terjadwal"}
               </Badge>
@@ -124,106 +155,157 @@ export function SessionInfoDialog({
         </div>
 
         {/* Body Section */}
-        <div className="p-6 space-y-6">
-
-          {/* Terapis Selection/Display */}
-          <div className="space-y-2">
-            <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5" />
-              Terapis
-            </label>
-            {isCompleted ? (
-              <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 font-medium text-sm text-zinc-700 dark:text-zinc-300">
-                {session.staff ? `${session.staff.firstName} ${session.staff.lastName}` : "-"}
-              </div>
-            ) : (
-              <StaffCombobox
-                value={session.staffId || ""}
-                onChange={(val) => handleUpdateSessionStaff(session.id, val)}
-                branchId={branchId || session.branchId}
-                serviceId={session.serviceId}
-                excludeSessionId={session.id}
-              />
-            )}
-          </div>
-
-          {/* Room Selection/Display */}
-          <div className="space-y-2">
-            <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" />
-              Ruangan
-            </label>
-            {isCompleted ? (
-              <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 font-medium text-sm text-zinc-700 dark:text-zinc-300">
-                {rooms.find(r => r.id === session.roomId)?.name || "-"}
-              </div>
-            ) : (
-              <Select value={session.roomId} onValueChange={(val) => handleUpdateSessionRoom(session.id, val)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pilih Ruangan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rooms.map(room => {
-                    const isDisabled = !session.isVip && room.isVip;
-                    return (
-                      <SelectItem 
-                        key={room.id} 
-                        value={room.id}
-                        disabled={isDisabled}
-                      >
-                        {room.name} {room.isVip ? "(VIP)" : ""}
-                        {isDisabled && " - Tidak tersedia untuk layanan reguler"}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {/* Time Info */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800/80 shadow-sm transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-900">
-              <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                Mulai {(session.actualStartTime || session.status === "COMPLETED") ? "(Aktual)" : "(Estimasi)"}
-              </div>
-              <div className="font-semibold text-zinc-700 dark:text-zinc-200">
-                {new Date(session.actualStartTime || session.startTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-              </div>
-            </div>
-
-            <div className="space-y-2 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800/80 shadow-sm transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-900">
-              <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                {isCompleted ? "Selesai (Aktual)" : "Estimasi Selesai"}
-              </div>
-              <div className="font-semibold text-zinc-700 dark:text-zinc-200">
-                {(isCompleted && session.actualEndTime)
-                  ? new Date(session.actualEndTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
-                  : session.endTime
-                    ? new Date(session.endTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
-                    : "-"}
-              </div>
-            </div>
-          </div>
-
-          {/* Reference ID */}
-          {(session.transactionItem?.transaction?.id || session.bookingId) && (
-            <div className="flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 font-medium">
-                <Receipt className="w-4 h-4" />
-                <span>ID Referensi</span>
-              </div>
-              <div className="font-mono text-xs font-semibold bg-zinc-200/50 dark:bg-zinc-800 px-2.5 py-1 rounded text-zinc-600 dark:text-zinc-300 tracking-tight">
-                {session.transactionItem?.transaction?.id || session.bookingId}
-              </div>
-            </div>
+        <div
+          className={cn(
+            "p-6 overflow-y-auto",
+            hasSegments ? "grid grid-cols-1 md:grid-cols-2 gap-6 items-start" : "space-y-6"
           )}
+        >
+          <div className="space-y-5">
+
+            {/* Terapis Selection/Display */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5" />
+                Terapis
+              </label>
+              {isCompleted ? (
+                <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 font-medium text-sm text-zinc-700 dark:text-zinc-300">
+                  {session.staff ? `${session.staff.firstName} ${session.staff.lastName}` : "-"}
+                </div>
+              ) : (
+                <StaffCombobox
+                  value={session.staffId || ""}
+                  onChange={(val) => handleUpdateSessionStaff(session.id, val)}
+                  branchId={branchId || session.branchId}
+                  serviceId={session.serviceId}
+                  excludeSessionId={session.id}
+                />
+              )}
+            </div>
+
+            {/* Room Selection/Display */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5" />
+                Ruangan
+              </label>
+              {isCompleted ? (
+                <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800 font-medium text-sm text-zinc-700 dark:text-zinc-300">
+                  {rooms.find(r => r.id === session.roomId)?.name || "-"}
+                </div>
+              ) : (
+                <Select value={session.roomId} onValueChange={(val) => handleUpdateSessionRoom(session.id, val)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Ruangan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rooms.map(room => {
+                      const isDisabled = !session.isVip && room.isVip;
+                      return (
+                        <SelectItem
+                          key={room.id}
+                          value={room.id}
+                          disabled={isDisabled}
+                        >
+                          {room.name} {room.isVip ? "(VIP)" : ""}
+                          {isDisabled && " - Tidak tersedia untuk layanan reguler"}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {/* Time Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800/80 shadow-sm transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-900">
+                <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  Mulai {(session.actualStartTime || session.status === "COMPLETED") ? "(Aktual)" : "(Estimasi)"}
+                </div>
+                <div className="font-semibold text-zinc-700 dark:text-zinc-200">
+                  {new Date(session.actualStartTime || session.startTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                </div>
+              </div>
+
+              <div className="space-y-2 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-100 dark:border-zinc-800/80 shadow-sm transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-900">
+                <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  {isCompleted ? "Selesai (Aktual)" : "Estimasi Selesai"}
+                </div>
+                <div className="font-semibold text-zinc-700 dark:text-zinc-200">
+                  {(isCompleted && session.actualEndTime)
+                    ? new Date(session.actualEndTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+                    : session.endTime
+                      ? new Date(session.endTime).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+                      : "-"}
+                </div>
+              </div>
+            </div>
+
+            {/* Reference ID */}
+            {(session.transactionItem?.transaction?.id || session.bookingId) && (
+              <div className="flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 font-medium">
+                  <Receipt className="w-4 h-4" />
+                  <span>ID Referensi</span>
+                </div>
+                <div className="font-mono text-xs font-semibold bg-zinc-200/50 dark:bg-zinc-800 px-2.5 py-1 rounded text-zinc-600 dark:text-zinc-300 tracking-tight">
+                  {session.transactionItem?.transaction?.id || session.bookingId}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-2 flex flex-col gap-3">
+              {isScheduled && session.booking?.status === "PENDING" && (
+                <Button
+                  onClick={() => {
+                    if (session.bookingId) handleProcessBooking(session.bookingId);
+                    onOpenChange(false);
+                  }}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Proses Booking
+                </Button>
+              )}
+
+              {isInProgress && (
+                <Button
+                  onClick={() => {
+                    if (session.paymentStatus === "PENDING") {
+                      toast.error("Tidak dapat menyelesaikan sesi. Pembayaran belum lunas.");
+                      return;
+                    }
+                    handleComplete(session.id);
+                    onOpenChange(false);
+                  }}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Selesaikan Sesi
+                </Button>
+              )}
+
+              {session.paymentStatus === "PENDING" && (
+                <Button
+                  variant={'outline'}
+                  onClick={() => {
+                    onPayNow();
+                    onOpenChange(false);
+                  }}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Buat Pembayaran
+                </Button>
+              )}
+            </div>
+          </div>
 
           {/* Segments Timeline */}
-          {segments.length > 0 && (
-            <div className="space-y-2">
+          {hasSegments && (
+            <div className="space-y-3 md:border-l md:border-zinc-200/70 md:dark:border-zinc-800 md:pl-6">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
                   Segmen Layanan ({segments.length})
@@ -256,14 +338,23 @@ export function SessionInfoDialog({
                 )}
               </div>
 
-              <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {segments.map((seg) => {
                   const segStatusLabel =
                     seg.status === "COMPLETED"
                       ? "Selesai"
                       : seg.status === "IN_PROGRESS"
-                      ? "Berlangsung"
-                      : "Terjadwal";
+                        ? "Berlangsung"
+                        : "Terjadwal";
+                  const formatSegmentTime = (val: string | Date | null | undefined) =>
+                    val
+                      ? new Date(val).toLocaleTimeString("id-ID", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                      : null;
+                  const segStart = formatSegmentTime(seg.actualStartTime || seg.startTime);
+                  const segEnd = formatSegmentTime(seg.actualEndTime || seg.endTime);
                   return (
                     <div
                       key={seg.id}
@@ -287,11 +378,26 @@ export function SessionInfoDialog({
                           {seg.staffName || "Belum ada terapis"}
                           {" · "}
                           {rooms.find((r) => r.id === (seg.roomId || session.roomId))?.name || "-"}
-                          {" · "}
-                          {seg.durationMinutes}m
+                        </div>
+                        <div className="text-[11px] font-medium text-zinc-600 dark:text-zinc-300 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-zinc-400 shrink-0" />
+                          {segStart && segEnd ? `${segStart} - ${segEnd}` : "-"}
+                          <span className="text-zinc-400">({seg.durationMinutes}m)</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
+                        {seg.status === "SCHEDULED" && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 text-zinc-500 hover:text-foreground"
+                            title="Edit segmen"
+                            onClick={() => openEditSegment(seg)}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                         {isInProgress && seg.status === "SCHEDULED" && (
                           <Button
                             type="button"
@@ -308,8 +414,8 @@ export function SessionInfoDialog({
                             seg.status === "COMPLETED"
                               ? "secondary"
                               : seg.status === "IN_PROGRESS"
-                              ? "default"
-                              : "outline"
+                                ? "default"
+                                : "outline"
                           }
                           className="text-[10px]"
                         >
@@ -326,7 +432,9 @@ export function SessionInfoDialog({
                   <div className="text-xs font-semibold text-foreground">
                     {segmentActionMode === "CONTINUE"
                       ? "Tambah Layanan Lanjutan"
-                      : "Ganti Layanan Sesi Berjalan (Harga Awal Tetap)"}
+                      : segmentActionMode === "SWITCH"
+                        ? "Ganti Layanan Sesi Berjalan (Harga Awal Tetap)"
+                        : "Edit Segmen Layanan"}
                   </div>
 
                   <ProductCombobox
@@ -335,18 +443,20 @@ export function SessionInfoDialog({
                     onChange={setSelectedServiceId}
                   />
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="segment-same-staff"
-                      checked={sameStaff}
-                      onCheckedChange={(checked) => setSameStaff(checked === true)}
-                    />
-                    <label htmlFor="segment-same-staff" className="text-xs font-medium cursor-pointer">
-                      Terapis sama ({activeStaffName})
-                    </label>
-                  </div>
+                  {segmentActionMode !== "EDIT" && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="segment-same-staff"
+                        checked={sameStaff}
+                        onCheckedChange={(checked) => setSameStaff(checked === true)}
+                      />
+                      <label htmlFor="segment-same-staff" className="text-xs font-medium cursor-pointer">
+                        Terapis sama ({activeStaffName})
+                      </label>
+                    </div>
+                  )}
 
-                  {!sameStaff && (
+                  {(segmentActionMode === "EDIT" || !sameStaff) && (
                     <StaffCombobox
                       serviceId={selectedServiceId || undefined}
                       value={selectedStaffId}
@@ -356,28 +466,32 @@ export function SessionInfoDialog({
                     />
                   )}
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="segment-same-room"
-                      checked={sameRoom}
-                      onCheckedChange={(checked) => setSameRoom(checked === true)}
-                    />
-                    <label htmlFor="segment-same-room" className="text-xs font-medium cursor-pointer">
-                      Ruangan sama ({activeRoomName})
-                    </label>
-                  </div>
+                  {segmentActionMode !== "EDIT" && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="segment-same-room"
+                        checked={sameRoom}
+                        onCheckedChange={(checked) => setSameRoom(checked === true)}
+                      />
+                      <label htmlFor="segment-same-room" className="text-xs font-medium cursor-pointer">
+                        Ruangan sama ({activeRoomName})
+                      </label>
+                    </div>
+                  )}
 
-                  {!sameRoom && (
+                  {(segmentActionMode === "EDIT" || !sameRoom) && (
                     <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
                       <SelectTrigger className="w-full bg-background">
                         <SelectValue placeholder="Pilih ruangan tujuan..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {rooms.map((room) => (
-                          <SelectItem key={room.id} value={room.id}>
-                            {room.name} {room.isVip ? "(VIP)" : ""}
-                          </SelectItem>
-                        ))}
+                        {rooms
+                          .filter((room) => !session.isVip || room.isVip)
+                          .map((room) => (
+                            <SelectItem key={room.id} value={room.id}>
+                              {room.name} {room.isVip ? "(VIP)" : ""}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   )}
@@ -387,7 +501,10 @@ export function SessionInfoDialog({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => setSegmentActionMode(null)}
+                      onClick={() => {
+                        setSegmentActionMode(null);
+                        setEditingSegmentId(null);
+                      }}
                     >
                       Batal
                     </Button>
@@ -397,8 +514,8 @@ export function SessionInfoDialog({
                       disabled={
                         isSubmittingSegment ||
                         !selectedServiceId ||
-                        (!sameStaff && !selectedStaffId) ||
-                        (!sameRoom && !selectedRoomId)
+                        (segmentActionMode === "EDIT" ? !selectedStaffId : !sameStaff && !selectedStaffId) ||
+                        (segmentActionMode === "EDIT" ? !selectedRoomId : !sameRoom && !selectedRoomId)
                       }
                       onClick={handleSegmentSubmit}
                     >
@@ -409,67 +526,6 @@ export function SessionInfoDialog({
               )}
             </div>
           )}
-
-          {/* Actions */}
-          <div className="pt-2 flex flex-col gap-3">
-            {isScheduled && session.booking?.status === "PENDING" && (
-              <Button
-                onClick={() => {
-                  if (session.bookingId) handleProcessBooking(session.bookingId);
-                  onOpenChange(false);
-                }}
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Proses Booking
-              </Button>
-            )}
-
-            {isScheduled && session.booking?.status !== "PENDING" && (
-              <Button
-                disabled={!session.staffId}
-                onClick={() => {
-                  if (!session.staffId) {
-                    toast.error("Silakan pilih terapis terlebih dahulu.");
-                    return;
-                  }
-                  handleStart(session.id);
-                  onOpenChange(false);
-                }}
-              >
-                <Play className="w-4 h-4 mr-2 fill-current" />
-                Mulai Sesi
-              </Button>
-            )}
-
-            {isInProgress && (
-              <Button
-                onClick={() => {
-                  if (session.paymentStatus === "PENDING") {
-                    toast.error("Tidak dapat menyelesaikan sesi. Pembayaran belum lunas.");
-                    return;
-                  }
-                  handleComplete(session.id);
-                  onOpenChange(false);
-                }}
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Selesaikan Sesi
-              </Button>
-            )}
-
-            {session.paymentStatus === "PENDING" && (
-              <Button
-                variant={'outline'}
-                onClick={() => {
-                  onPayNow();
-                  onOpenChange(false);
-                }}
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                Buat Pembayaran
-              </Button>
-            )}
-          </div>
 
         </div>
       </DialogContent>

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StaffCombobox } from "../../staff/components/staff-combobox";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ServiceSelectionDialogProps {
   selectedProduct: any | null;
@@ -13,23 +14,35 @@ interface ServiceSelectionDialogProps {
   staff: any[];
   rooms: any[];
   branchId: string;
-  onAddServiceToCart: (staffId: string, roomId: string) => void;
+  onAddServiceToCart: (staffId: string, roomId: string, isVip?: boolean) => void;
 }
 
 export function ServiceSelectionDialog({ selectedProduct, onClose, staff, rooms, branchId, onAddServiceToCart }: ServiceSelectionDialogProps) {
+  const [isVipUpgrade, setIsVipUpgrade] = useState<boolean>(false);
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
+
+  const filteredRooms = rooms.filter((r) => (isVipUpgrade ? Boolean(r.isVip) : !r.isVip));
 
   // Reset state when a new product is selected
   useEffect(() => {
     if (selectedProduct) {
+      setIsVipUpgrade(false);
       setSelectedStaffId("");
       setSelectedRoomId("");
     }
   }, [selectedProduct]);
 
+  const handleVipChange = (checked: boolean) => {
+    setIsVipUpgrade(checked);
+    const currentRoom = rooms.find((r) => r.id === selectedRoomId);
+    if (currentRoom && Boolean(currentRoom.isVip) !== checked) {
+      setSelectedRoomId("");
+    }
+  };
+
   const handleAdd = () => {
-    onAddServiceToCart(selectedStaffId, selectedRoomId);
+    onAddServiceToCart(selectedStaffId, selectedRoomId, isVipUpgrade);
   };
 
   return (
@@ -57,20 +70,42 @@ export function ServiceSelectionDialog({ selectedProduct, onClose, staff, rooms,
             </div>
 
             <div className="space-y-3">
-              <Label className="text-muted-foreground font-semibold">Ruangan</Label>
+              <Label className="text-muted-foreground font-semibold">
+                Ruangan {isVipUpgrade ? "(VIP)" : ""}
+              </Label>
               <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
                 <SelectTrigger className="w-full h-12 border-input">
-                  <SelectValue placeholder="Pilih Ruangan" />
+                  <SelectValue placeholder={isVipUpgrade ? "Pilih Ruangan VIP" : "Pilih Ruangan"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {rooms.map((r) => (
-                    <SelectItem key={r.id} value={r.id} className="cursor-pointer">
-                      {r.name}
-                    </SelectItem>
-                  ))}
+                  {filteredRooms.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">
+                      {isVipUpgrade ? "Tidak ada ruangan VIP aktif" : "Tidak ada ruangan reguler aktif"}
+                    </div>
+                  ) : (
+                    filteredRooms.map((r) => (
+                      <SelectItem key={r.id} value={r.id} className="cursor-pointer">
+                        {r.name} {r.isVip ? "(VIP)" : ""}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2 pt-1">
+            <Checkbox
+              id="dialog-vip-upgrade"
+              checked={isVipUpgrade}
+              onCheckedChange={(checked) => handleVipChange(checked === true)}
+            />
+            <label
+              htmlFor="dialog-vip-upgrade"
+              className="text-sm font-medium leading-none cursor-pointer text-amber-600"
+            >
+              Upgrade ke VIP (+ Rp 80.000)
+            </label>
           </div>
 
 

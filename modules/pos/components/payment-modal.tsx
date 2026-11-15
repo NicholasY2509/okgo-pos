@@ -58,12 +58,14 @@ export function PaymentModal({ isOpen, onClose, branchId, paymentMethods, onSucc
                 <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Rincian Transaksi</div>
                 <div className="flex justify-between text-sm">
                   <span className="text-foreground">Total Layanan ({cart.items.length} item)</span>
-                  <span className="font-medium">Rp {(cart.subtotal - (cart.isVipUpgrade ? 80000 : 0)).toLocaleString('id-ID')}</span>
+                  <span className="font-medium">Rp {(cart.subtotal - cart.vipFeeTotal).toLocaleString('id-ID')}</span>
                 </div>
-                {cart.isVipUpgrade && (
+                {cart.vipFeeTotal > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-foreground">Upgrade VIP</span>
-                    <span className="font-medium">Rp 80.000</span>
+                    <span className="text-foreground">
+                      Upgrade VIP{cart.vipSessionCount > 1 ? ` (${cart.vipSessionCount} Sesi)` : ""}
+                    </span>
+                    <span className="font-medium">Rp {cart.vipFeeTotal.toLocaleString('id-ID')}</span>
                   </div>
                 )}
               </div>

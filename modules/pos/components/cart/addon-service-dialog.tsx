@@ -37,11 +37,14 @@ export function AddonServiceDialog({
   branchId,
   onConfirm,
 }: AddonServiceDialogProps) {
+  const isVipSession = Boolean(parentItem?.isVip);
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [sameStaff, setSameStaff] = useState<boolean>(true);
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
   const [sameRoom, setSameRoom] = useState<boolean>(true);
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
+
+  const filteredRooms = rooms.filter((r) => (isVipSession ? Boolean(r.isVip) : !r.isVip));
 
   useEffect(() => {
     if (parentItem) {
@@ -158,9 +161,9 @@ export function AddonServiceDialog({
                       <SelectValue placeholder="Pilih Ruangan" />
                     </SelectTrigger>
                     <SelectContent>
-                      {rooms.map((r) => (
+                      {filteredRooms.map((r) => (
                         <SelectItem key={r.id} value={r.id}>
-                          {r.name}
+                          {r.name} {r.isVip ? "(VIP)" : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
