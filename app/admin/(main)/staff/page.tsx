@@ -5,6 +5,7 @@ import { BranchService } from "@/modules/branch/services/branch-service"
 import { StaffTable } from "@/modules/staff/components/staff-table"
 import { StaffDialog } from "@/modules/staff/components/staff-dialog"
 import { StaffFilters } from "@/modules/staff/components/staff-filters"
+import { FaceApiHealthDialog } from "@/modules/staff/components/face-api-health-dialog"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { PageHeader } from "@/components/page-header"
 import Link from "next/link"
@@ -42,6 +43,7 @@ export default async function StaffPage({ searchParams }: StaffPageProps) {
         description="Kelola anggota staf Anda secara global."
       >
         <div className="flex gap-2">
+          <FaceApiHealthDialog />
           <StaffDialog
             workPositions={workPositions.map(wp => ({ id: wp.id, name: wp.name }))}
           />
