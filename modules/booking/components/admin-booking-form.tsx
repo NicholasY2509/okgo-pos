@@ -1,9 +1,10 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useAdminBookingForm } from "../hooks/use-admin-booking-form";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { AlertTriangle, Calendar as CalendarIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Calendar as CalendarIcon, ChevronRight, Loader2, Plus, Sparkles, Trash2, User } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -19,8 +20,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CustomerSelector } from "../../pos/components/customer-selector";
-import { ProductCombobox } from "../../product/components/product-combobox";
-import { StaffCombobox } from "../../staff/components/staff-combobox";
+import { BookingSelectionDialog } from "./booking-selection-dialog";
+import type { ServiceOption, StaffOption } from "@/modules/pos/components/selection-panel-lists";
 
 interface AdminBookingFormProps {
   branchId: string;
@@ -38,6 +39,8 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
     isSubmitting,
     loadingInitial,
     loadingSlots,
+    services,
+    staffList,
     availableSlots,
     selectedDate,
     selectedStartTime,
@@ -46,6 +49,14 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
     setConfirmBusyStaffOpen,
     confirmBusyStaffSubmit,
   } = useAdminBookingForm({ branchId, onSuccess });
+
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const watchedSelections = form.watch("selections");
+
+  const startDateTime = useMemo(() => {
+    if (!selectedDate || !selectedStartTime) return undefined;
+    return new Date(`${selectedDate}T${selectedStartTime}:00`);
+  }, [selectedDate, selectedStartTime]);
 
   if (loadingInitial) {
     return (
@@ -93,64 +104,95 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
               </div>
 
               <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                {fields.map((item, index) => (
-                  <div key={item.id} className="p-3.5 border rounded-xl space-y-3 relative bg-muted/5">
-                    {fields.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 text-destructive hover:bg-destructive/10 hover:text-destructive h-7 w-7"
-                        onClick={() => remove(index)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
+                {fields.map((item, index) => {
+                  const selection = watchedSelections?.[index];
+                  const selectedProduct = (services as ServiceOption[] || []).find(
+                    (p) => p.id === selection?.serviceId
+                  );
+                  const selectedStaff = (staffList as StaffOption[] || []).find(
+                    (s) => s.id === selection?.staffId
+                  );
+                  const serviceError = form.formState.errors.selections?.[index]?.serviceId;
 
-                    <FormField
-                      control={form.control}
-                      name={`selections.${index}.serviceId` as const}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Layanan {fields.length > 1 ? index + 1 : ""}</FormLabel>
-                          <FormControl>
-                            <ProductCombobox
-                              branchId={branchId}
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                              error={!!form.formState.errors.selections?.[index]?.serviceId}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`selections.${index}.staffId` as const}
-                      render={({ field }) => {
-                        const currentServiceId = form.watch(`selections.${index}.serviceId`);
-                        return (
-                          <FormItem>
-                            <FormLabel>Terapis (Opsional)</FormLabel>
-                            <FormControl>
-                              <StaffCombobox
-                                branchId={branchId}
-                                serviceId={currentServiceId}
-                                startTime={selectedStartTime ? new Date(selectedStartTime) : undefined}
-                                includeUnavailable={true}
-                                value={field.value || ""}
-                                onChange={(val) => field.onChange(val || undefined)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        );
+                  return (
+                    <div
+                      key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setEditingIndex(index)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setEditingIndex(index);
+                        }
                       }}
-                    />
-                  </div>
-                ))}
+                      className={cn(
+                        "p-3.5 border rounded-xl transition-all cursor-pointer bg-card hover:bg-accent/40 space-y-2.5",
+                        serviceError
+                          ? "border-destructive ring-1 ring-destructive/30"
+                          : "border-border hover:border-primary/40"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                          Layanan {fields.length > 1 ? index + 1 : ""}
+                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {fields.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive h-7 w-7"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                remove(index);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-sm">
+                        <div className="flex items-start gap-2 min-w-0">
+                          <Sparkles className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <p className="text-[11px] text-muted-foreground">Layanan</p>
+                            {selectedProduct ? (
+                              <p className="font-medium text-foreground truncate">
+                                {selectedProduct.name}
+                              </p>
+                            ) : (
+                              <p
+                                className={cn(
+                                  "text-xs italic",
+                                  serviceError ? "text-destructive" : "text-muted-foreground"
+                                )}
+                              >
+                                Pilih layanan
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-2 min-w-0">
+                          <User className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <p className="text-[11px] text-muted-foreground">Terapis</p>
+                            <p className="font-medium text-foreground truncate">
+                              {selectedStaff
+                                ? `${selectedStaff.firstName} ${selectedStaff.lastName}`
+                                : "Siapa saja (Opsional)"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -308,6 +350,28 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {editingIndex !== null && watchedSelections?.[editingIndex] && (
+        <BookingSelectionDialog
+          key={`booking-selection-${editingIndex}`}
+          open={editingIndex !== null}
+          index={editingIndex}
+          totalCount={fields.length}
+          branchId={branchId}
+          startTime={startDateTime}
+          services={services || []}
+          staffList={staffList || []}
+          initialServiceId={watchedSelections[editingIndex].serviceId || ""}
+          initialStaffId={watchedSelections[editingIndex].staffId}
+          onClose={() => setEditingIndex(null)}
+          onSave={(serviceId, staffId) => {
+            form.setValue(`selections.${editingIndex}.serviceId`, serviceId, {
+              shouldValidate: true,
+            });
+            form.setValue(`selections.${editingIndex}.staffId`, staffId);
+          }}
+        />
+      )}
     </Form>
   );
 }
