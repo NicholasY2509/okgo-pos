@@ -3,6 +3,7 @@ import { useForm, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { io } from "socket.io-client";
 import { bookingSchema, type BookingInput } from "../schemas/booking";
 import {
   getServicesAction,
@@ -93,6 +94,15 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
       const res = await createBookingAction(payload);
       if (res.success) {
         toast.success("Booking berhasil dibuat");
+        try {
+          const socket = io(
+            process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined
+          );
+          socket.emit("new_booking", { branchId: values.branchId });
+          setTimeout(() => socket.disconnect(), 1000);
+        } catch {
+          // Ignore socket errors
+        }
         form.reset();
         if (onSuccess) onSuccess();
       } else {

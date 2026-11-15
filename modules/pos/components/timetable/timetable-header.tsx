@@ -21,6 +21,7 @@ export function TimetableHeader({ isSidebarOpen, setIsSidebarOpen }: TimetableHe
     isBookingModalOpen,
     setIsBookingModalOpen,
     fetchSessions,
+    fetchPendingBookings,
   } = useTimetableStore();
 
   return (
@@ -52,6 +53,7 @@ export function TimetableHeader({ isSidebarOpen, setIsSidebarOpen }: TimetableHe
                 onSuccess={() => {
                   setIsBookingModalOpen(false);
                   fetchSessions();
+                  fetchPendingBookings();
                 }}
                 onCancel={() => setIsBookingModalOpen(false)}
               />
