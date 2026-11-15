@@ -11,6 +11,7 @@ import { CreditCard, CheckCircle2, Loader2, X } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { useTimetableStore } from "../stores/timetable-store";
+import { io } from "socket.io-client";
 import { NumericFormat } from "react-number-format";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -19,17 +20,28 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function ExistingTransactionPaymentModal() {
   const {
+    branchId,
     selectedTransactionForPayment: transaction,
     setSelectedTransactionForPayment,
     paymentMethods,
-    fetchSessions
+    fetchSessions,
+    fetchPendingBookings
   } = useTimetableStore();
 
 
   const onClose = () => setSelectedTransactionForPayment(null);
   const onSuccess = () => {
+    const wasPendingBookingAssignment = !!transaction?.isPendingBookingAssignment;
     setSelectedTransactionForPayment(null);
     fetchSessions();
+    if (wasPendingBookingAssignment) {
+      fetchPendingBookings();
+      const socket = io(
+        process.env.NODE_ENV === "development" ? "http://localhost:3001" : undefined
+      );
+      socket.emit("service_assigned", { branchId });
+      setTimeout(() => socket.disconnect(), 1000);
+    }
   };
 
   if (!transaction) return null;

@@ -12,7 +12,7 @@ import { ProductCombobox } from "@/modules/product/components/product-combobox";
 import { StaffCombobox } from "@/modules/staff/components/staff-combobox";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
-import { assignBookingToTimetableAction } from "@/modules/booking/actions/booking-actions";
+import { assignBookingToTimetableAction, previewBookingAssignmentAction } from "@/modules/booking/actions/booking-actions";
 import { useTimetableStore } from "../../stores/timetable-store";
 import { io } from "socket.io-client";
 import { toast } from "sonner";
@@ -34,11 +34,13 @@ export function AssignBookingModal() {
   const { 
     branchId, 
     selectedBookingForAssignment, 
-    setSelectedBookingForAssignment, 
+    setSelectedBookingForAssignment,
+    setSelectedTransactionForPayment,
     fetchPendingBookings, 
     fetchSessions 
   } = useTimetableStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitAction, setSubmitAction] = useState<"pay_later" | "pay_now" | null>(null);
 
   const form = useForm<AssignInput>({
     resolver: zodResolver(assignSchema),
@@ -78,13 +80,30 @@ export function AssignBookingModal() {
     }
   }, [selectedBookingForAssignment, form]);
 
-  const onSubmit = async (values: AssignInput) => {
+  const handleAssign = async (values: AssignInput, openPaymentAfter: boolean) => {
     if (!selectedBookingForAssignment) return;
     setIsSubmitting(true);
+    setSubmitAction(openPaymentAfter ? "pay_now" : "pay_later");
     
     try {
       const dateStr = format(values.date, "yyyy-MM-dd");
       const startTime = new Date(`${dateStr}T${values.time}:00`);
+
+      if (openPaymentAfter) {
+        const previewRes = await previewBookingAssignmentAction(
+          selectedBookingForAssignment.id,
+          startTime,
+          values.selections
+        );
+        if (previewRes.success && previewRes.data) {
+          setSelectedBookingForAssignment(null);
+          setSelectedTransactionForPayment(previewRes.data);
+        } else {
+          toast.error(previewRes.error || "Gagal memeriksa ketersediaan jadwal");
+        }
+        return;
+      }
+
       const res = await assignBookingToTimetableAction(selectedBookingForAssignment.id, startTime, values.selections);
       if (res.success) {
         toast.success("Booking berhasil ditugaskan ke jadwal");
@@ -103,6 +122,7 @@ export function AssignBookingModal() {
       toast.error(err.message || "Terjadi kesalahan");
     } finally {
       setIsSubmitting(false);
+      setSubmitAction(null);
     }
   };
 
@@ -128,7 +148,7 @@ export function AssignBookingModal() {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit((values) => handleAssign(values, true))} className="space-y-6">
             <div className="grid grid-cols-2 gap-4 border-b border-border/50 pb-6">
               <FormField
                 control={form.control}
@@ -236,17 +256,40 @@ export function AssignBookingModal() {
               ))}
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => setSelectedBookingForAssignment(null)}>
+            <div className="flex flex-wrap justify-end gap-3 pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={() => setSelectedBookingForAssignment(null)}
+              >
                 Batal
               </Button>
-              <Button type="submit" disabled={isSubmitting || fields.length === 0}>
-                {isSubmitting ? (
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={isSubmitting || fields.length === 0}
+                onClick={form.handleSubmit((values) => handleAssign(values, false))}
+              >
+                {isSubmitting && submitAction === "pay_later" ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Menyimpan...
                   </>
                 ) : (
-                  "Tugaskan ke Jadwal"
+                  "Bayar nanti dan jadwalkan sesi"
+                )}
+              </Button>
+              <Button
+                type="button"
+                disabled={isSubmitting || fields.length === 0}
+                onClick={form.handleSubmit((values) => handleAssign(values, true))}
+              >
+                {isSubmitting && submitAction === "pay_now" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Menyimpan...
+                  </>
+                ) : (
+                  "Bayar Sekarang"
                 )}
               </Button>
             </div>

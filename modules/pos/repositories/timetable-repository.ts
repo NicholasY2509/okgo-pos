@@ -1,8 +1,51 @@
 import { prisma } from "@/lib/prisma";
 
+const segmentsInclude = {
+  orderBy: { sequenceOrder: "asc" as const },
+  include: {
+    staff: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+      },
+    },
+  },
+};
+
+async function enrichSessionsWithProducts<T extends { serviceId: string; segments?: any[] }>(
+  sessions: T[]
+) {
+  const serviceIds = new Set<string>();
+  for (const s of sessions) {
+    if (s.serviceId) serviceIds.add(s.serviceId);
+    for (const seg of s.segments || []) {
+      if (seg.serviceId) serviceIds.add(seg.serviceId);
+    }
+  }
+
+  const products =
+    serviceIds.size > 0
+      ? await prisma.product.findMany({
+          where: { id: { in: Array.from(serviceIds) } },
+          select: { id: true, name: true, duration: true },
+        })
+      : [];
+  const productMap = new Map(products.map((p) => [p.id, p]));
+
+  return sessions.map((s) => ({
+    ...s,
+    serviceProduct: productMap.get(s.serviceId) ?? null,
+    segments: (s.segments || []).map((seg: any) => ({
+      ...seg,
+      serviceName: productMap.get(seg.serviceId)?.name ?? "Layanan",
+    })),
+  }));
+}
+
 export const TimetableRepository = {
   async getActiveSessions(branchId: string) {
-    return await prisma.serviceSession.findMany({
+    const sessions = await prisma.serviceSession.findMany({
       where: {
         branchId,
         status: {
@@ -39,12 +82,14 @@ export const TimetableRepository = {
             firstName: true,
             lastName: true
           }
-        }
+        },
+        segments: segmentsInclude,
       },
       orderBy: {
         startTime: 'asc'
       }
     });
+    return await enrichSessionsWithProducts(sessions);
   },
 
   async getRoomSessions(branchId: string, roomId: string, date?: string) {
@@ -121,7 +166,8 @@ export const TimetableRepository = {
             firstName: true,
             lastName: true
           }
-        }
+        },
+        segments: segmentsInclude,
       },
       orderBy: [
         { startTime: 'asc' },
@@ -129,23 +175,11 @@ export const TimetableRepository = {
       ]
     });
 
-    const serviceIds = [...new Set(sessions.map((s) => s.serviceId).filter(Boolean))];
-    const products = serviceIds.length > 0
-      ? await prisma.product.findMany({
-          where: { id: { in: serviceIds } },
-          select: { id: true, name: true, duration: true }
-        })
-      : [];
-    const productMap = new Map(products.map((p) => [p.id, p]));
-
-    return sessions.map((s) => ({
-      ...s,
-      serviceProduct: productMap.get(s.serviceId) ?? null
-    }));
+    return await enrichSessionsWithProducts(sessions);
   },
 
   async getSessionsByDateRange(branchId: string, startOfDay: Date, endOfDay: Date) {
-    return await prisma.serviceSession.findMany({
+    const sessions = await prisma.serviceSession.findMany({
       where: {
         branchId,
         startTime: {
@@ -184,12 +218,14 @@ export const TimetableRepository = {
             firstName: true,
             lastName: true
           }
-        }
+        },
+        segments: segmentsInclude,
       },
       orderBy: {
         startTime: 'asc'
       }
     });
+    return await enrichSessionsWithProducts(sessions);
   },
 
   async getSessionByIdWithIncludes(sessionId: string) {
@@ -199,8 +235,49 @@ export const TimetableRepository = {
         transactionItem: {
           include: { transaction: true }
         },
-        booking: true
+        booking: true,
+        segments: {
+          orderBy: { sequenceOrder: "asc" }
+        }
       }
+    });
+  },
+
+  async startSessionWithSegments(sessionId: string, now: Date) {
+    return await prisma.$transaction(async (tx) => {
+      const firstScheduled = await tx.serviceSessionSegment.findFirst({
+        where: { serviceSessionId: sessionId, status: "SCHEDULED" },
+        orderBy: { sequenceOrder: "asc" },
+      });
+
+      if (firstScheduled) {
+        await tx.serviceSessionSegment.update({
+          where: { id: firstScheduled.id },
+          data: { status: "IN_PROGRESS", actualStartTime: now },
+        });
+      }
+
+      return await tx.serviceSession.update({
+        where: { id: sessionId },
+        data: { status: "IN_PROGRESS", actualStartTime: now },
+      });
+    });
+  },
+
+  async completeSessionWithSegments(sessionId: string, now: Date) {
+    return await prisma.$transaction(async (tx) => {
+      await tx.serviceSessionSegment.updateMany({
+        where: {
+          serviceSessionId: sessionId,
+          status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+        },
+        data: { status: "COMPLETED", actualEndTime: now },
+      });
+
+      return await tx.serviceSession.update({
+        where: { id: sessionId },
+        data: { status: "COMPLETED", actualEndTime: now },
+      });
     });
   },
 

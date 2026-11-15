@@ -8,6 +8,19 @@ session — it records what the code cannot say for itself.
 > Keep 10 entries verbatim; compact the rest into Consolidated history. Delete lines whose
 > value has expired.
 
+## 2026-11-15 — Multi-Service & Mid-Session Switch Support (POS Phase)
+
+**Did:**
+1. Documented and accepted architecture decision in [`docs/adr/0014-multi-service-session-segments.md`](docs/adr/0014-multi-service-session-segments.md) (`ServiceSessionSegment` child model under `ServiceSession`).
+2. Updated Prisma schema ([`transaction.prisma`](prisma/schema/transaction.prisma), [`staff.prisma`](prisma/schema/staff.prisma), [`payroll.prisma`](prisma/schema/payroll.prisma)), pushed via `npx prisma db push`, and backfilled 61 existing `ServiceSession` rows into `ServiceSessionSegment` records.
+3. Updated POS checkout ([`pos-schema.ts`](modules/pos/schemas/pos-schema.ts), [`pos-checkout-repository.ts`](modules/pos/repositories/pos-checkout-repository.ts), [`pos-store.tsx`](modules/pos/stores/pos-store.tsx), [`use-pos-payment.ts`](modules/pos/hooks/use-pos-payment.ts)) to support `sessionGroupKey` grouping via an explicit `+ Lanjut Servis` add-on button on [`CartItems`](modules/pos/components/cart/cart-items.tsx) and [`AddonServiceDialog`](modules/pos/components/cart/addon-service-dialog.tsx).
+4. Implemented 5-layer segment operations ([`session-segment-schema.ts`](modules/pos/schemas/session-segment-schema.ts), [`session-segment-repository.ts`](modules/pos/repositories/session-segment-repository.ts), [`session-segment-service.ts`](modules/pos/services/session-segment-service.ts), [`session-segment-action.ts`](modules/pos/actions/session-segment-action.ts)) and integrated them into Timetable ([`timetable-repository.ts`](modules/pos/repositories/timetable-repository.ts), [`timetable-service.ts`](modules/pos/services/timetable-service.ts), [`timetable-store.ts`](modules/pos/stores/timetable-store.ts), [`session-info-dialog.tsx`](modules/pos/components/timetable/session-info-dialog.tsx), [`session-card.tsx`](modules/pos/components/timetable/session-card.tsx)).
+5. Added unit tests in [`session-segment-service.test.ts`](modules/pos/services/session-segment-service.test.ts). Verification gate passed: `npm run typecheck` clean and `npm test` (22 files, 96 tests passed).
+
+**Pending:**
+- Mid-session switch commission split rule (currently keeps initial transaction price; final commission split formula to be confirmed).
+- `nyenyak-portal` Flutter app & `/api/portal/*` multi-segment face-scan handoff updates.
+
 ## 2026-11-12 — Marketing Landing Page Maintenance Mode Toggle
 
 **Did:**

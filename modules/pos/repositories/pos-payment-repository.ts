@@ -1,18 +1,26 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
+
+export interface ExistingPaymentInput {
+  transactionId: string;
+  cashierId?: string | null;
+  payments: {
+    paymentMethodId: string;
+    amount: number;
+    referenceNumber?: string;
+    voucherCode?: string;
+    notes?: string;
+  }[];
+}
 
 export const PosPaymentRepository = {
-  async payExistingTransaction(input: {
-    transactionId: string;
-    cashierId?: string | null;
-    payments: {
-      paymentMethodId: string;
-      amount: number;
-      referenceNumber?: string;
-      voucherCode?: string;
-      notes?: string;
-    }[];
-  }) {
+  async payExistingTransaction(input: ExistingPaymentInput) {
     return await prisma.$transaction(async (tx) => {
+      return await this.processTransactionPayments(tx, input);
+    });
+  },
+
+  async processTransactionPayments(tx: Prisma.TransactionClient, input: ExistingPaymentInput) {
       const transaction = await tx.transaction.findUnique({
         where: { id: input.transactionId },
         include: { items: true }
@@ -147,6 +155,5 @@ export const PosPaymentRepository = {
       }
 
       return updatedTransaction;
-    });
   }
 };

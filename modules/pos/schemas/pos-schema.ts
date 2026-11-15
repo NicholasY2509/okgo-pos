@@ -18,6 +18,8 @@ export const posItemServiceSchema = z.object({
   isVoucherRedemption: z.boolean().optional().nullable(),
   customerVoucherId: z.string().optional().nullable(),
   voucherCode: z.string().optional().nullable(),
+  sessionGroupKey: z.string().optional().nullable(),
+  sequenceOrder: z.number().int().min(1).optional().nullable(),
 });
 
 export const posItemVoucherPacketSchema = z.object({

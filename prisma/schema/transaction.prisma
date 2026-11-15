@@ -124,9 +124,10 @@ model TransactionItem {
 
   transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
-  serviceSessions    ServiceSession[]
-  voucherRedemptions VoucherRedemption[]
-  staffIncentives    StaffIncentive[]
+  serviceSessions        ServiceSession[]
+  serviceSessionSegments ServiceSessionSegment[]
+  voucherRedemptions     VoucherRedemption[]
+  staffIncentives        StaffIncentive[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -223,9 +224,10 @@ model ServiceSession {
 
   therapistCommissionAmount Decimal? @default(0)
 
-  staff              Staff?              @relation(fields: [staffId], references: [id])
-  transactionItem    TransactionItem?    @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
-  booking            Booking?            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  staff              Staff?                  @relation(fields: [staffId], references: [id])
+  transactionItem    TransactionItem?        @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
+  booking            Booking?                @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  segments           ServiceSessionSegment[]
   voucherRedemptions VoucherRedemption[]
   staffIncentives    StaffIncentive[]
 
@@ -239,6 +241,45 @@ model ServiceSession {
   @@index([staffId])
   @@index([roomId])
   @@index([branchId])
+  @@index([status])
+}
+
+model ServiceSessionSegment {
+  id String @id @default(cuid())
+
+  serviceSessionId  String
+  sequenceOrder     Int
+  serviceId         String
+  staffId           String?
+  roomId            String?
+  transactionItemId String?
+
+  status       String @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  switchReason String @default("INITIAL") // INITIAL, CONTINUATION, MID_SESSION_SWITCH
+
+  durationMinutes Int @default(60)
+
+  startTime       DateTime?
+  endTime         DateTime?
+  actualStartTime DateTime?
+  actualEndTime   DateTime?
+
+  therapistCommissionAmount Decimal? @default(0)
+
+  serviceSession  ServiceSession   @relation(fields: [serviceSessionId], references: [id], onDelete: Cascade)
+  staff           Staff?           @relation(fields: [staffId], references: [id])
+  transactionItem TransactionItem? @relation(fields: [transactionItemId], references: [id], onDelete: SetNull)
+  staffIncentives StaffIncentive[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([serviceSessionId, sequenceOrder])
+  @@index([serviceSessionId])
+  @@index([serviceId])
+  @@index([staffId])
+  @@index([roomId])
+  @@index([transactionItemId])
   @@index([status])
 }
 

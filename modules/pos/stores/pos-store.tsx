@@ -20,6 +20,8 @@ export type CartItem = {
   isVoucherRedemption?: boolean;
   customerVoucherId?: string;
   voucherCode?: string;
+  sessionGroupKey?: string | null;
+  sequenceOrder?: number | null;
 };
 
 export type AppliedPromo = {
@@ -47,6 +49,10 @@ interface PosState {
 interface PosActions {
   setCustomerId: (id: string | undefined) => void;
   addItem: (item: Omit<CartItem, "cartId">) => void;
+  addAddonServiceToItem: (
+    parentCartId: string,
+    addon: Omit<CartItem, "cartId" | "sessionGroupKey" | "sequenceOrder">
+  ) => void;
   removeItem: (cartId: string) => void;
   updateQuantity: (cartId: string, quantity: number) => void;
   updateItemDiscount: (cartId: string, discountAmount: number) => void;
@@ -94,12 +100,66 @@ export const createPosStore = () => {
             // Auto remove promo when items are added as it might invalidate conditions
             appliedPromos: [],
           })),
+        addAddonServiceToItem: (parentCartId, addon) =>
+          set((state) => {
+            const parent = state.items.find((i) => i.cartId === parentCartId);
+            if (!parent || parent.type !== "SERVICE") return state;
+
+            const groupKey = parent.sessionGroupKey || `grp-${parent.cartId}`;
+            const groupItems = state.items.filter(
+              (i) => i.cartId === parent.cartId || i.sessionGroupKey === groupKey
+            );
+            const maxSeq = groupItems.reduce(
+              (max, i) => Math.max(max, i.sequenceOrder || 1),
+              1
+            );
+
+            const updatedItems = state.items.map((i) =>
+              i.cartId === parent.cartId
+                ? { ...i, sessionGroupKey: groupKey, sequenceOrder: i.sequenceOrder || 1 }
+                : i
+            );
+
+            return {
+              items: [
+                ...updatedItems,
+                {
+                  ...addon,
+                  cartId: Math.random().toString(36).substr(2, 9),
+                  roomId: addon.roomId || parent.roomId,
+                  roomName: addon.roomName || parent.roomName,
+                  quantity: 1,
+                  sessionGroupKey: groupKey,
+                  sequenceOrder: maxSeq + 1,
+                },
+              ],
+              appliedPromos: [],
+            };
+          }),
         removeItem: (cartId) =>
-          set((state) => ({
-            items: state.items.filter((i) => i.cartId !== cartId),
-            // Auto remove promo when items are removed
-            appliedPromos: [],
-          })),
+          set((state) => {
+            const target = state.items.find((i) => i.cartId === cartId);
+            const remaining = state.items.filter((i) => i.cartId !== cartId);
+            if (target?.sessionGroupKey) {
+              const sameGroup = remaining.filter(
+                (i) => i.sessionGroupKey === target.sessionGroupKey
+              );
+              if (sameGroup.length === 1) {
+                return {
+                  items: remaining.map((i) =>
+                    i.sessionGroupKey === target.sessionGroupKey
+                      ? { ...i, sessionGroupKey: null, sequenceOrder: null }
+                      : i
+                  ),
+                  appliedPromos: [],
+                };
+              }
+            }
+            return {
+              items: remaining,
+              appliedPromos: [],
+            };
+          }),
         updateQuantity: (cartId, quantity) =>
           set((state) => ({
             items: state.items.map((i) => (i.cartId === cartId ? { ...i, quantity } : i)),
@@ -238,6 +298,7 @@ export function usePosStoreActions() {
   return {
     setCustomerId: useStore(store, (s) => s.setCustomerId),
     addItem: useStore(store, (s) => s.addItem),
+    addAddonServiceToItem: useStore(store, (s) => s.addAddonServiceToItem),
     removeItem: useStore(store, (s) => s.removeItem),
     updateQuantity: useStore(store, (s) => s.updateQuantity),
     updateItemDiscount: useStore(store, (s) => s.updateItemDiscount),
@@ -267,6 +328,7 @@ export function usePosCart() {
   const customerId = useStore(store, (s) => s.customerId);
   const setCustomerId = useStore(store, (s) => s.setCustomerId);
   const addItem = useStore(store, (s) => s.addItem);
+  const addAddonServiceToItem = useStore(store, (s) => s.addAddonServiceToItem);
   const removeItem = useStore(store, (s) => s.removeItem);
   const updateQuantity = useStore(store, (s) => s.updateQuantity);
   const updateItemDiscount = useStore(store, (s) => s.updateItemDiscount);
@@ -303,6 +365,7 @@ export function usePosCart() {
     customerId,
     setCustomerId,
     addItem,
+    addAddonServiceToItem,
     removeItem,
     updateQuantity,
     updateItemDiscount,

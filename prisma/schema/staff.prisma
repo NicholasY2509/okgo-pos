@@ -103,6 +103,7 @@ model Staff {
   workPosition           WorkPosition            @relation(fields: [workPositionId], references: [id])
   staffUsers             StaffUser[]
   serviceSessions        ServiceSession[]
+  serviceSessionSegments ServiceSessionSegment[]
   branchStaffs           BranchStaff[]
   attendanceWorkingHours AttendanceWorkingHour[]
   staffMachines          StaffMachine[]

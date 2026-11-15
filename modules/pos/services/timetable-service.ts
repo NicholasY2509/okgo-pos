@@ -34,8 +34,35 @@ export class TimetableService {
       || session.booking?.customerPhone
       || null;
 
+    const segments = Array.isArray(session.segments)
+      ? session.segments.map((seg: any) => ({
+          id: seg.id,
+          serviceSessionId: seg.serviceSessionId,
+          sequenceOrder: seg.sequenceOrder,
+          serviceId: seg.serviceId,
+          serviceName: seg.serviceName || "Layanan",
+          staffId: seg.staffId ?? null,
+          roomId: seg.roomId ?? session.roomId ?? null,
+          staffName: seg.staff
+            ? `${seg.staff.firstName || ""} ${seg.staff.lastName || ""}`.trim() || null
+            : null,
+          transactionItemId: seg.transactionItemId ?? null,
+          status: seg.status,
+          switchReason: seg.switchReason,
+          durationMinutes: seg.durationMinutes,
+          startTime: seg.startTime,
+          endTime: seg.endTime,
+          actualStartTime: seg.actualStartTime,
+          actualEndTime: seg.actualEndTime,
+          therapistCommissionAmount: seg.therapistCommissionAmount
+            ? Number(seg.therapistCommissionAmount)
+            : 0,
+        }))
+      : [];
+
     return {
       ...session,
+      segments,
       isBooking: isBooking || !!session.bookingId,
       bookingNumber: session.booking?.bookingNumber,
       isVip: !!session.transactionItem?.transaction?.isVip,
@@ -93,10 +120,7 @@ export class TimetableService {
       throw new Error("Sesi tidak dapat diselesaikan karena pembayaran belum lunas.");
     }
 
-    return await TimetableRepository.updateSession(sessionId, {
-      status: "COMPLETED",
-      actualEndTime: new Date()
-    });
+    return await TimetableRepository.completeSessionWithSegments(sessionId, new Date());
   }
 
   static async startSession(sessionId: string) {
@@ -106,10 +130,7 @@ export class TimetableService {
     if (session.status !== "SCHEDULED") throw new Error("Sesi tidak dalam status terjadwal");
     if (!session.staffId) throw new Error("Terapis belum dipilih. Silakan pilih terapis terlebih dahulu.");
 
-    return await TimetableRepository.updateSession(sessionId, {
-      status: "IN_PROGRESS",
-      actualStartTime: new Date(),
-    });
+    return await TimetableRepository.startSessionWithSegments(sessionId, new Date());
   }
 
   static async updateSessionTime(sessionId: string, startTime: Date, endTime: Date) {

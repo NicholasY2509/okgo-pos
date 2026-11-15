@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { payExistingTransactionAction } from "../actions/pos-action";
+import { assignAndPayBookingAction } from "../../booking/actions/booking-actions";
 import { getCustomerVouchersAction, getVoucherByCodeAction } from "../../vouchers/actions/get-customer-vouchers-action";
 
 export function useExistingPayment(transaction: any, paymentMethods: any[], onSuccess: () => void, routerRefresh: () => void) {
@@ -64,40 +65,39 @@ export function useExistingPayment(transaction: any, paymentMethods: any[], onSu
       return;
     }
 
-    let res: any;
+    if (pm?.type === "VOUCHER" && selectedVouchers.length === 0 && !payment.voucherCode) {
+      toast.error("Pilih atau masukkan kode voucher.");
+      return;
+    }
 
-    if (pm?.type === "VOUCHER") {
-      if (selectedVouchers.length === 0 && !payment.voucherCode) {
-        toast.error("Pilih atau masukkan kode voucher.");
-        return;
-      }
-
-      setIsSubmitting(true);
-      const voucherCodes = selectedVouchers.length > 0 ? selectedVouchers.map(v => v.code) : [payment.voucherCode];
-
-      const payload = {
-        transactionId: transaction.id,
-        payments: voucherCodes.map(code => ({
+    const paymentsPayload = pm?.type === "VOUCHER"
+      ? (selectedVouchers.length > 0 ? selectedVouchers.map(v => v.code) : [payment.voucherCode]).map(code => ({
           paymentMethodId: payment.paymentMethodId,
           amount: 0,
           voucherCode: code,
           notes: payment.notes || undefined
         }))
-      };
-
-      res = await payExistingTransactionAction(payload);
-    } else {
-      setIsSubmitting(true);
-      const payload = {
-        transactionId: transaction.id,
-        payments: [{
+      : [{
           paymentMethodId: payment.paymentMethodId,
           amount: Number(payment.amount),
           referenceNumber: payment.referenceNumber || undefined,
           notes: payment.notes || undefined
-        }]
-      };
-      res = await payExistingTransactionAction(payload);
+        }];
+
+    setIsSubmitting(true);
+    let res: any;
+    if (transaction.isPendingBookingAssignment && transaction.pendingAssignment) {
+      res = await assignAndPayBookingAction({
+        bookingId: transaction.pendingAssignment.bookingId,
+        startTime: new Date(transaction.pendingAssignment.startTime),
+        selections: transaction.pendingAssignment.selections,
+        payments: paymentsPayload,
+      });
+    } else {
+      res = await payExistingTransactionAction({
+        transactionId: transaction.id,
+        payments: paymentsPayload,
+      });
     }
     setIsSubmitting(false);
 

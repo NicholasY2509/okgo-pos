@@ -3,7 +3,7 @@
 import { useAdminBookingForm } from "../hooks/use-admin-booking-form";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Plus, Trash2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -21,13 +21,15 @@ interface AdminBookingFormProps {
 export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBookingFormProps) {
   const {
     form,
+    fields,
+    append,
+    remove,
     onSubmit,
     isSubmitting,
     loadingInitial,
     loadingSlots,
     availableSlots,
     selectedDate,
-    selectedServiceId
   } = useAdminBookingForm({ branchId, onSuccess });
 
   if (loadingInitial) {
@@ -61,42 +63,79 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="selections.0.serviceId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Layanan</FormLabel>
-                  <FormControl>
-                    <ProductCombobox
-                      branchId={branchId}
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                      error={!!form.formState.errors.selections?.[0]?.serviceId}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <FormLabel>Layanan & Terapis</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ serviceId: "", staffId: undefined })}
+                >
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Tambah Layanan
+                </Button>
+              </div>
 
-            <FormField
-              control={form.control}
-              name="selections.0.staffId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Terapis (Opsional)</FormLabel>
-                  <FormControl>
-                    <StaffCombobox
-                      branchId={branchId}
-                      value={field.value || ""}
-                      onChange={(val) => field.onChange(val || undefined)}
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                {fields.map((item, index) => (
+                  <div key={item.id} className="p-3.5 border rounded-xl space-y-3 relative bg-muted/5">
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 text-destructive hover:bg-destructive/10 hover:text-destructive h-7 w-7"
+                        onClick={() => remove(index)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name={`selections.${index}.serviceId` as const}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Layanan {fields.length > 1 ? index + 1 : ""}</FormLabel>
+                          <FormControl>
+                            <ProductCombobox
+                              branchId={branchId}
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              error={!!form.formState.errors.selections?.[index]?.serviceId}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+                    <FormField
+                      control={form.control}
+                      name={`selections.${index}.staffId` as const}
+                      render={({ field }) => {
+                        const currentServiceId = form.watch(`selections.${index}.serviceId`);
+                        return (
+                          <FormItem>
+                            <FormLabel>Terapis (Opsional)</FormLabel>
+                            <FormControl>
+                              <StaffCombobox
+                                branchId={branchId}
+                                serviceId={currentServiceId}
+                                value={field.value || ""}
+                                onChange={(val) => field.onChange(val || undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
 
           </div>
 
@@ -158,7 +197,11 @@ export function AdminBookingForm({ branchId, onSuccess, onCancel }: AdminBooking
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 h-full overflow-y-auto pr-2 pb-2 content-start">
                     {availableSlots.map(slot => {
                       const dateObj = new Date(slot);
-                      const timeString = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                      const timeString = dateObj.toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        timeZone: 'Asia/Jakarta'
+                      });
                       const isSelected = form.watch("startTime") === slot;
                       return (
                         <div

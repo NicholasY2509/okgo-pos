@@ -75,7 +75,16 @@ export function SessionCard({ session, lane = 0 }: { session: any, lane?: number
           <span className="font-semibold text-xs truncate" title={session.itemName}>
             {session.itemName}
           </span>
-          <Badge
+          <div className="flex items-center gap-1 shrink-0">
+            {Array.isArray(session.segments) && session.segments.length > 1 && (
+              <Badge
+                variant="secondary"
+                className="text-[8px] px-1 py-0 h-4 shrink-0 font-semibold"
+              >
+                {session.segments.length} Layanan
+              </Badge>
+            )}
+            <Badge
             variant="outline"
             className={cn(
               "text-[8px] px-1 py-0 h-4 shrink-0 font-medium",
@@ -92,7 +101,8 @@ export function SessionCard({ session, lane = 0 }: { session: any, lane?: number
             ) : (
               "Walk-in"
             )}
-          </Badge>
+            </Badge>
+          </div>
         </div>
 
         <div className="text-[10px] text-muted-foreground flex flex-col gap-0.5 mt-auto select-none pointer-events-none">

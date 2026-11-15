@@ -18,9 +18,10 @@ interface TimetableClientProps {
   paymentMethods: any[];
   staff: any[];
   brandSetting?: any;
+  products?: any[];
 }
 
-export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandSetting }: TimetableClientProps) {
+export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandSetting, products = [] }: TimetableClientProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const {
@@ -33,7 +34,7 @@ export function TimetableClient({ branchId, rooms, paymentMethods, staff, brandS
   } = useTimetableStore();
 
   useEffect(() => {
-    setInitialData({ branchId, rooms, paymentMethods, staff, brandSetting });
+    setInitialData({ branchId, rooms, paymentMethods, staff, brandSetting, products });
     fetchSessions();
     fetchPendingBookings();
 

@@ -117,6 +117,7 @@ export const PosCheckoutRepository = {
     const serviceSessionsData: any[] = [];
     const customerVouchersData: any[] = [];
     const itemVoucherRedemptionsData: any[] = [];
+    const groupCursorMap = new Map<string, { nextStart: Date; sequenceOrder: number }>();
 
 
 
@@ -179,8 +180,22 @@ export const PosCheckoutRepository = {
           throw new Error(`Kapasitas ruang ${room.name} penuh.`);
         }
 
-        const startTime = new Date();
-        const endTime = product.duration ? new Date(startTime.getTime() + product.duration * 60000) : null;
+        const durationMinutes = product.duration || 60;
+        const groupKey = item.sessionGroupKey || null;
+        const startTime = groupKey && groupCursorMap.has(groupKey)
+          ? new Date(groupCursorMap.get(groupKey)!.nextStart)
+          : new Date();
+        const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+        const sequenceOrder = groupKey && groupCursorMap.has(groupKey)
+          ? groupCursorMap.get(groupKey)!.sequenceOrder + 1
+          : 1;
+
+        if (groupKey) {
+          groupCursorMap.set(groupKey, {
+            nextStart: endTime,
+            sequenceOrder,
+          });
+        }
 
         serviceSessionsData.push({
           serviceId: item.serviceId,
@@ -191,6 +206,9 @@ export const PosCheckoutRepository = {
           bookingId: input.loadedBookingId || null,
           startTime,
           endTime,
+          durationMinutes,
+          sessionGroupKey: groupKey,
+          sequenceOrder,
           status: "SCHEDULED"
         });
 
@@ -525,6 +543,7 @@ export const PosCheckoutRepository = {
     voucherRedemptionsData: any[]
   ) {
     let serviceIndex = 0;
+    const createdGroupSessions = new Map<string, any>();
 
     for (const itemData of transactionItemsData) {
       const itemType = itemData._tempType;
@@ -544,25 +563,67 @@ export const PosCheckoutRepository = {
 
       if (itemType === "SERVICE") {
         const sessionData = serviceSessionsData[serviceIndex];
+        const {
+          durationMinutes = 60,
+          sessionGroupKey = null,
+          sequenceOrder = 1,
+          ...sessionCreateFields
+        } = sessionData;
 
         for (let i = 0; i < createdItem.quantity; i++) {
-          const createdSession = await tx.serviceSession.create({
+          let createdSession =
+            sessionGroupKey && i === 0
+              ? createdGroupSessions.get(sessionGroupKey)
+              : null;
+
+          if (!createdSession) {
+            createdSession = await tx.serviceSession.create({
+              data: {
+                ...sessionCreateFields,
+                transactionItemId: createdItem.id,
+              }
+            });
+            if (sessionGroupKey && i === 0) {
+              createdGroupSessions.set(sessionGroupKey, createdSession);
+            }
+          } else {
+            createdSession = await tx.serviceSession.update({
+              where: { id: createdSession.id },
+              data: {
+                endTime: sessionCreateFields.endTime,
+              }
+            });
+            createdGroupSessions.set(sessionGroupKey, createdSession);
+          }
+
+          const createdSegment = await tx.serviceSessionSegment.create({
             data: {
-              ...sessionData,
+              serviceSessionId: createdSession.id,
+              sequenceOrder: i === 0 ? sequenceOrder : 1,
+              serviceId: sessionCreateFields.serviceId,
+              staffId: sessionCreateFields.staffId,
+              roomId: sessionCreateFields.roomId,
               transactionItemId: createdItem.id,
+              status: sessionCreateFields.status || "SCHEDULED",
+              switchReason: sequenceOrder > 1 && i === 0 ? "CONTINUATION" : "INITIAL",
+              durationMinutes,
+              startTime: sessionCreateFields.startTime,
+              endTime: sessionCreateFields.endTime,
+              therapistCommissionAmount: therapistIncentivePerUnit > 0 ? therapistIncentivePerUnit : 0,
             }
           });
 
           if (therapistIncentivePerUnit > 0) {
             await tx.staffIncentive.create({
               data: {
-                staffId: sessionData.staffId,
+                staffId: sessionCreateFields.staffId,
                 amount: therapistIncentivePerUnit,
                 gross: createdItem.unitPrice,
                 type: "SERVICE_COMMISSION",
                 description: `Commission for service: ${itemData.itemNameSnapshot}`,
                 transactionItemId: createdItem.id,
                 serviceSessionId: createdSession.id,
+                serviceSessionSegmentId: createdSegment.id,
               }
             });
           }

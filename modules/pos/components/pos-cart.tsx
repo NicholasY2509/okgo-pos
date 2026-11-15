@@ -16,9 +16,12 @@ interface PosCartProps {
   onCheckout: () => void;
   branchId: string;
   onRedeemVoucher: (voucher: any) => void;
+  products?: any[];
+  staff?: any[];
+  rooms?: any[];
 }
 
-export function PosCart({ onCheckout, branchId, onRedeemVoucher }: PosCartProps) {
+export function PosCart({ onCheckout, branchId, onRedeemVoucher, products = [], staff = [], rooms = [] }: PosCartProps) {
   const { isVipUpgrade, setIsVipUpgrade, appliedPromos, clearPromos, appliedVoucher } = usePosCart();
   const cartItems = usePosStoreSelector((state) => state.items);
   const hasVoucherPacket = cartItems.some(i => i.type === "VOUCHER_PACKET");
@@ -38,7 +41,7 @@ export function PosCart({ onCheckout, branchId, onRedeemVoucher }: PosCartProps)
       <div className="mb-2">
         <CartCustomer />
       </div>
-      <CartItems />
+      <CartItems products={products} staff={staff} rooms={rooms} branchId={branchId} />
 
       <div className="border-t border-border pt-3 mt-2 bg-card relative z-10 shrink-0 space-y-3">
         <div className="flex flex-col gap-1">

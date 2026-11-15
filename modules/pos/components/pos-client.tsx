@@ -76,6 +76,9 @@ export function PosClient({ branchId, products, voucherPackets, staff, rooms, pa
           onCheckout={() => setIsPaymentModalOpen(true)}
           branchId={branchId}
           onRedeemVoucher={handleRedeemVoucherClick}
+          products={products}
+          staff={staff}
+          rooms={rooms}
         />
       </div>
 

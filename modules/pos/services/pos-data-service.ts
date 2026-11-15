@@ -1,6 +1,14 @@
 import { PosDataRepository } from "../repositories/pos-data-repository";
 
 export class PosDataService {
+  static async getActiveProducts() {
+    const products = await PosDataRepository.getActiveProducts();
+    return products.map((p) => ({
+      ...p,
+      price: p.price ? Number(p.price) : 0,
+    }));
+  }
+
   static async getInitialData(tenant: string) {
     const branch = await PosDataRepository.getBranchBySubdomain(tenant);
 

@@ -37,4 +37,24 @@ export class BookingService {
   static async assignBookingToTimetable(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
     return await BookingRepository.assignBookingToTimetable(bookingId, startTime, selections);
   }
+
+  static async previewBookingAssignment(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
+    return await BookingRepository.previewBookingAssignment(bookingId, startTime, selections);
+  }
+
+  static async assignAndPayBooking(input: {
+    bookingId: string;
+    startTime: Date;
+    selections: { serviceId: string; staffId?: string }[];
+    cashierId?: string | null;
+    payments: {
+      paymentMethodId: string;
+      amount: number;
+      referenceNumber?: string;
+      voucherCode?: string;
+      notes?: string;
+    }[];
+  }) {
+    return await BookingRepository.assignAndPayBooking(input);
+  }
 }

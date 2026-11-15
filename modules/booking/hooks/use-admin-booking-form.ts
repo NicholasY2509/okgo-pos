@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -35,10 +35,14 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "selections",
+  });
+
   const selectedDate = form.watch("date");
   const selections = useWatch({ control: form.control, name: "selections" });
   const selectedServiceId = selections?.[0]?.serviceId;
-  const selectedStaffId = selections?.[0]?.staffId;
 
   // Fetch initial data
   useEffect(() => {
@@ -56,8 +60,8 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
   // to avoid unnecessary rerenders while avoiding the JSON.stringify whole object trap
   const slotDependencies = useMemo(() => {
     if (!selections || selections.length === 0) return "";
-    return `${selections[0].serviceId}-${selections[0].staffId || 'none'}`;
-  }, [selectedServiceId, selectedStaffId]);
+    return selections.map((s) => `${s.serviceId || ""}-${s.staffId || "none"}`).join("|");
+  }, [selections]);
 
   // Fetch available slots when date or service changes
   useEffect(() => {
@@ -103,6 +107,9 @@ export function useAdminBookingForm({ branchId, onSuccess }: UseAdminBookingForm
 
   return {
     form,
+    fields,
+    append,
+    remove,
     onSubmit: form.handleSubmit(onSubmit),
     isSubmitting,
     loadingInitial,

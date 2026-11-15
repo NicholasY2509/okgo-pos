@@ -72,17 +72,20 @@ model StaffIncentive {
   type        String // SERVICE_COMMISSION, CASHIER_COMMISSION, MANUAL_BONUS
   description String?
 
-  serviceSessionId  String?
-  transactionItemId String?
+  serviceSessionId        String?
+  serviceSessionSegmentId String?
+  transactionItemId       String?
 
   date      DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  staff           Staff            @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  serviceSession  ServiceSession?  @relation(fields: [serviceSessionId], references: [id])
-  transactionItem TransactionItem? @relation(fields: [transactionItemId], references: [id])
+  staff                 Staff                  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  serviceSession        ServiceSession?        @relation(fields: [serviceSessionId], references: [id])
+  serviceSessionSegment ServiceSessionSegment? @relation(fields: [serviceSessionSegmentId], references: [id])
+  transactionItem       TransactionItem?       @relation(fields: [transactionItemId], references: [id])
 
   @@index([staffId])
   @@index([date])
+  @@index([serviceSessionSegmentId])
 }

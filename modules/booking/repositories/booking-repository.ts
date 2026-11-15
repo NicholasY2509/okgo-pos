@@ -1,8 +1,34 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { BookingInput } from "../schemas/booking";
 import { startOfDay, endOfDay, addMinutes, isBefore, addHours, format } from "date-fns";
 import { StaffAvailabilityService } from "../../staff/services/staff-availability-service";
 import { getTherapistWorkPositionFilter } from "../../staff/repositories/staff-repository";
+import { PosPaymentRepository } from "../../pos/repositories/pos-payment-repository";
+
+const JAKARTA_TIMEZONE = "Asia/Jakarta";
+const JAKARTA_UTC_OFFSET = "+07:00";
+
+/**
+ * Normalizes a `YYYY-MM-DD` or ISO date string into a `YYYY-MM-DD` calendar date in Asia/Jakarta.
+ */
+function toJakartaDateString(dateStr: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return dateStr;
+  }
+  return new Intl.DateTimeFormat("en-CA", { timeZone: JAKARTA_TIMEZONE }).format(new Date(dateStr));
+}
+
+/**
+ * Builds a Date representing a wall-clock time in Asia/Jakarta (UTC+07:00) regardless of server TZ.
+ */
+function parseJakartaDateTime(dateOnly: string, hours: number, minutes = 0, seconds = 0, ms = 0): Date {
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(minutes).padStart(2, "0");
+  const ss = String(seconds).padStart(2, "0");
+  const mmm = String(ms).padStart(3, "0");
+  return new Date(`${dateOnly}T${hh}:${mm}:${ss}.${mmm}${JAKARTA_UTC_OFFSET}`);
+}
 
 export const BookingRepository = {
   async getBranches() {
@@ -140,9 +166,9 @@ export const BookingRepository = {
   },
 
   async getAvailableSlots(branchId: string, dateStr: string, selections: { serviceId?: string, staffId?: string }[]) {
-    const date = new Date(dateStr);
-    const start = startOfDay(date);
-    const end = endOfDay(date);
+    const dateOnly = toJakartaDateString(dateStr);
+    const start = parseJakartaDateTime(dateOnly, 0, 0, 0, 0);
+    const end = parseJakartaDateTime(dateOnly, 23, 59, 59, 999);
 
     let maxDuration = 60;
     const serviceIds = selections.map(s => s.serviceId).filter(id => id) as string[];
@@ -189,19 +215,19 @@ export const BookingRepository = {
 
     const businessStart = 8;
     const businessEnd = 22;
+    const closingTime = parseJakartaDateTime(dateOnly, businessEnd, 0, 0, 0);
     const slots = [];
     const now = new Date();
 
     const minTime = addHours(now, 2);
 
     for (let hour = businessStart; hour < businessEnd; hour++) {
-      const slotStart = new Date(date);
-      slotStart.setHours(hour, 0, 0, 0);
+      const slotStart = parseJakartaDateTime(dateOnly, hour, 0, 0, 0);
       const slotEnd = addMinutes(slotStart, maxDuration);
 
       if (isBefore(slotStart, minTime)) continue;
 
-      if (slotEnd.getHours() > businessEnd || (slotEnd.getHours() === businessEnd && slotEnd.getMinutes() > 0)) {
+      if (slotEnd > closingTime) {
         continue;
       }
 
@@ -870,11 +896,19 @@ export const BookingRepository = {
     });
   },
 
-  async assignBookingToTimetable(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
-    return await prisma.$transaction(async (tx) => {
+  async prepareBookingAssignment(
+    tx: Prisma.TransactionClient,
+    bookingId: string,
+    startTime: Date,
+    selections: { serviceId: string; staffId?: string }[]
+  ) {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
-        include: { items: { include: { appliedVoucher: { include: { voucherPacket: { include: { product: true } } } } } }, serviceSessions: true }
+        include: {
+          customer: { select: { id: true, name: true, phone: true } },
+          items: { include: { appliedVoucher: { include: { voucherPacket: { include: { product: true } } } } } },
+          serviceSessions: true
+        }
       });
 
       if (!booking) throw new Error("Booking tidak ditemukan");
@@ -1046,6 +1080,51 @@ export const BookingRepository = {
         });
       }
 
+      return {
+        booking,
+        slotStart,
+        maxDuration,
+        subtotal,
+        transactionItems,
+      };
+  },
+
+  async previewBookingAssignment(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
+    const prepared = await this.prepareBookingAssignment(prisma, bookingId, startTime, selections);
+    return {
+      isPendingBookingAssignment: true,
+      pendingAssignment: {
+        bookingId,
+        startTime: startTime.toISOString(),
+        selections,
+      },
+      customerId: prepared.booking.customerId,
+      customer: prepared.booking.customer,
+      subtotal: prepared.subtotal,
+      discountTotal: 0,
+      totalAmount: prepared.subtotal,
+      paidAmount: 0,
+      items: prepared.transactionItems.map((item, idx) => ({
+        id: `preview-${idx}`,
+        type: item.type,
+        serviceId: item.serviceId,
+        itemNameSnapshot: item.itemNameSnapshot,
+        unitPrice: Number(item.unitPrice),
+        quantity: item.quantity,
+        subtotal: Number(item.subtotal),
+      })),
+    };
+  },
+
+  async assignBookingInTx(
+    tx: Prisma.TransactionClient,
+    bookingId: string,
+    startTime: Date,
+    selections: { serviceId: string; staffId?: string }[]
+  ) {
+      const { booking, slotStart, maxDuration, subtotal, transactionItems } =
+        await this.prepareBookingAssignment(tx, bookingId, startTime, selections);
+
       await tx.booking.update({
         where: { id: bookingId },
         data: {
@@ -1117,7 +1196,68 @@ export const BookingRepository = {
         createdSessions.push(session);
       }
 
-      return true;
+      const fullTransaction = await tx.transaction.findUnique({
+        where: { id: transaction.id },
+        include: {
+          items: true,
+          customer: {
+            select: { id: true, name: true, phone: true }
+          }
+        }
+      });
+
+      return fullTransaction
+        ? {
+            ...fullTransaction,
+            subtotal: Number(fullTransaction.subtotal),
+            discountTotal: Number(fullTransaction.discountTotal || 0),
+            totalAmount: Number(fullTransaction.totalAmount),
+            paidAmount: Number(fullTransaction.paidAmount || 0),
+            items: fullTransaction.items.map((item) => ({
+              ...item,
+              unitPrice: Number(item.unitPrice),
+              subtotal: Number(item.subtotal),
+            })),
+          }
+        : null;
+  },
+
+  async assignBookingToTimetable(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
+    return await prisma.$transaction(async (tx) => {
+      return await this.assignBookingInTx(tx, bookingId, startTime, selections);
+    });
+  },
+
+  async assignAndPayBooking(input: {
+    bookingId: string;
+    startTime: Date;
+    selections: { serviceId: string; staffId?: string }[];
+    cashierId?: string | null;
+    payments: {
+      paymentMethodId: string;
+      amount: number;
+      referenceNumber?: string;
+      voucherCode?: string;
+      notes?: string;
+    }[];
+  }) {
+    return await prisma.$transaction(async (tx) => {
+      const createdTx = await this.assignBookingInTx(tx, input.bookingId, input.startTime, input.selections);
+      if (!createdTx) {
+        throw new Error("Gagal membuat transaksi untuk booking.");
+      }
+
+      const updatedTx = await PosPaymentRepository.processTransactionPayments(tx, {
+        transactionId: createdTx.id,
+        cashierId: input.cashierId,
+        payments: input.payments,
+      });
+
+      if (updatedTx.status !== "COMPLETED") {
+        throw new Error("Pembayaran belum lunas.");
+      }
+
+      return updatedTx;
     });
   }
 };

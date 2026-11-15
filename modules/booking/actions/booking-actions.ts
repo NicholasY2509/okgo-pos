@@ -3,6 +3,8 @@
 import { bookingSchema, BookingInput } from "../schemas/booking";
 import { BookingService } from "../services/booking-service";
 import { AuthGuardService } from "@/modules/auth/services/auth-guard-service";
+import { auth } from "@/modules/auth/auth";
+import { StaffUserService } from "@/modules/staff-user/services/staff-user-service";
 
 export async function getBranchesAction() {
   try {
@@ -92,6 +94,52 @@ export async function assignBookingToTimetableAction(bookingId: string, startTim
     return { success: true, data: JSON.parse(JSON.stringify(result)) };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Gagal menugaskan booking ke jadwal";
+    return { error: message };
+  }
+}
+
+export async function previewBookingAssignmentAction(bookingId: string, startTime: Date, selections: { serviceId: string; staffId?: string }[]) {
+  try {
+    await AuthGuardService.requireAuth();
+    const result = await BookingService.previewBookingAssignment(bookingId, startTime, selections);
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal memeriksa ketersediaan jadwal";
+    return { error: message };
+  }
+}
+
+export async function assignAndPayBookingAction(values: {
+  bookingId: string;
+  startTime: Date;
+  selections: { serviceId: string; staffId?: string }[];
+  cashierId?: string | null;
+  payments: {
+    paymentMethodId: string;
+    amount: number;
+    referenceNumber?: string;
+    voucherCode?: string;
+    notes?: string;
+  }[];
+}) {
+  try {
+    await AuthGuardService.requireAuth();
+    const session = await auth();
+    let cashierId = values.cashierId;
+    if (session?.user?.id && !cashierId) {
+      const staffUser = await StaffUserService.findByUserId(session.user.id);
+      if (staffUser) {
+        cashierId = staffUser.staffId;
+      }
+    }
+
+    const result = await BookingService.assignAndPayBooking({
+      ...values,
+      cashierId,
+    });
+    return { success: true, transactionId: result.id };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal memproses pembayaran dan jadwal";
     return { error: message };
   }
 }

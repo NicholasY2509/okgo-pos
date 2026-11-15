@@ -42,11 +42,12 @@ interface TimetableState {
   rooms: any[];
   paymentMethods: any[];
   staff: any[];
+  products: any[];
   brandSetting: any | null;
   businessHoursStart: number;
   totalHours: number;
 
-  setInitialData: (data: { branchId: string; rooms: any[]; paymentMethods: any[]; staff: any[]; brandSetting?: any }) => void;
+  setInitialData: (data: { branchId: string; rooms: any[]; paymentMethods: any[]; staff: any[]; products?: any[]; brandSetting?: any }) => void;
   setBranchId: (branchId: string) => void;
   setDate: (date: Date) => void;
   setIsBookingModalOpen: (isOpen: boolean) => void;
@@ -63,6 +64,9 @@ interface TimetableState {
   handleProcessBooking: (bookingId: string) => Promise<void>;
   handleUpdateSessionStaff: (sessionId: string, staffId: string) => Promise<void>;
   handleUpdateSessionRoom: (sessionId: string, roomId: string) => Promise<void>;
+  handleAddContinuationSegment: (sessionId: string, serviceId: string, staffId: string, roomId?: string) => Promise<boolean>;
+  handleSwitchActiveSegment: (sessionId: string, serviceId: string, staffId: string, roomId?: string) => Promise<boolean>;
+  handleStartSegment: (sessionId: string, segmentId: string) => Promise<boolean>;
 }
 
 export const useTimetableStore = create<TimetableState>((set, get) => ({
@@ -78,11 +82,12 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
   rooms: [],
   paymentMethods: [],
   staff: [],
+  products: [],
   brandSetting: null,
   businessHoursStart: 8,
   totalHours: 14,
 
-  setInitialData: ({ branchId, rooms, paymentMethods, staff, brandSetting }) => {
+  setInitialData: ({ branchId, rooms, paymentMethods, staff, products = [], brandSetting }) => {
     let businessHoursStart = 8;
     let businessHoursEnd = 22;
 
@@ -97,7 +102,7 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
 
     const totalHours = businessHoursEnd - businessHoursStart;
 
-    set({ branchId, rooms, paymentMethods, staff, brandSetting, businessHoursStart, totalHours });
+    set({ branchId, rooms, paymentMethods, staff, products, brandSetting, businessHoursStart, totalHours });
   },
   setBranchId: (branchId) => set({ branchId }),
   setDate: (date) => {
@@ -284,5 +289,71 @@ export const useTimetableStore = create<TimetableState>((set, get) => ({
     } else {
       toast.error(res.error || "Gagal memindahkan ruangan");
     }
+  },
+
+  handleAddContinuationSegment: async (sessionId, serviceId, staffId, roomId) => {
+    const { branchId, sessions, fetchSessions } = get();
+    const target = sessions.find((s) => s.id === sessionId);
+    const { addContinuationSegmentAction } = await import("../actions/session-segment-action");
+    const res = await addContinuationSegmentAction({ sessionId, serviceId, staffId, roomId });
+    if (res.success) {
+      toast.success("Layanan lanjutan ditambahkan ke sesi");
+      broadcastRoomSessionUpdate({
+        branchId,
+        roomId: target?.roomId,
+        sessionId,
+        action: "segment_added",
+      });
+      await fetchSessions();
+      const updated = get().sessions.find((s) => s.id === sessionId) || null;
+      set({ selectedSessionForInfo: updated });
+      return true;
+    }
+    toast.error(res.error || "Gagal menambahkan layanan lanjutan");
+    return false;
+  },
+
+  handleSwitchActiveSegment: async (sessionId, serviceId, staffId, roomId) => {
+    const { branchId, sessions, fetchSessions } = get();
+    const target = sessions.find((s) => s.id === sessionId);
+    const { switchActiveSegmentAction } = await import("../actions/session-segment-action");
+    const res = await switchActiveSegmentAction({ sessionId, serviceId, staffId, roomId });
+    if (res.success) {
+      toast.success("Layanan sesi berhasil diganti");
+      broadcastRoomSessionUpdate({
+        branchId,
+        roomId: target?.roomId,
+        sessionId,
+        action: "segment_switched",
+      });
+      await fetchSessions();
+      const updated = get().sessions.find((s) => s.id === sessionId) || null;
+      set({ selectedSessionForInfo: updated });
+      return true;
+    }
+    toast.error(res.error || "Gagal mengganti layanan sesi");
+    return false;
+  },
+
+  handleStartSegment: async (sessionId, segmentId) => {
+    const { branchId, sessions, fetchSessions } = get();
+    const target = sessions.find((s) => s.id === sessionId);
+    const { startSegmentAction } = await import("../actions/session-segment-action");
+    const res = await startSegmentAction({ sessionId, segmentId });
+    if (res.success) {
+      toast.success("Segmen layanan dimulai");
+      broadcastRoomSessionUpdate({
+        branchId,
+        roomId: target?.roomId,
+        sessionId,
+        action: "segment_started",
+      });
+      await fetchSessions();
+      const updated = get().sessions.find((s) => s.id === sessionId) || null;
+      set({ selectedSessionForInfo: updated });
+      return true;
+    }
+    toast.error(res.error || "Gagal memulai segmen");
+    return false;
   }
 }));

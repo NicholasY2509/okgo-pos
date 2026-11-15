@@ -98,7 +98,9 @@ export function usePosPayment(cart: any, branchId: string, paymentMethods: any[]
         discountAmount: i.discountAmount,
         isVoucherRedemption: i.isVoucherRedemption,
         customerVoucherId: i.customerVoucherId,
-        voucherCode: i.voucherCode
+        voucherCode: i.voucherCode,
+        sessionGroupKey: i.sessionGroupKey ?? null,
+        sequenceOrder: i.sequenceOrder ?? null,
       })),
       payments: isPayLater ? [] : paymentsArray,
       isPayLater

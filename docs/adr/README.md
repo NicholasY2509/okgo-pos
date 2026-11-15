@@ -23,6 +23,7 @@ Decisions that were expensive to make and would be expensive to reverse. Each fi
 | 0011 | [Generate Invoice PDF via pdf-lib and Send via Evolution API WhatsApp](0011-whatsapp-invoice-pdf-via-evolution-api.md) | Accepted | 2026-11-08 |
 | 0012 | [Multi-Instance Branch WhatsApp Configuration](0012-multi-instance-branch-whatsapp-configuration.md) | Accepted | 2026-11-08 |
 | 0013 | [Marketing Maintenance Mode Toggle via Dedicated MarketingSetting Model](0013-marketing-maintenance-mode-toggle.md) | Accepted | 2026-11-12 |
+| 0014 | [Model Multi-Service Sessions via ServiceSessionSegment](0014-multi-service-session-segments.md) | Accepted | 2026-11-15 |
 
 ## When an ADR is required
 
