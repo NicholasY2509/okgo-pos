@@ -17,7 +17,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: "Nyenyak Healing Point | Tempat Pijat & Spa Premium di Medan",
-    description: "Tempat Pijat & Spa Premium di Medan untuk Relaksasi Maksimal.",
+    description:
+      "Tempat pijat dan spa terbaik di Medan. Lepas lelah, tidur lebih nyenyak bersama terapis profesional kami untuk relaksasi tubuh dan pikiran yang optimal.",
+    alternates: {
+      canonical: "/",
+    },
+    openGraph: {
+      title: "Nyenyak Healing Point | Tempat Pijat & Spa Premium di Medan",
+      description:
+        "Tempat pijat dan spa terbaik di Medan. Lepas lelah, tidur lebih nyenyak bersama terapis profesional kami untuk relaksasi tubuh dan pikiran yang optimal.",
+      url: "/",
+    },
   };
 }
 

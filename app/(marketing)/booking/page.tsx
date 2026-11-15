@@ -5,7 +5,17 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Booking Layanan",
-  description: "Buat jadwal layanan dengan cepat dan mudah.",
+  description:
+    "Reservasi jadwal pijat dan spa di Nyenyak Healing Point Medan secara online. Pilih cabang terdekat, layanan favorit, serta waktu kunjungan Anda dengan mudah.",
+  alternates: {
+    canonical: "/booking",
+  },
+  openGraph: {
+    title: "Booking Layanan | Nyenyak Healing Point",
+    description:
+      "Reservasi jadwal pijat dan spa di Nyenyak Healing Point Medan secara online. Pilih cabang terdekat, layanan favorit, serta waktu kunjungan Anda dengan mudah.",
+    url: "/booking",
+  },
 };
 
 export default function BookingPage() {

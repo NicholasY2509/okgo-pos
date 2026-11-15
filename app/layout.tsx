@@ -34,7 +34,7 @@ const fontDisplay = Cormorant_Garamond({
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.nyenyak.com"),
+  metadataBase: new URL("https://nyenyak.com"),
   title: {
     template: "%s | Nyenyak Healing Point",
     default: "Nyenyak Healing Point | Tempat Pijat & Spa Medan",
@@ -80,7 +80,7 @@ export default function RootLayout({
               "@type": ["WebSite", "DaySpa", "HealthAndBeautyBusiness"],
               "name": "Nyenyak Healing Point",
               "alternateName": ["Nyenyak", "Nyenyak Spa", "Tempat Pijat Nyenyak Medan"],
-              "url": "https://www.nyenyak.com/",
+              "url": "https://nyenyak.com/",
               "description": "Tempat pijat dan spa terbaik di Medan. Lepas lelah, tidur lebih nyenyak.",
               "address": {
                 "@type": "PostalAddress",

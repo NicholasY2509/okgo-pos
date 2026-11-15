@@ -89,7 +89,7 @@ export function BookingWizard() {
 
       <div className="pb-12 pt-2 px-6">
         <div className="max-w-3xl mx-auto pb-32">
-          <div className="mb-6 relative">
+          <div className="mb-6 relative" data-nosnippet>
             <div className="flex flex-col items-center w-full">
               <div className="w-full">
                 {/* Minimalist Goal Gradient Progress Bar */}
