@@ -47,7 +47,13 @@ export const TransactionRepository = {
     return await prisma.customerVoucher.findMany({
       where: { sourceTransactionId: { in: transactionIds } },
       include: {
-        redemptions: true
+        redemptions: {
+          where: {
+            transaction: {
+              status: { notIn: ["CANCELLED", "VOIDED"] }
+            }
+          }
+        }
       }
     });
   },

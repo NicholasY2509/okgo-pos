@@ -53,7 +53,12 @@ export function TransactionDetailDialog({
       if (res.error) {
         toast.error(res.error);
       } else {
-        toast.success("Transaksi berhasil dibatalkan.");
+        const reopened = res.data?.reopenedTransaction;
+        toast.success(
+          reopened
+            ? `Pembayaran transaksi dibatalkan. Sesi layanan tetap aktif dengan tagihan baru (${reopened.transactionNumber}).`
+            : "Transaksi berhasil dibatalkan."
+        );
         setIsConfirmOpen(false);
         onOpenChange(false);
         onTransactionCancelled?.();
@@ -270,7 +275,13 @@ export function TransactionDetailDialog({
               Tindakan ini akan:
               <ul className="list-disc pl-5 mt-2 space-y-1 text-xs">
                 <li>Mengubah status transaksi menjadi <strong>CANCELLED</strong></li>
-                <li>Membatalkan seluruh sesi layanan terkait</li>
+                {transaction.status === "PENDING" ? (
+                  <li>Membatalkan seluruh sesi layanan terjadwal terkait</li>
+                ) : (
+                  <li>
+                    Mempertahankan sesi layanan tetap aktif dengan tagihan baru berstatus <strong>PENDING</strong> agar dapat dibayar ulang
+                  </li>
+                )}
                 {transaction.hasGeneratedVouchers && (
                   <li>Membatalkan seluruh ({transaction.totalGeneratedVouchers}) voucher paket yang belum digunakan (VOID)</li>
                 )}
