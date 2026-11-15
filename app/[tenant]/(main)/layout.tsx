@@ -80,6 +80,11 @@ export default async function TenantLayout({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 rounded-xl">
                 <DropdownMenuItem asChild>
+                  <Link href={`/customers`} className="w-full cursor-pointer">
+                    Pelanggan
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href={`/kiosk`} className="w-full cursor-pointer">
                     Mode Kiosk
                   </Link>

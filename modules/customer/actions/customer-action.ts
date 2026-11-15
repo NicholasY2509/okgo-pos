@@ -92,3 +92,77 @@ export async function deleteCustomerAction(id: string) {
     return { error: message };
   }
 }
+
+export async function getCustomerDirectoryAction(query: string = "", page: number = 1, limit: number = 20) {
+  try {
+    const authCheck = await AuthGuardService.requireAuth();
+    if (!authCheck.success) {
+      return { error: authCheck.error };
+    }
+
+    const result = await CustomerService.getDirectory(query, page, limit);
+    return { success: true, data: result.data, metadata: result.metadata };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal memuat daftar pelanggan.";
+    return { error: message };
+  }
+}
+
+export async function getCustomerDetailAction(id: string) {
+  try {
+    const authCheck = await AuthGuardService.requireAuth();
+    if (!authCheck.success) {
+      return { error: authCheck.error };
+    }
+
+    const result = await CustomerService.getDetailWithActivity(id);
+    if (!result) {
+      return { error: "Pelanggan tidak ditemukan." };
+    }
+    return { success: true, data: result };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal memuat detail pelanggan.";
+    return { error: message };
+  }
+}
+
+export async function getCustomerVouchersPaginatedAction(params: {
+  customerId: string;
+  statusFilter?: "ALL" | "ACTIVE" | "INACTIVE";
+  page?: number;
+  limit?: number;
+}) {
+  try {
+    const authCheck = await AuthGuardService.requireAuth();
+    if (!authCheck.success) {
+      return { error: authCheck.error };
+    }
+
+    const result = await CustomerService.getCustomerVouchers(params);
+    return { success: true, data: result.data, metadata: result.metadata };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal memuat voucher pelanggan.";
+    return { error: message };
+  }
+}
+
+export async function getCustomerActivitiesAction(params: {
+  customerId: string;
+  type?: "ALL" | "TRANSACTION" | "SESSION" | "BOOKING";
+  date?: string;
+  page?: number;
+  limit?: number;
+}) {
+  try {
+    const authCheck = await AuthGuardService.requireAuth();
+    if (!authCheck.success) {
+      return { error: authCheck.error };
+    }
+
+    const result = await CustomerService.getCustomerActivities(params);
+    return { success: true, data: result.data, metadata: result.metadata };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Gagal memuat aktivitas pelanggan.";
+    return { error: message };
+  }
+}
