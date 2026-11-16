@@ -726,7 +726,7 @@ export function AssignBookingModal() {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Menyimpan...
                     </>
                   ) : (
-                    "Bayar Sekarang"
+                    "Bayar Sekarang & Jadwalkan Sesi"
                   )}
                 </Button>
                 <Button
@@ -741,7 +741,7 @@ export function AssignBookingModal() {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Menyimpan...
                     </>
                   ) : (
-                    "Bayar nanti dan jadwalkan sesi"
+                    "Bayar Nanti & Jadwalkan Sesi"
                   )}
                 </Button>
                 <div className="grid grid-cols-2 gap-2.5">

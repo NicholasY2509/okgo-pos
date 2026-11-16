@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { isToday } from "date-fns";
-import { Search, X, Activity, CalendarCheck, Clock, CheckCircle2 } from "lucide-react";
+import { Search, X, Activity } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,10 +33,6 @@ export function TimetableSidebar({ isOpen }: TimetableSidebarProps) {
   );
   const scheduledCount = useMemo(
     () => sessions.filter((s) => s.status === "SCHEDULED").length,
-    [sessions]
-  );
-  const completedCount = useMemo(
-    () => sessions.filter((s) => s.status === "COMPLETED").length,
     [sessions]
   );
   const pendingPaymentCount = useMemo(
@@ -105,43 +101,6 @@ export function TimetableSidebar({ isOpen }: TimetableSidebarProps) {
 
   return (
     <div className="w-88 shrink-0 bg-background border-l border-border flex flex-col h-full overflow-hidden">
-      {/* Top Operations KPI Pulse */}
-      <div className="p-3 border-b border-border bg-muted/20 shrink-0">
-        <div className="grid grid-cols-4 gap-1.5 text-center">
-          <div className="bg-card p-1.5 rounded-lg border border-border/80">
-            <div className="flex items-center justify-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm font-bold text-foreground font-mono">{inProgressCount}</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground block truncate">Aktif</span>
-          </div>
-
-          <div className="bg-card p-1.5 rounded-lg border border-border/80">
-            <div className="flex items-center justify-center gap-1">
-              <Clock className="w-3 h-3 text-muted-foreground" />
-              <span className="text-sm font-bold text-foreground font-mono">{scheduledCount}</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground block truncate">Terjadwal</span>
-          </div>
-
-          <div className="bg-card p-1.5 rounded-lg border border-border/80">
-            <div className="flex items-center justify-center gap-1">
-              <CalendarCheck className="w-3 h-3 text-muted-foreground" />
-              <span className="text-sm font-bold text-foreground font-mono">{pendingBookings?.length || 0}</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground block truncate">Booking</span>
-          </div>
-
-          <div className="bg-card p-1.5 rounded-lg border border-border/80">
-            <div className="flex items-center justify-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-muted-foreground" />
-              <span className="text-sm font-bold text-foreground font-mono">{completedCount}</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground block truncate">Selesai</span>
-          </div>
-        </div>
-      </div>
-
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-h-0 flex flex-col overflow-hidden">
         <div className="p-2 border-b border-border shrink-0 bg-background">

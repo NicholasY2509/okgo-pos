@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useStaffCombobox } from "@/modules/staff/hooks/use-staff-combobox";
 import {
@@ -269,7 +268,7 @@ export function AssignBookingSelectionDialog({
                   </label>
                 </div>
 
-                {customerVoucherId ? (
+                {customerVoucherId && (
                   <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <Ticket className="w-3.5 h-3.5 shrink-0" />
@@ -285,30 +284,6 @@ export function AssignBookingSelectionDialog({
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between gap-3 pt-1">
-                    <Label
-                      htmlFor={`dialog-assign-discount-${visitorIndex}`}
-                      className="text-xs text-muted-foreground whitespace-nowrap"
-                    >
-                      Diskon Item (Rp)
-                    </Label>
-                    <Input
-                      id={`dialog-assign-discount-${visitorIndex}`}
-                      type="number"
-                      min={0}
-                      placeholder="0"
-                      className="h-9 w-36 text-right text-sm"
-                      value={discountAmount || ""}
-                      onChange={(e) => {
-                        const val =
-                          e.target.value === ""
-                            ? 0
-                            : Math.max(0, Number(e.target.value));
-                        setDiscountAmount(val);
-                      }}
-                    />
                   </div>
                 )}
               </div>
