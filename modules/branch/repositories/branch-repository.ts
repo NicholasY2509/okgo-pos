@@ -36,6 +36,12 @@ export const BranchRepository = {
           data: { whatsappInstanceName },
         })
         },
+    updateBranchSettings: async (branchId: string, maxDailyBookings: number | null) => {
+        return await prisma.branch.update({
+          where: { id: branchId },
+          data: { maxDailyBookings },
+        })
+        },
     getBranchBySubdomain: async (subdomain: string) => {
         return await prisma.branch.findUnique({
           where: { subdomain },

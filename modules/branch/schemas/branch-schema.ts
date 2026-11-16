@@ -18,6 +18,17 @@ export const updateBranchSchema = z.object({
 })
 
 export type UpdateBranchInput = z.infer<typeof updateBranchSchema>
+
+export const updateBranchSettingsSchema = z.object({
+  branchId: z.string().cuid(),
+  maxDailyBookings: z
+    .number({ error: "Batas booking harus berupa angka" })
+    .int("Batas booking harus berupa bilangan bulat")
+    .min(1, "Minimal 1 slot booking per hari")
+    .nullable(),
+})
+
+export type UpdateBranchSettingsInput = z.infer<typeof updateBranchSettingsSchema>
 export const assignStaffBranchSchema = z.object({
   branchId: z.string().min(1, "Cabang wajib dipilih"),
   staffId: z.string().min(1, "Staf wajib dipilih"),

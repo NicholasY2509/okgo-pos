@@ -5,6 +5,12 @@ import { startOfDay, endOfDay, addMinutes, isBefore, addHours, format } from "da
 import { StaffAvailabilityService } from "../../staff/services/staff-availability-service";
 import { getTherapistWorkPositionFilter } from "../../staff/repositories/staff-repository";
 import { PosPaymentRepository } from "../../pos/repositories/pos-payment-repository";
+import {
+  calculateDailyQuota,
+  countRequestedBookingSlots,
+  hasEnoughDailyQuota,
+  type DailyBookingQuotaStatus,
+} from "../services/daily-booking-quota";
 
 const JAKARTA_TIMEZONE = "Asia/Jakarta";
 const JAKARTA_UTC_OFFSET = "+07:00";
@@ -31,6 +37,57 @@ function parseJakartaDateTime(dateOnly: string, hours: number, minutes = 0, seco
 }
 
 export const BookingRepository = {
+  async getDailyQuotaStatus(
+    db: Prisma.TransactionClient | typeof prisma,
+    branchId: string,
+    dateInput: string | Date,
+    excludeBookingId?: string
+  ): Promise<DailyBookingQuotaStatus> {
+    const dateOnly = toJakartaDateString(
+      dateInput instanceof Date ? dateInput.toISOString() : dateInput
+    );
+    const dayStart = parseJakartaDateTime(dateOnly, 0, 0, 0, 0);
+    const dayEnd = parseJakartaDateTime(dateOnly, 23, 59, 59, 999);
+
+    const branch = await db.branch.findUnique({
+      where: { id: branchId },
+      select: { maxDailyBookings: true },
+    });
+
+    const bookings = await db.booking.findMany({
+      where: {
+        branchId,
+        status: { in: ["PENDING", "PROCESSED"] },
+        scheduledStartTime: { gte: dayStart, lte: dayEnd },
+        ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
+      },
+      select: {
+        guestCount: true,
+        items: { select: { quantity: true } },
+      },
+    });
+
+    return calculateDailyQuota(branch?.maxDailyBookings ?? null, bookings);
+  },
+
+  async assertDailyQuota(
+    db: Prisma.TransactionClient | typeof prisma,
+    branchId: string,
+    dateInput: string | Date,
+    selections?: unknown[] | null,
+    excludeBookingId?: string
+  ): Promise<void> {
+    const dailyQuota = await this.getDailyQuotaStatus(db, branchId, dateInput, excludeBookingId);
+    const requestedSlots = countRequestedBookingSlots(selections);
+    if (!hasEnoughDailyQuota(dailyQuota, requestedSlots)) {
+      throw new Error(
+        dailyQuota.remainingDailyQuota === 0
+          ? `Kuota booking harian cabang sudah penuh (maksimal ${dailyQuota.maxDailyBookings} slot/hari).`
+          : `Kuota booking harian cabang tidak mencukupi (tersisa ${dailyQuota.remainingDailyQuota} dari ${dailyQuota.maxDailyBookings} slot/hari).`
+      );
+    }
+  },
+
   async getBranches() {
     return await prisma.branch.findMany({
       where: { isActive: true },
@@ -162,7 +219,9 @@ export const BookingRepository = {
       guestCount: b.guestCount || b.items.length || 1,
     }));
 
-    return { staffSchedules, roomSessions, totalCapacity, rooms, unassignedBookings: simplifiedUnassigned };
+    const dailyQuota = await this.getDailyQuotaStatus(prisma, branchId, dateStr);
+
+    return { staffSchedules, roomSessions, totalCapacity, rooms, unassignedBookings: simplifiedUnassigned, dailyQuota };
   },
 
   async getAvailableSlots(branchId: string, dateStr: string, selections: { serviceId?: string, staffId?: string }[]) {
@@ -216,6 +275,10 @@ export const BookingRepository = {
     const closingTime = parseJakartaDateTime(dateOnly, businessEnd, 0, 0, 0);
     const slots: { time: string; availableCount: number; canFulfill: boolean; reason?: string }[] = [];
     const now = new Date();
+
+    const dailyQuota = await this.getDailyQuotaStatus(prisma, branchId, dateOnly);
+    const requestedSlots = countRequestedBookingSlots(selections);
+    const quotaSatisfied = hasEnoughDailyQuota(dailyQuota, requestedSlots);
 
     const minTime = addHours(now, 2);
 
@@ -364,9 +427,22 @@ export const BookingRepository = {
           }
         }
 
+        const effectiveAvailableCount =
+          dailyQuota.remainingDailyQuota !== null
+            ? Math.min(availableCount, dailyQuota.remainingDailyQuota)
+            : availableCount;
+
+        if (!quotaSatisfied) {
+          canFulfill = false;
+          reason =
+            dailyQuota.remainingDailyQuota === 0
+              ? "Kuota harian penuh"
+              : "Kuota harian kurang";
+        }
+
         slots.push({
           time: slotStart.toISOString(),
-          availableCount,
+          availableCount: quotaSatisfied ? effectiveAvailableCount : 0,
           canFulfill,
           reason,
         });
@@ -411,6 +487,8 @@ export const BookingRepository = {
 
   async createBooking(data: BookingInput) {
     return await prisma.$transaction(async (tx) => {
+      await this.assertDailyQuota(tx, data.branchId, new Date(data.startTime), data.selections);
+
       let customer;
       if (data.customerId) {
         customer = await tx.customer.findUnique({
@@ -685,6 +763,8 @@ export const BookingRepository = {
     return await prisma.$transaction(async (tx) => {
       const existing = await tx.booking.findUnique({ where: { id: bookingId } });
       if (!existing || existing.status !== "PENDING") throw new Error("Hanya booking dengan status PENDING yang dapat diubah.");
+
+      await this.assertDailyQuota(tx, data.branchId, new Date(data.startTime), data.selections, bookingId);
 
       let customer;
       if (data.customerId) {

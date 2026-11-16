@@ -186,7 +186,16 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
         const totalCapacity = dailySchedule.totalCapacity || (dailySchedule.rooms?.length || 1);
         const availableRooms = Math.max(0, totalCapacity - occupiedRooms - unassignedInSlot);
         const remainingStaff = Math.max(0, availableStaff - unassignedInSlot);
-        const slotCapacity = Math.min(remainingStaff, availableRooms);
+        let slotCapacity = Math.min(remainingStaff, availableRooms);
+
+        const dailyQuota = dailySchedule.dailyQuota;
+        if (dailyQuota && dailyQuota.maxDailyBookings != null && dailyQuota.remainingDailyQuota != null) {
+          const requestedSlots = Math.max(1, (selections || []).length);
+          slotCapacity =
+            dailyQuota.remainingDailyQuota < requestedSlots
+              ? 0
+              : Math.min(slotCapacity, dailyQuota.remainingDailyQuota);
+        }
 
         slots.push({
           timeString: slotStart.toISOString(),
@@ -196,7 +205,14 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
       }
     }
     return slots;
-  }, [selectedDate, dailySchedule, brandSetting, totalDuration]);
+  }, [selectedDate, dailySchedule, brandSetting, totalDuration, selections]);
+
+  const dailyQuota = dailySchedule?.dailyQuota;
+  const requestedSlots = Math.max(1, (selections || []).length);
+  const isDailyQuotaExhausted =
+    dailyQuota?.maxDailyBookings != null &&
+    dailyQuota?.remainingDailyQuota != null &&
+    dailyQuota.remainingDailyQuota < requestedSlots;
 
   return (
     <div className="space-y-10 animate-in slide-in-from-right-8 fade-in duration-300">
@@ -238,6 +254,14 @@ export function StepTime({ form, dailySchedule, brandSetting, loading, services 
           <label className="text-[9px] font-bold uppercase tracking-[0.3em] text-muted-foreground block mb-4">Waktu Tersedia</label>
           {loading || !dailySchedule ? (
             <div className="py-8 text-center text-muted-foreground font-light text-[10px] uppercase tracking-[0.3em]">Mencari jadwal kosong...</div>
+          ) : isDailyQuotaExhausted ? (
+            <div className="py-12 text-center border-y border-border/10">
+              <p className="text-muted-foreground font-light">
+                {dailyQuota.remainingDailyQuota === 0
+                  ? "Kuota booking harian untuk tanggal ini sudah penuh."
+                  : `Sisa kuota booking harian tidak mencukupi (tersisa ${dailyQuota.remainingDailyQuota} slot).`}
+              </p>
+            </div>
           ) : timeSlots.length === 0 ? (
             <div className="py-12 text-center border-y border-border/10">
               <p className="text-muted-foreground font-light">Tidak ada jadwal tersedia di tanggal ini.</p>

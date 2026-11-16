@@ -7,12 +7,14 @@ import {
   createBranchSchema,
   assignStaffBranchSchema,
   updateBranchSchema,
+  updateBranchSettingsSchema,
   bulkAssignStaffSchema,
   transferBranchStaffSchema,
   bulkTransferStaffSchema,
   type CreateBranchInput,
   type AssignStaffBranchInput,
   type UpdateBranchInput,
+  type UpdateBranchSettingsInput,
   type BulkAssignStaffInput,
   type TransferBranchStaffInput,
   type BulkTransferStaffInput,
@@ -64,6 +66,27 @@ export async function updateBranchAction(values: UpdateBranchInput) {
   } catch (error: unknown) {
     console.error("Failed to update branch:", error)
     return { error: "Gagal memperbarui cabang." }
+  }
+}
+
+export async function updateBranchSettingsAction(values: UpdateBranchSettingsInput) {
+  try {
+    const validatedFields = updateBranchSettingsSchema.safeParse(values)
+
+    if (!validatedFields.success) {
+      return { error: validatedFields.error.issues[0]?.message || "Pengaturan cabang tidak valid." }
+    }
+
+    const { branchId, maxDailyBookings } = validatedFields.data
+    const branch = await BranchService.updateBranchSettings(branchId, maxDailyBookings)
+
+    revalidatePath("/admin/branches")
+    revalidatePath(`/admin/branches/${branch.subdomain}`)
+
+    return { success: true, data: branch }
+  } catch (error: unknown) {
+    console.error("Failed to update branch settings:", error)
+    return { error: "Gagal memperbarui pengaturan cabang." }
   }
 }
 

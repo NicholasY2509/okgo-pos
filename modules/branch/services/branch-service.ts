@@ -25,6 +25,10 @@ export class BranchService {
       return await BranchRepository.updateBranchWhatsappInstance(branchId, whatsappInstanceName);
   }
 
+  static async updateBranchSettings(branchId: string, maxDailyBookings: number | null) {
+      return await BranchRepository.updateBranchSettings(branchId, maxDailyBookings);
+  }
+
   static async getBranchBySubdomain(subdomain: string) {
       return await BranchRepository.getBranchBySubdomain(subdomain);
   }

@@ -2,6 +2,7 @@ import { BranchService } from "@/modules/branch/services/branch-service"
 import { BranchStaffTab } from "@/modules/branch/components/branch-staff-tab"
 import { BranchPerformanceTab } from "@/modules/branch/components/branch-performance-tab"
 import { BranchWhatsappTab } from "@/modules/branch/components/branch-whatsapp-tab"
+import { BranchSettingsTab } from "@/modules/branch/components/branch-settings-tab"
 import { PageHeader } from "@/components/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
@@ -37,7 +38,7 @@ export default async function BranchSettingsPage({
       />
 
       <Tabs value={tab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-[600px]">
+        <TabsList className="grid w-full grid-cols-4 max-w-[720px]">
           <TabsTrigger value="performance" asChild>
             <Link href={`/admin/branches/${slug}?tab=performance`} replace>Performa Cabang</Link>
           </TabsTrigger>
@@ -46,6 +47,9 @@ export default async function BranchSettingsPage({
           </TabsTrigger>
           <TabsTrigger value="whatsapp" asChild>
             <Link href={`/admin/branches/${slug}?tab=whatsapp`} replace>Integrasi WhatsApp</Link>
+          </TabsTrigger>
+          <TabsTrigger value="settings" asChild>
+            <Link href={`/admin/branches/${slug}?tab=settings`} replace>Pengaturan</Link>
           </TabsTrigger>
         </TabsList>
 
@@ -63,6 +67,16 @@ export default async function BranchSettingsPage({
               branchId={branch.id}
               branchName={branch.name}
               subdomain={branch.subdomain}
+            />
+          ) : null}
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-4 pt-4">
+          {tab === 'settings' ? (
+            <BranchSettingsTab
+              branchId={branch.id}
+              branchName={branch.name}
+              initialMaxDailyBookings={branch.maxDailyBookings ?? null}
             />
           ) : null}
         </TabsContent>
