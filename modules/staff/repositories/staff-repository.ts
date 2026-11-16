@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { Prisma } from "@/lib/generated/prisma"
 import { CreateStaffInput, UpdateStaffInput } from "../schemas/staff-schema"
 import { StaffAvailabilityService } from "../services/staff-availability-service"
+import { sortStaffByShiftAndArrival } from "../services/staff-shift-sort"
 import { addMinutes, format } from "date-fns"
 import { BranchStaffHrisItem } from "../types/hris-types"
 
@@ -35,7 +36,8 @@ export const StaffRepository = {
     startTime?: Date,
     includeUnavailable: boolean = false
   ) {
-    const todayStr = (startTime || new Date()).toISOString().split('T')[0];
+    const now = startTime || new Date();
+    const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(now);
     const todayStart = new Date(todayStr + "T00:00:00.000Z");
     const todayEnd = new Date(todayStr + "T23:59:59.999Z");
 
@@ -63,7 +65,7 @@ export const StaffRepository = {
       whereClause.workPosition = await getTherapistWorkPositionFilter();
     }
 
-    const staffList = await prisma.staff.findMany({
+    const rawStaffList = await prisma.staff.findMany({
       where: whereClause,
       include: {
         workPosition: true,
@@ -78,19 +80,28 @@ export const StaffRepository = {
           },
           include: {
             status: true,
+            attendanceWorkingHour: {
+              include: { workingHour: true },
+            },
           },
-        }
+        },
+        attendanceWorkingHours: {
+          where: {
+            attendanceDate: {
+              gte: todayStart,
+              lte: todayEnd,
+            }
+          },
+          include: {
+            workingHour: true,
+          },
+        },
       },
     });
 
-    // Sort by attendance clockIn (earliest first), then nulls at the bottom
-    staffList.sort((a: any, b: any) => {
-      const aTime = a.attendances?.[0]?.clockIn ? new Date(a.attendances[0].clockIn).getTime() : Infinity;
-      const bTime = b.attendances?.[0]?.clockIn ? new Date(b.attendances[0].clockIn).getTime() : Infinity;
-      return aTime - bTime;
-    });
+    // Prioritize active shift at reference time, then earliest attendance clockIn within the shift
+    const staffList = sortStaffByShiftAndArrival(rawStaffList, now);
 
-    const now = startTime || new Date();
     const endTime = addMinutes(now, maxDuration);
 
     const sessionWhereClause: any = {
